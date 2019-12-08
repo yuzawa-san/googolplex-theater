@@ -64,7 +64,7 @@ public final class Config {
     if (line.hasOption("cast-config")) {
       this.castConfigPath = Paths.get(line.getOptionValue("cast-config"));
     } else {
-      this.castConfigPath = Paths.get(CastConfigLoader.DEFAULT_PATH);
+      this.castConfigPath = Paths.get(CastConfigLoader.DEFAULT_PATH).toAbsolutePath();
     }
     File castConfigFile = getCastConfigPath().toFile();
     if (!castConfigFile.exists() || !castConfigFile.isFile()) {
