@@ -1,1 +1,68 @@
-<p>googolplex-theater</p>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Googolplex Theater</title>
+	</head>
+	<body>
+		<h1>Googolplex Theater</h1>
+		<p>
+			<a href="https://github.com/yuzawa-san/googolplex-theater/">GitHub source</a>
+		</p>
+		<p>
+			This tool is to test the receiver app with nearby devices. For detailed usage of the standalone application see the
+			<a href="https://github.com/yuzawa-san/googolplex-theater/blob/master/README.md">README</a>
+		</p>
+		<p>
+			Click the icon to select a Chromecast: 
+			<div style="width:25px; height:25px;">
+				<google-cast-launcher></google-cast-launcher>
+			</div>
+		</p>
+		<p>
+			URL: <input id="url" value="https://example.com"> <button id="load" disabled>load</button>
+		</p>
+		<p>URL must be https and must not deny framing.</p>
+		<script>
+		window['__onGCastApiAvailable'] = function(isAvailable) {
+			if (isAvailable) {
+				initializeCastApi();
+			}
+		};
+		var loadButton = document.getElementById("load");
+		var initializeCastApi = function() {
+			var context = cast.framework.CastContext.getInstance();
+			context.setOptions({
+				receiverApplicationId: "B1A3B99B",
+				autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+			});
+			var context = cast.framework.CastContext.getInstance();
+			context.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, function(event) {
+				if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
+					loadButton.disabled = false;
+				}
+				if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
+					loadButton.disabled = true;
+				}
+			});
+		};
+		
+		loadButton.onclick = function(){
+			var session = cast.framework.CastContext.getInstance().getCurrentSession();
+			if (!session) {
+				alert("Chromecast not connected!");
+				return;
+			}
+			var url = document.getElementById("url").value;
+			session.sendMessage("urn:x-cast:com.jyuzawa.googolplex-theater.device", {
+				device: {
+					name: "TestDevice",
+					settings: [{
+						"url": url
+					}]
+				}
+			});
+		}
+		</script>
+		<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+	</body>
+</html>

@@ -1,0 +1,12 @@
+{
+	"devices": [
+		{
+			"name": "NameOfYourChromecast",
+			"settings": [
+				{
+					"url": "https://example.com/"
+				}
+			]
+		}
+	]
+}
