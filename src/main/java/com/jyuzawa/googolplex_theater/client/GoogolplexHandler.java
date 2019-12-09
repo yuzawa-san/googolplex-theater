@@ -30,7 +30,7 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
   private static final int HEARTBEAT_SECONDS = 5;
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
 
-  private static final String NAMESPACE_CUSTOM = "urn:x-cast:com.url.cast";
+  private static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
   private static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
   private static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
   private static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
