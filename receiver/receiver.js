@@ -20,6 +20,6 @@ const GoogolplexTheater = {
 			context.addEventListener(cast.framework.system.EventType.SENDER_DISCONNECTED, ev => window.close());
 			context.start(options);
 		}
-		document.body.appendChild(script);
+		document.body.appendChild(sdkScript);
 	}
 };
