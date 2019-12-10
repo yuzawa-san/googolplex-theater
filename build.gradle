@@ -11,9 +11,6 @@ apply plugin: "com.google.protobuf"
 apply plugin: "com.diffplug.gradle.spotless"
 apply plugin: "com.github.johnrengelman.shadow"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
 	mavenCentral()
 }
