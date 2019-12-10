@@ -47,12 +47,17 @@ public final class Config {
             .hasArg()
             .argName("IFACE")
             .build());
+    options.addOption(Option.builder("h").longOpt("help").desc("show usage").build());
     return options;
   }
 
   public Config(Options options, String[] args) throws ParseException {
     CommandLineParser parser = new DefaultParser();
     CommandLine line = parser.parse(options, args);
+
+    if (line.hasOption("help")) {
+      throw new ParseException("show help");
+    }
 
     // application id
     if (line.hasOption("app-id")) {
