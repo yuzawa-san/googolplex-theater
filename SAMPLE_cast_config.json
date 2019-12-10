@@ -1,12 +1,9 @@
 {
-	"devices": [
-		{
-			"name": "NameOfYourChromecast",
-			"settings": [
-				{
-					"url": "https://example.com/"
-				}
-			]
+	"devices": [{
+		"name": "NameOfYourDevice",
+		"settings": {
+			"url": "https://example.com/",
+			"refreshSeconds": 3600
 		}
-	]
+	}
 }
