@@ -1,5 +1,6 @@
 package com.jyuzawa.googolplex_theater.config;
 
+import com.jyuzawa.googolplex_theater.client.GoogolplexHandler;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -31,7 +32,6 @@ public final class Config {
             .desc("cast application ID")
             .hasArg()
             .argName("ABCDEFGH")
-            .required()
             .build());
     options.addOption(
         Option.builder("c")
@@ -55,7 +55,11 @@ public final class Config {
     CommandLine line = parser.parse(options, args);
 
     // application id
-    this.appId = line.getOptionValue("app-id");
+    if (line.hasOption("app-id")) {
+      this.appId = line.getOptionValue("app_id");
+    } else {
+      this.appId = GoogolplexHandler.DEFAULT_APPLICATION_ID;
+    }
     if (!APP_ID_PATTERN.matcher(appId).find()) {
       throw new ParseException("invalid cast app-id, must be " + APP_ID_PATTERN.pattern());
     }

@@ -26,6 +26,12 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
   public static final AttributeKey<DeviceInfo> DEVICE_INFO_KEY =
       AttributeKey.valueOf(GoogolplexHandler.class.getCanonicalName());
 
+  /**
+   * This is a published application for public use. The URL is
+   * https://www.jyuzawa.com/googolplex-theater/receiver/index.html
+   */
+  public static final String DEFAULT_APPLICATION_ID = "B1A3B99B";
+
   private static final String DEFAULT_RECEIVER_ID = "receiver-0";
   private static final int HEARTBEAT_SECONDS = 5;
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
