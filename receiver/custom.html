@@ -20,9 +20,9 @@
 		<script type="text/javascript" src="receiver.js"></script>
 		<script type="text/javascript">
 			// load receiver js above and then configure your listener
-			GoogolplexTheater.init((device, sendMessage) => {
-				// do something with the device
-				document.getElementById("message").innerText = JSON.stringify(device);
+			GoogolplexTheater.init((deviceName, settings, sendMessage) => {
+				// do something with the device name and settings
+				document.getElementById("message").innerText = deviceName + ": "+ JSON.stringify(settings);
 				// messages you send will be logged
 				sendMessage({
 					"foo":"bar",

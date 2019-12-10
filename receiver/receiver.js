@@ -14,7 +14,9 @@ const GoogolplexTheater = {
 			context.addCustomMessageListener(NAMESPACE_CUSTOM, customEvent => {
 				console.log("MESSAGE", customEvent);
 				if (customEvent.type === "message") {
-					listener(customEvent.data.device, sendMessage);
+					const { data } = customEvent;
+					const { name, settings } = data;
+					listener(name, settings, sendMessage);
 				}
 			});
 			context.addEventListener(cast.framework.system.EventType.SENDER_DISCONNECTED, ev => window.close());

@@ -186,7 +186,8 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
       ctx.writeAndFlush(sessionConnectMessage);
       // display data custom message
       Map<String, Object> custom = new HashMap<>();
-      custom.put("device", device);
+      custom.put("name", device.name);
+      custom.put("settings", device.settings);
       custom.put("requestId", requestId++);
       CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, transportId, custom);
       ctx.writeAndFlush(customMessage);

@@ -24,7 +24,7 @@
 				margin: 5px;
 				opacity:0.5;
 				font-family: sans-serif;
-				text-shadow: 1px 1px 1px white;
+				text-shadow: 0px 0px 2px white;
 			}
 		</style>
 	</head>
@@ -33,9 +33,15 @@
 		<iframe id="iframe" src="" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" seamless="seamless"></iframe>
 		<script type="text/javascript" src="receiver.js"></script>
 		<script type="text/javascript">
-			GoogolplexTheater.init((device, sendMessage) => {
-				document.getElementById("message").innerText = device.name;
-				document.getElementById("iframe").src = device.settings[0].url;
+			GoogolplexTheater.init((deviceName, settings, sendMessage) => {
+				document.getElementById("message").innerText = deviceName;
+				const { refreshSeconds, url } = settings;
+				document.getElementById("iframe").src = url;
+				if (refreshSeconds) {
+					window.setInterval(() => {
+						iframe.src += '';
+					}, refreshSeconds * 1000);
+				}
 			});
 		</script>
 	</body>
