@@ -29,6 +29,7 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
   private static final String DEFAULT_RECEIVER_ID = "receiver-0";
   private static final int HEARTBEAT_SECONDS = 5;
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
+  private static final int ERROR_RETRY_SECONDS = 60;
 
   private static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
   private static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
@@ -166,6 +167,13 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
     String name = device.name;
     if (receiverPayload.reason != null) {
       LOG.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
+      ctx.executor()
+          .schedule(
+              () -> {
+                ctx.close();
+              },
+              ERROR_RETRY_SECONDS,
+              TimeUnit.SECONDS);
       return;
     }
     if (!receiverPayload.isApplicationStatus()) {
