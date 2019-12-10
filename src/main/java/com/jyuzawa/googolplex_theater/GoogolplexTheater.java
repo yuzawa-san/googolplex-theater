@@ -45,6 +45,7 @@ public final class GoogolplexTheater {
       System.exit(1);
     } catch (Exception e) {
       LOG.error("Failed to start", e);
+      System.exit(1);
     }
   }
 }
