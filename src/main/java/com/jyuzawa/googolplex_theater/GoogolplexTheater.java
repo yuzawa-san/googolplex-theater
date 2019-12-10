@@ -20,6 +20,7 @@ public final class GoogolplexTheater {
     Options options = Config.generateOptions();
     try {
       Config config = new Config(options, args);
+      LOG.info("Starting up Googolplex Theater!");
       GoogolplexController state = new GoogolplexController(config.getAppId());
       CastConfigLoader configLoader = new CastConfigLoader(state, config.getCastConfigPath());
       ServiceDiscovery serviceDiscovery = new ServiceDiscovery(state, config.getInterfaceAddress());
@@ -28,6 +29,7 @@ public final class GoogolplexTheater {
           .addShutdownHook(
               new Thread(
                   () -> {
+                    LOG.info("Shutting down Googolplex Theater!");
                     for (Closeable task : tasks) {
                       try {
                         task.close();
