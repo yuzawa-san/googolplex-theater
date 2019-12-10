@@ -1,11 +1,10 @@
 # googolplex-theater
 
-Maintain multiple Chromecast screens on you network without using your browser.
+Persistently maintain multiple Chromecast screens on you local network without using your browser.
 Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
-Persistence provided using smart reconnect capabilities.
 
-There are several tools and libraries out there, but this project is intended to be very minimalist.
+There are several tools and libraries out there (see below), but this project is intended to be very minimalist.
 There is no UI or backing database, rather there is a simple JSON config file which is watched for changes.
 The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an iframe.
 The receiver application can be customized easily to suit your needs. 
@@ -15,14 +14,15 @@ The receiver application can be customized easily to suit your needs.
 * Java 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
 * The application must run on the same network as your Chromecasts.
 * Multicast DNS must work on your network and on the machine you run the application on.
-* For custom receivers: a [Chromecast developer registration](https://developers.google.com/cast/docs/registration#RegisterApp) and configured developer [devices](https://cast.google.com/publish)
-* IMPORTANT: URLs must be https and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
+* IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
 
 ## Compilation
 
 ```
 ./gradlew shadowJar
 ```
+
+The result of this is a fat-JAR (a JAR with all dependencies): `build/libs/googolplex-theater-all.jar`
 
 ## Configuration
 
@@ -35,18 +35,47 @@ Some example use cases involve using cron and putting your config under version 
 ## Running
 
 ```
-java -jar build/libs/googolplex-theater-all.jar
+java -jar build/libs/googolplex-theater-all.jar --help
 ```
-will show all runtime options.
+will show all usage options.
 
 ```
-java -jar build/libs/googolplex-theater-all.jar -a APP_ID
+java -jar build/libs/googolplex-theater-all.jar
 ```
-will run the application for the registered APP_ID.
+will run the application with default settings.
+
+### Case Study: Grafana Dashboards
+
+The maintainer has used this to show statistics dashboards in an software engineering context.
+
+* Configure and name your Chromecasts.
+* Create one Grafana playlist per device.
+* Figure out how to use proper Grafana auth (proxy, token, etc).
+* Make your cast config file with each playlist url per device.
+* Place the cast config file under version control (git) or store it someplace accessible (http/s3/scp).
+* Compile application locally.
+* Copy application over to Raspberry Pi.
+* Use a Raspberry Pi and install Java runtime.
+* Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
+* Run the application as a daemon using systemd or upstart or whatever you want.
+
+### Using a Custom Receiver
+
+If you wish to customize the behavior of the receiver from just displaying a single URL in an IFRAME, see the example custom receiver in `receiver/custom.html`.
+
+For custom receivers, you will be required to [sign up as a Chromecast developer](https://developers.google.com/cast/docs/registration#RegisterApp) and also configure [devices](https://cast.google.com/publish) for development.
+
+Currently the device name and settings are printed to the screen. Customize the listener handler to do as you wish.
+
+Host your modified file via HTTP on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
+
+Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
 
 ## Contributions
 
-This is a side project, so I will accept contributions, but provide no guarantee to the speed at which I can accept submissions given the need to test this with hardware.
+This is intended to be minimalist and easy to set up, so advanced features are not the goal here. Some other projects listed below may be more suited for your use case.
+
+This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
 
 Run [spotless](https://github.com/diffplug/spotless) to ensure everything is properly formatted:
 
@@ -70,3 +99,4 @@ This application overlaps in functionality with some of these fine projects:
 
 It is designed for multiple Chromecasts, rather than a [googol](https://en.wikipedia.org/wiki/Googol) or [googolplex](https://en.wikipedia.org/wiki/Googolplex).
 It is from [The Simpsons](https://simpsons.fandom.com/wiki/Springfield_Googolplex_Theatres). The developer made it singular and decided to use the American spelling.
+Googol sure does sound like the manufacturer of the Chromecast.
