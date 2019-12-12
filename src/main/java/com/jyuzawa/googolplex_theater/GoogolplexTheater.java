@@ -24,6 +24,7 @@ public final class GoogolplexTheater {
     try {
       Config config = new Config(args);
       LOG.info("Starting up Googolplex Theater!");
+      LOG.info("Website: https://github.com/yuzawa-san/googolplex-theater");
       GoogolplexController controller = new GoogolplexController(config.getAppId());
       CastConfigLoader configLoader = new CastConfigLoader(controller, config.getCastConfigPath());
       ServiceDiscovery serviceDiscovery =
