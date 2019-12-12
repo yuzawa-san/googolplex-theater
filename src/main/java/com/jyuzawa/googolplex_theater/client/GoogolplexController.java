@@ -36,6 +36,12 @@ import javax.jmdns.ServiceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class represents the state of the application. All modifications to state occur in the same
+ * thread.
+ *
+ * @author jyuzawa
+ */
 public final class GoogolplexController implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexController.class);
 
@@ -51,6 +57,7 @@ public final class GoogolplexController implements Closeable {
   private final Map<String, Channel> nameToChannel;
 
   public GoogolplexController(String appId) throws IOException {
+    // the state is maintained in these maps
     this.nameToDeviceInfo = new ConcurrentHashMap<>();
     this.serviceNameToName = new ConcurrentHashMap<>();
     this.nameToAddress = new ConcurrentHashMap<>();
@@ -60,11 +67,13 @@ public final class GoogolplexController implements Closeable {
     SslContext sslContext =
         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
     LOG.info("Using cast application id: {}", appId);
+    // configure the socket client
     this.bootstrap =
         new Bootstrap()
             .channel(NioSocketChannel.class)
             .group(eventLoopGroup)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS);
+    // the pipeline to use for the socket client
     this.bootstrap.handler(
         new ChannelInitializer<SocketChannel>() {
           @Override
@@ -81,31 +90,46 @@ public final class GoogolplexController implements Closeable {
         });
   }
 
+  /**
+   * Load the config and propagate the changes to the any currently connected devices.
+   *
+   * @param config the settings loaded from the file
+   */
   public void loadConfig(CastConfig config) {
     eventLoop.execute(
         () -> {
           Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
           for (DeviceInfo deviceInfo : config.devices) {
             String name = deviceInfo.name;
+            // mark that we should not remove this device
             namesToRemove.remove(name);
             DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
+            // ignore unchanged devices
             if (!deviceInfo.equals(oldDeviceInfo)) {
               LOG.info("CONFIG_UPDATED '{}'", name);
               nameToDeviceInfo.put(name, deviceInfo);
-              open(name);
+              apply(name);
             }
           }
+          // remove devices that were missing in the new config
           for (String name : namesToRemove) {
             LOG.info("CONFIG_REMOVED '{}'", name);
             nameToDeviceInfo.remove(name);
-            open(name);
+            apply(name);
           }
         });
   }
 
+  /**
+   * Add a discovered device and initialize a new connection to the device if one does not exist
+   * already.
+   *
+   * @param event mdns info
+   */
   public void register(ServiceEvent event) {
     eventLoop.execute(
         () -> {
+          // the device information may not be full
           ServiceInfo info = event.getInfo();
           String name = info.getPropertyString("fn");
           if (name == null) {
@@ -119,23 +143,40 @@ public final class GoogolplexController implements Closeable {
             LOG.debug("Found unaddressable cast:\n{}", info);
             return;
           }
+          /*
+           * we choose the first address. there should usually be just one. the mdns library returns ipv4 addresses
+           * before ipv6.
+           */
           InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
           InetSocketAddress oldAddress = nameToAddress.put(name, address);
           if (!address.equals(oldAddress)) {
+            /*
+             * this is a newly discovered device, or an existing device whose address was updated.
+             */
             LOG.info("REGISTER '{}' {}", name, address);
-            open(name);
+            apply(name);
           }
         });
   }
 
-  private void open(String name) {
+  /**
+   * Apply changes to a device. This closes any existing connections. If there were no existing
+   * connections, then a new connection is made. The new connection will call this function again
+   * when it is closed. This logic allows for new connections to take on the proper settings.
+   *
+   * @param name device's name
+   */
+  private void apply(String name) {
     Channel oldChannel = nameToChannel.get(name);
     if (oldChannel != null) {
       LOG.info("DISCONNECT '{}'", name);
-      // kill the channel, so it will roll over
+      /*
+       * kill the channel, so it will reconnect and this method will be called again, but skip this code path.
+       */
       oldChannel.close();
       return;
     }
+    // ensure that there is enough information to connect
     InetSocketAddress address = nameToAddress.get(name);
     if (address == null) {
       return;
@@ -150,10 +191,19 @@ public final class GoogolplexController implements Closeable {
             .connect(address)
             .addListener(
                 (ChannelFuture f) -> {
+                  /*
+                   * NOTE: this callback is not executed from the controller's eventLoop, so we must use eventLoop.execute and
+                   * eventLoop.schedule to ensure concurrency.
+                   */
                   if (f.isSuccess()) {
                     LOG.info("CONNECTED '{}'", name);
                     Channel ch = f.channel();
+                    // inform the handler what the device settings are
                     ch.attr(GoogolplexHandler.DEVICE_INFO_KEY).set(deviceInfo);
+                    /*
+                     * this is what causes the persistence when the handler detects failure. additionally, it allows for the
+                     * first part of this method to work properly. in that case, we are closing the connection on purpose.
+                     */
                     ch.closeFuture()
                         .addListener(
                             (ChannelFuture closeFuture) -> {
@@ -161,7 +211,7 @@ public final class GoogolplexController implements Closeable {
                               eventLoop.execute(
                                   () -> {
                                     nameToChannel.remove(name);
-                                    open(name);
+                                    apply(name);
                                   });
                             });
                   } else {
@@ -171,10 +221,12 @@ public final class GoogolplexController implements Closeable {
                         name,
                         cause.getClass().getSimpleName(),
                         cause.getMessage());
+                    // reschedule a reconnect.
+                    // TODO: exponential backoff?
                     eventLoop.schedule(
                         () -> {
                           nameToChannel.remove(name);
-                          open(name);
+                          apply(name);
                         },
                         CONNECTION_RETRY_SECONDS,
                         TimeUnit.SECONDS);
@@ -182,17 +234,6 @@ public final class GoogolplexController implements Closeable {
                 })
             .channel();
     nameToChannel.put(name, channel);
-  }
-
-  public void unregister(ServiceEvent event) {
-    eventLoop.execute(
-        () -> {
-          String name = serviceNameToName.get(event.getName());
-          if (name != null) {
-            LOG.info("UNREGISTER '{}'", name);
-            nameToAddress.remove(name);
-          }
-        });
   }
 
   @Override

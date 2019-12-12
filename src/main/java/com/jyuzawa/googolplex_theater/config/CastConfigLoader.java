@@ -15,6 +15,12 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class loads the cast config at start and watches the files for subsequent changes. The
+ * controller is notified of such changes.
+ *
+ * @author jyuzawa
+ */
 public final class CastConfigLoader implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(CastConfigLoader.class);
 
@@ -22,10 +28,10 @@ public final class CastConfigLoader implements Closeable {
 
   private final ExecutorService executor;
   private final Path path;
-  private final GoogolplexController state;
+  private final GoogolplexController controller;
 
-  public CastConfigLoader(GoogolplexController state, Path castConfigPath) throws IOException {
-    this.state = state;
+  public CastConfigLoader(GoogolplexController controller, Path castConfigPath) throws IOException {
+    this.controller = controller;
     this.executor = Executors.newSingleThreadExecutor();
     this.path = castConfigPath;
     LOG.info("Using cast config: {}", castConfigPath.toAbsolutePath());
@@ -33,15 +39,24 @@ public final class CastConfigLoader implements Closeable {
     executor.submit(
         () -> {
           try {
+            /*
+             * the watch operation only works with directories, so we have to get the parent directory of the file.
+             */
             WatchService watchService = FileSystems.getDefault().newWatchService();
             Path directoryPath = path.getParent();
             directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             WatchKey key;
+            // this blocks until the system notifies us of any changes.
             while ((key = watchService.take()) != null) {
               try {
+                // go thru all changes. sadly this API is not super type safe.
                 for (WatchEvent<?> event : key.pollEvents()) {
                   @SuppressWarnings("unchecked")
                   WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                  /*
+                   * we could have found out about any file in the same directory, so make sure that it is
+                   * indeed our config file.
+                   */
                   if (path.endsWith(ev.context())) {
                     load();
                   }
@@ -60,10 +75,15 @@ public final class CastConfigLoader implements Closeable {
         });
   }
 
+  /**
+   * Read the file, decode the file content, and inform the controller of the changes.
+   *
+   * @throws IOException when JSON deserialization fails
+   */
   private void load() throws IOException {
     LOG.info("Reloading cast config");
     CastConfig out = JsonUtil.MAPPER.readValue(path.toFile(), CastConfig.class);
-    state.loadConfig(out);
+    controller.loadConfig(out);
   }
 
   @Override

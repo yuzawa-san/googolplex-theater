@@ -3,6 +3,11 @@ package com.jyuzawa.googolplex_theater.util;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Provides a singleton JSON mapper.
+ *
+ * @author jyuzawa
+ */
 public final class JsonUtil {
 
   public static final ObjectMapper MAPPER = newMapper();

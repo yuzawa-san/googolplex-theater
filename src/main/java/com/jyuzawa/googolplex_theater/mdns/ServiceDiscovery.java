@@ -10,6 +10,11 @@ import javax.jmdns.ServiceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class starts a listener for nearby devices and informs the controller of any changes.
+ *
+ * @author jyuzawa
+ */
 public final class ServiceDiscovery implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceDiscovery.class);
 
@@ -40,7 +45,10 @@ public final class ServiceDiscovery implements Closeable {
 
     @Override
     public void serviceRemoved(ServiceEvent event) {
-      // controller.unregister(event);
+      /*
+       * NOTE: it is hard to determine if something is permanently disconnected. empirically, we do get a lot of
+       * these events when the device is not actually disconnected.
+       */
     }
 
     @Override

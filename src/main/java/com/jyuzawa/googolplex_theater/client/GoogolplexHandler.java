@@ -19,6 +19,15 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class handles messages from the device and prepares proper responses. The lifecycle is very
+ * simple. Once the connection is established, the controller does not send additional messages.
+ * Theoretically it could, but for simplicity of lifecycle management, we do not. If the controller
+ * wants to do something after the connection is established, it will close the connection and start
+ * anew. Recall that any close we trigger in this handler will cause the controller to reconnect.
+ *
+ * @author jyuzawa
+ */
 public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMessage> {
 
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexHandler.class);
@@ -37,7 +46,9 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
   private static final int ERROR_RETRY_SECONDS = 60;
 
+  /** This custom namespace is used to identify messages related to our application. */
   private static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
+
   private static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
   private static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
   private static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
@@ -58,15 +69,27 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
     this.appId = appId;
     this.senderId = "sender-" + System.identityHashCode(this);
     this.heartbeatMessage = generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);
-    this.lastHeartbeat = Instant.now();
   }
 
+  /**
+   * @param type
+   * @return a simple message with no fields
+   */
   private static final Map<String, Object> messagePayload(String type) {
     Map<String, Object> out = new HashMap<>();
     out.put("type", type);
     return Collections.unmodifiableMap(out);
   }
 
+  /**
+   * Generates a protobuf message with the given payload.
+   *
+   * @param namespace the label to determine which message stream this belongs to
+   * @param destinationId either the default value or the value established for the session
+   * @param payload a series of key values to turn into a JSON string
+   * @return a fully constructed message
+   * @throws IOException when JSON serialization fails
+   */
   private CastMessage generateMessage(
       String namespace, String destinationId, Map<String, Object> payload) throws IOException {
     CastMessage.Builder out = CastMessage.newBuilder();
@@ -80,6 +103,12 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
   }
 
   @Override
+  /**
+   * The connection is up. Configures keep alive messages and timeout. Sends an initial connect
+   * message and launch message. The device will respond back with a receiver status message (or
+   * error if the receiver could not be started). That response and the keep alive responses from
+   * the device are all handled in the channelRead0().
+   */
   public void channelActive(ChannelHandlerContext ctx) throws Exception {
     // initial connect
     CastMessage initialConnectMessage =
@@ -102,7 +131,7 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
                   if (lastHeartbeat
                       .plus(HEARTBEAT_TIMEOUT_SECONDS, ChronoUnit.SECONDS)
                       .isBefore(Instant.now())) {
-                    // the last heartbeat occurred too long ago, so kill the connection
+                    /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
                     String name = getDeviceInfo(ctx).name;
                     LOG.warn("EXPIRE '{}'", name);
                     ctx.close();
@@ -114,14 +143,25 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
                 HEARTBEAT_SECONDS,
                 HEARTBEAT_SECONDS,
                 TimeUnit.SECONDS);
+    /*
+     * there was no heartbeat now, but we initialize with the start time, so we don't timeout immediately.
+     */
+    this.lastHeartbeat = Instant.now();
   }
 
+  /**
+   * The device info has been stashed in the attribute map.
+   *
+   * @param ctx
+   * @return the device info
+   */
   private DeviceInfo getDeviceInfo(ChannelHandlerContext ctx) {
     return ctx.channel().attr(DEVICE_INFO_KEY).get();
   }
 
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    // shutdown heartbeat
     if (heartbeatFuture != null) {
       heartbeatFuture.cancel(false);
     }
@@ -129,6 +169,7 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, CastMessage msg) throws Exception {
+    // do some rudimentary validation
     if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0
         || msg.getPayloadType() != PayloadType.STRING) {
       LOG.debug("Invalid message");
@@ -144,6 +185,7 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
       LOG.debug("Invalid message destination");
       return;
     }
+    // handle different namespaces differently
     String namespace = msg.getNamespace();
     DeviceInfo device = getDeviceInfo(ctx);
     String name = device.name;
@@ -160,19 +202,25 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
         LOG.debug("other message");
         break;
     }
-    if (namespace.equals(NAMESPACE_HEARTBEAT)) {
-      lastHeartbeat = Instant.now();
-      return;
-    }
   }
 
+  /**
+   * Determine how to respond or act upon receiving a response from the receiver.
+   *
+   * @param ctx channel context
+   * @param msg a receiver message
+   * @param device the device name and settings
+   * @throws IOException when the JSON serialization fails
+   */
   private void handleReceiverMessage(ChannelHandlerContext ctx, CastMessage msg, DeviceInfo device)
       throws IOException {
     ReceiverResponse receiverPayload =
         JsonUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
     String name = device.name;
     if (receiverPayload.reason != null) {
+      // the presence of the reason indicates the launch likely failed for some reason
       LOG.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
+      // do not close immediately, so we can avoid reconnecting incessantly
       ctx.executor()
           .schedule(
               () -> {
@@ -186,11 +234,18 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
       return;
     }
     if (receiverPayload.isIdleScreen()) {
+      /*
+       * if the idle screen is back, the receiver app has crashed for some reason, so close which will trigger a
+       * refresh.
+       */
       LOG.info("DOWN '{}'", name);
       ctx.channel().close();
       return;
     }
     String transportId = receiverPayload.getApplicationTransportId(appId);
+    /*
+     * if transportId is present for our appId, then we can send the settings thru our custom namespace
+     */
     if (sessionReceiverId == null && transportId != null) {
       sessionReceiverId = transportId;
       LOG.info("UP '{}'", name);
@@ -210,12 +265,14 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    // empirically, these are connection resets.
     DeviceInfo device = getDeviceInfo(ctx);
     String name = "unknown";
     if (device != null) {
       name = device.name;
     }
     LOG.error("EXCEPTION '{}' {}: {}", name, cause.getClass().getSimpleName(), cause.getMessage());
+    // this close will trigger the controller to reconnect
     ctx.close();
   }
 }

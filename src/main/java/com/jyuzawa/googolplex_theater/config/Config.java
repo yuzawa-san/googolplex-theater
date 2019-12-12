@@ -16,15 +16,21 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+/**
+ * This class represents the values of all of the CLI arguments.
+ *
+ * @author jyuzawa
+ */
 public final class Config {
 
+  public static final Options OPTIONS = generateOptions();
   private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]{8}$");
 
   private final String appId;
   private final Path castConfigPath;
   private final InetAddress interfaceAddress;
 
-  public static Options generateOptions() {
+  private static Options generateOptions() {
     Options options = new Options();
     options.addOption(
         Option.builder("a")
@@ -51,15 +57,22 @@ public final class Config {
     return options;
   }
 
-  public Config(Options options, String[] args) throws ParseException {
+  /**
+   * Parse CLI arguments and run validation.
+   *
+   * @param args from the main
+   * @throws ParseException when validation fails
+   */
+  public Config(String[] args) throws ParseException {
     CommandLineParser parser = new DefaultParser();
-    CommandLine line = parser.parse(options, args);
+    CommandLine line = parser.parse(OPTIONS, args);
 
+    // bail for help
     if (line.hasOption("help")) {
       throw new ParseException("show help");
     }
 
-    // application id
+    // application id: check against pattern.
     if (line.hasOption("app-id")) {
       this.appId = line.getOptionValue("app_id");
     } else {
@@ -69,9 +82,9 @@ public final class Config {
       throw new ParseException("invalid cast app-id, must be " + APP_ID_PATTERN.pattern());
     }
 
-    // cast-config
+    // cast-config: check that file exists.
     if (line.hasOption("cast-config")) {
-      this.castConfigPath = Paths.get(line.getOptionValue("cast-config"));
+      this.castConfigPath = Paths.get(line.getOptionValue("cast-config")).toAbsolutePath();
     } else {
       this.castConfigPath = Paths.get(CastConfigLoader.DEFAULT_PATH).toAbsolutePath();
     }
@@ -81,12 +94,14 @@ public final class Config {
           "cast-config file does not exist: " + castConfigFile.getAbsolutePath());
     }
 
-    // interface
+    // interface: missing will cause the mdns client to autochoose the interface.
     InetAddress theInterfaceAddress = null;
     if (line.hasOption("interface")) {
       String interfaceValue = line.getOptionValue("interface");
       try {
+        // this will throw if the interface does not exist
         NetworkInterface iface = NetworkInterface.getByName(interfaceValue);
+        // if it does exist, use the first address
         List<InetAddress> addresses = Collections.list(iface.getInetAddresses());
         if (addresses.isEmpty()) {
           throw new IllegalArgumentException("interface " + interfaceValue + " has no addresses");
@@ -105,14 +120,17 @@ public final class Config {
     this.interfaceAddress = theInterfaceAddress;
   }
 
+  /** @return the properly registered application ID to use in the receiver. */
   public String getAppId() {
     return appId;
   }
 
+  /** @return the file location of device names and their settings. */
   public Path getCastConfigPath() {
     return castConfigPath;
   }
 
+  /** @return the IP address for the network interface to use for service discovery. */
   public InetAddress getInterfaceAddress() {
     return interfaceAddress;
   }
