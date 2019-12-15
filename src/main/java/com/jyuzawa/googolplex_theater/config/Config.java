@@ -151,6 +151,7 @@ public final class Config {
     return interfaceAddress;
   }
 
+  /** @return the port to run the web UI server on */
   public int getServerPort() {
     return port;
   }

@@ -246,6 +246,11 @@ public final class GoogolplexController implements Closeable {
     nameToChannel.put(name, channel);
   }
 
+  /**
+   * Trigger a refresh by closing channels which will cause a reconnect.
+   *
+   * @param name the device to refresh
+   */
   public void refresh(String name) {
     // closing channels will cause them to reconnect
     if (name == null) {
@@ -262,6 +267,7 @@ public final class GoogolplexController implements Closeable {
     }
   }
 
+  /** @return a list of device information, address, connection age */
   public List<DeviceStatus> getConfiguredDevices() {
     List<DeviceStatus> out = new ArrayList<>();
     for (Map.Entry<String, DeviceInfo> entry : nameToDeviceInfo.entrySet()) {
@@ -272,6 +278,7 @@ public final class GoogolplexController implements Closeable {
     return out;
   }
 
+  /** @return a list of device names and addresses */
   public List<DeviceStatus> getUnconfiguredDevices() {
     List<DeviceStatus> out = new ArrayList<>();
     for (Map.Entry<String, InetSocketAddress> entry : nameToAddress.entrySet()) {

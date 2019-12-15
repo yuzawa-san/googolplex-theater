@@ -30,7 +30,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+/**
+ * This class handle requests to the web UI.
+ *
+ * @author jyuzawa
+ */
+public final class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexServerHandler.class);
 
   private static final ObjectWriter PRETTY_PRINTER =
@@ -69,6 +74,13 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     }
   }
 
+  /**
+   * Handle routes for different paths and methods.
+   *
+   * @param request
+   * @param response
+   * @throws IOException
+   */
   public void route(FullHttpRequest request, FullHttpResponse response) throws IOException {
     HttpMethod method = request.method();
     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
@@ -77,6 +89,7 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     if (method == HttpMethod.GET) {
       if (path.equals("/")) {
         overview(content);
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=utf-8");
       } else if (path.equals("/favicon.png")) {
         content.writeBytes(FAVICON);
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "image/png");
@@ -86,6 +99,7 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     } else if (method == HttpMethod.POST) {
       if (path.equals("/refresh")) {
         refresh(content, queryStringDecoder.parameters());
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=utf-8");
       } else {
         error(response, HttpResponseStatus.NOT_FOUND);
       }
@@ -94,6 +108,12 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     }
   }
 
+  /**
+   * Generate the overview page with configured and unconfigured devices.
+   *
+   * @param content
+   * @throws IOException
+   */
   public void overview(ByteBuf content) throws IOException {
     StringBuilder configuredDevicesContent = new StringBuilder();
     for (DeviceStatus status : controller.getConfiguredDevices()) {
@@ -146,9 +166,15 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     responseContent =
         responseContent.replace("{{UNCONFIGURED_DEVICES}}", unconfiguredDevicesContent.toString());
     responseContent = MAIN_TEMPLATE.replace("{{CONTENT}}", responseContent);
-    write(content, responseContent);
+    content.writeCharSequence(responseContent, CharsetUtil.UTF_8);
   }
 
+  /**
+   * Generate the page for refreshing a device or all of the devices.
+   *
+   * @param content
+   * @param params
+   */
   public void refresh(ByteBuf content, Map<String, List<String>> params) {
     List<String> nameParam = params.get("name");
     String name;
@@ -162,9 +188,15 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     String responseContent = REFRESH_TEMPLATE;
     responseContent = responseContent.replace("{{NAME}}", name);
     responseContent = MAIN_TEMPLATE.replace("{{CONTENT}}", responseContent);
-    write(content, responseContent);
+    content.writeCharSequence(responseContent, CharsetUtil.UTF_8);
   }
 
+  /**
+   * Read a classpath resource as bytes.
+   *
+   * @param resource
+   * @return
+   */
   private static byte[] loadBytes(String resource) {
     try {
       InputStream inputStream = GoogolplexServerHandler.class.getResourceAsStream(resource);
@@ -182,16 +214,25 @@ public class GoogolplexServerHandler extends SimpleChannelInboundHandler<FullHtt
     }
   }
 
+  /**
+   * Read a classpath resource as a string.
+   *
+   * @param resources
+   * @return
+   */
   private static String load(String resources) {
     return new String(loadBytes(resources), CharsetUtil.UTF_8);
   }
 
-  private static void write(ByteBuf byteBuf, String string) {
-    byteBuf.writeCharSequence(string, CharsetUtil.UTF_8);
-  }
-
+  /**
+   * Generate an error. The body is just the status text.
+   *
+   * @param response
+   * @param status
+   */
   private static void error(FullHttpResponse response, HttpResponseStatus status) {
     response.setStatus(status);
+    response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=utf-8");
     response.content().writeCharSequence(status.codeAsText(), CharsetUtil.UTF_8);
   }
 }

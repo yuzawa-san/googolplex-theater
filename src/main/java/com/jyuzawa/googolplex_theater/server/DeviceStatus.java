@@ -8,6 +8,11 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * A representation of a device's name, settings, current address, and connection age.
+ *
+ * @author jyuzawa
+ */
 public final class DeviceStatus implements Comparable<DeviceStatus> {
 
   public final String name;
@@ -15,6 +20,13 @@ public final class DeviceStatus implements Comparable<DeviceStatus> {
   public final String ipAddress;
   public final String duration;
 
+  /**
+   * Constructor for configured devices
+   *
+   * @param deviceInfo
+   * @param address
+   * @param channel
+   */
   public DeviceStatus(DeviceInfo deviceInfo, InetSocketAddress address, Channel channel) {
     this.name = deviceInfo.name;
     this.settings = deviceInfo.settings;
@@ -31,6 +43,25 @@ public final class DeviceStatus implements Comparable<DeviceStatus> {
     }
   }
 
+  /**
+   * Constructor for unconfigured devices
+   *
+   * @param instant
+   * @return
+   */
+  public DeviceStatus(String name, InetSocketAddress address) {
+    this.name = name;
+    this.settings = null;
+    this.ipAddress = address.getAddress().getHostAddress();
+    this.duration = null;
+  }
+
+  /**
+   * Generate a human readable connection age string.
+   *
+   * @param instant
+   * @return
+   */
   private static String calculateDuration(Instant instant) {
     if (instant == null) {
       return null;
@@ -43,13 +74,6 @@ public final class DeviceStatus implements Comparable<DeviceStatus> {
     long minutes = deltaSeconds / 60L;
     deltaSeconds %= 60L;
     return String.format("<pre>%02dd%02dh%02dm%02ds</pre>", days, hours, minutes, deltaSeconds);
-  }
-
-  public DeviceStatus(String name, InetSocketAddress address) {
-    this.name = name;
-    this.settings = null;
-    this.ipAddress = address.getAddress().getHostAddress();
-    this.duration = null;
   }
 
   @Override

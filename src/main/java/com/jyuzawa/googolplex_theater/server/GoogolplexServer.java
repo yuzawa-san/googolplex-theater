@@ -16,9 +16,14 @@ import java.io.Closeable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GoogolplexServer implements Closeable {
+/**
+ * This class runs the server for the web UI.
+ *
+ * @author jyuzawa
+ */
+public final class GoogolplexServer implements Closeable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexServer.class);
 
   public static final int DEFAULT_PORT = 8000;
 
