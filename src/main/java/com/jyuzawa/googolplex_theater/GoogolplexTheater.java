@@ -4,6 +4,7 @@ import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import com.jyuzawa.googolplex_theater.config.CastConfigLoader;
 import com.jyuzawa.googolplex_theater.config.Config;
 import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
+import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.List;
@@ -19,18 +20,20 @@ import org.slf4j.LoggerFactory;
  */
 public final class GoogolplexTheater {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexTheater.class);
+  public static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
 
   public static void main(String[] args) throws InterruptedException {
     try {
       Config config = new Config(args);
       LOG.info("Starting up Googolplex Theater!");
-      LOG.info("Website: https://github.com/yuzawa-san/googolplex-theater");
+      LOG.info("Website: " + PROJECT_WEBSITE);
       GoogolplexController controller = new GoogolplexController(config.getAppId());
+      GoogolplexServer server = new GoogolplexServer(controller, config.getServerPort());
       CastConfigLoader configLoader = new CastConfigLoader(controller, config.getCastConfigPath());
       ServiceDiscovery serviceDiscovery =
           new ServiceDiscovery(controller, config.getInterfaceAddress());
       // collect items to close on shutdown
-      List<Closeable> tasks = Arrays.asList(configLoader, serviceDiscovery, controller);
+      List<Closeable> tasks = Arrays.asList(configLoader, serviceDiscovery, server, controller);
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(

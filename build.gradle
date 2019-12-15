@@ -61,6 +61,7 @@ dependencies {
 	implementation 'io.netty:netty-codec:4.1.43.Final'
 	implementation 'io.netty:netty-buffer:4.1.43.Final'
 	implementation 'io.netty:netty-handler:4.1.43.Final'
+	implementation 'io.netty:netty-codec-http:4.1.43.Final'
 	implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
 	implementation 'org.jmdns:jmdns:3.5.5'

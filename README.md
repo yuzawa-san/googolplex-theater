@@ -1,5 +1,7 @@
 # googolplex-theater
 
+![Icon](src/main/resources/favicon.png)
+
 Persistently maintain multiple Chromecast screens on you local network without using your browser.
 Ideal for digital signage applications.
 Originally developed to display statistics dashboards.

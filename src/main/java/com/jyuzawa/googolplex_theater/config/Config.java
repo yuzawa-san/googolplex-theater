@@ -1,6 +1,7 @@
 package com.jyuzawa.googolplex_theater.config;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexHandler;
+import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
+import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -29,6 +30,7 @@ public final class Config {
   private final String appId;
   private final Path castConfigPath;
   private final InetAddress interfaceAddress;
+  private final int port;
 
   private static Options generateOptions() {
     Options options = new Options();
@@ -53,6 +55,13 @@ public final class Config {
             .hasArg()
             .argName("IFACE")
             .build());
+    options.addOption(
+        Option.builder("p")
+            .longOpt("port")
+            .desc("server port number")
+            .hasArg()
+            .argName("PORTNUM")
+            .build());
     options.addOption(Option.builder("h").longOpt("help").desc("show usage").build());
     return options;
   }
@@ -76,7 +85,7 @@ public final class Config {
     if (line.hasOption("app-id")) {
       this.appId = line.getOptionValue("app_id");
     } else {
-      this.appId = GoogolplexHandler.DEFAULT_APPLICATION_ID;
+      this.appId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
     }
     if (!APP_ID_PATTERN.matcher(appId).find()) {
       throw new ParseException("invalid cast app-id, must be " + APP_ID_PATTERN.pattern());
@@ -118,6 +127,13 @@ public final class Config {
       }
     }
     this.interfaceAddress = theInterfaceAddress;
+
+    // server port
+    if (line.hasOption("port")) {
+      this.port = Integer.parseInt(line.getOptionValue("port"));
+    } else {
+      this.port = GoogolplexServer.DEFAULT_PORT;
+    }
   }
 
   /** @return the properly registered application ID to use in the receiver. */
@@ -133,5 +149,9 @@ public final class Config {
   /** @return the IP address for the network interface to use for service discovery. */
   public InetAddress getInterfaceAddress() {
     return interfaceAddress;
+  }
+
+  public int getServerPort() {
+    return port;
   }
 }

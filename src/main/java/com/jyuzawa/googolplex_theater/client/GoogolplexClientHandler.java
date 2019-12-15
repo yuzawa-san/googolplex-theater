@@ -28,12 +28,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author jyuzawa
  */
-public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMessage> {
+public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<CastMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexClientHandler.class);
 
   public static final AttributeKey<DeviceInfo> DEVICE_INFO_KEY =
-      AttributeKey.valueOf(GoogolplexHandler.class.getCanonicalName());
+      AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_device");
+  public static final AttributeKey<Instant> CONNECTION_BIRTH_KEY =
+      AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_birth");
 
   /**
    * This is a published application for public use. The URL is
@@ -65,7 +67,7 @@ public final class GoogolplexHandler extends SimpleChannelInboundHandler<CastMes
   private Instant lastHeartbeat;
   private final CastMessage heartbeatMessage;
 
-  public GoogolplexHandler(String appId) throws IOException {
+  public GoogolplexClientHandler(String appId) throws IOException {
     this.appId = appId;
     this.senderId = "sender-" + System.identityHashCode(this);
     this.heartbeatMessage = generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);

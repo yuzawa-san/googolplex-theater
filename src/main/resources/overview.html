@@ -1,0 +1,31 @@
+<h2>Configured Devices</h2>
+<table class='table table-striped'>
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Address</th>
+			<th>Uptime</th>
+			<th>Settings</th>
+			<th>
+				<form method="post" action="/refresh">
+					<input class="btn btn-primary" type="submit" value="Refresh All">
+				</form>
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{CONFIGURED_DEVICES}}
+	</tbody>
+</table>
+<h2>Unconfigured Devices</h2>
+<table class='table table-striped'>
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Address</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{UNCONFIGURED_DEVICES}}
+	</tbody>
+</table>

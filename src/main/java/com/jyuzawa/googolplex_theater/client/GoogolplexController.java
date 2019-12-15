@@ -3,6 +3,7 @@ package com.jyuzawa.googolplex_theater.client;
 import com.jyuzawa.googolplex_theater.config.CastConfig;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
+import com.jyuzawa.googolplex_theater.server.DeviceStatus;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -26,7 +27,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,9 +90,13 @@ public final class GoogolplexController implements Closeable {
             p.addLast("frameEncoder", new LengthFieldPrepender(4));
             p.addLast("protobufEncoder", new ProtobufEncoder());
             p.addLast("logger", new LoggingHandler());
-            p.addLast("handler", new GoogolplexHandler(appId));
+            p.addLast("handler", new GoogolplexClientHandler(appId));
           }
         });
+  }
+
+  public EventLoopGroup getEventLoopGroup() {
+    return eventLoopGroup;
   }
 
   /**
@@ -199,7 +208,8 @@ public final class GoogolplexController implements Closeable {
                     LOG.info("CONNECTED '{}'", name);
                     Channel ch = f.channel();
                     // inform the handler what the device settings are
-                    ch.attr(GoogolplexHandler.DEVICE_INFO_KEY).set(deviceInfo);
+                    ch.attr(GoogolplexClientHandler.DEVICE_INFO_KEY).set(deviceInfo);
+                    ch.attr(GoogolplexClientHandler.CONNECTION_BIRTH_KEY).set(Instant.now());
                     /*
                      * this is what causes the persistence when the handler detects failure. additionally, it allows for the
                      * first part of this method to work properly. in that case, we are closing the connection on purpose.
@@ -234,6 +244,43 @@ public final class GoogolplexController implements Closeable {
                 })
             .channel();
     nameToChannel.put(name, channel);
+  }
+
+  public void refresh(String name) {
+    // closing channels will cause them to reconnect
+    if (name == null) {
+      // close all channels
+      for (Channel channel : nameToChannel.values()) {
+        channel.close();
+      }
+    } else {
+      // close specific channel
+      Channel channel = nameToChannel.get(name);
+      if (channel != null) {
+        channel.close();
+      }
+    }
+  }
+
+  public List<DeviceStatus> getConfiguredDevices() {
+    List<DeviceStatus> out = new ArrayList<>();
+    for (Map.Entry<String, DeviceInfo> entry : nameToDeviceInfo.entrySet()) {
+      String name = entry.getKey();
+      out.add(new DeviceStatus(entry.getValue(), nameToAddress.get(name), nameToChannel.get(name)));
+    }
+    Collections.sort(out);
+    return out;
+  }
+
+  public List<DeviceStatus> getUnconfiguredDevices() {
+    List<DeviceStatus> out = new ArrayList<>();
+    for (Map.Entry<String, InetSocketAddress> entry : nameToAddress.entrySet()) {
+      String name = entry.getKey();
+      if (!nameToDeviceInfo.containsKey(name)) {
+        out.add(new DeviceStatus(name, entry.getValue()));
+      }
+    }
+    return out;
   }
 
   @Override
