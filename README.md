@@ -7,9 +7,9 @@ Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
 There are several tools and libraries out there (see below), but this project is intended to be very minimalist.
-There is a simple UI to trigger refreshes. There is backing database, rather there is a simple JSON config file which is watched for changes.
+There is a simple UI to trigger refreshes. There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
 The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an iframe.
-The receiver application can be customized easily to suit your needs. 
+The receiver application can be customized easily to suit your needs.
 
 ## Requirements
 
