@@ -7,7 +7,7 @@ Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
 There are several tools and libraries out there (see below), but this project is intended to be very minimalist.
-There is no UI or backing database, rather there is a simple JSON config file which is watched for changes.
+There is a simple UI to trigger refreshes. There is backing database, rather there is a simple JSON config file which is watched for changes.
 The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an iframe.
 The receiver application can be customized easily to suit your needs. 
 
@@ -46,6 +46,9 @@ java -jar build/libs/googolplex-theater-all.jar
 ```
 will run the application with default settings.
 
+To provide resiliency, it is recommended to run the application as a daemon.
+See service descriptor files for [upstart](daemon/googolplex-theater.conf), [systemd](daemon/googolplex-theater.service), [launchd](daemon/com.jyuzawa.googolplex-theater.plist). They should work with minor modifications. Please refer to their respective installation guides to enable on your system.
+
 ### Case Study: Grafana Dashboards
 
 The maintainer has used this to show statistics dashboards in an software engineering context.
@@ -60,6 +63,8 @@ The maintainer has used this to show statistics dashboards in an software engine
 * Use a Raspberry Pi and install Java runtime.
 * Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * Run the application as a daemon using systemd or upstart or whatever you want.
+* Config is updated periodically by the platform health tean as our dashboard needs change.
+* In the event that a screen needs to be refreshed by any staff member by accessing the UI and hitting a few buttons.s
 
 ### Using a Custom Receiver
 
@@ -89,13 +94,31 @@ Run [spotless](https://github.com/diffplug/spotless) to ensure everything is pro
 
 This application overlaps in functionality with some of these fine projects:
 
-* [dashcast](https://github.com/stestagg/dashcast) - simple dashboard display application 
-* [greenscreen](https://github.com/groupon/greenscreen) - original digital signage implementation
-* [multicast](https://github.com/superhawk610/multicast) - a fork/refactor of greenscreen
+### Protocol implementations
 * [node-castv2](https://github.com/thibauts/node-castv2) - nodejs library
 * [nodecastor](https://github.com/vincentbernat/nodecastor) - nodejs library
 * [chromecast-java-api-v2](https://github.com/vitalidze/chromecast-java-api-v2) - java library
 * [pychromecast](https://github.com/balloob/pychromecast) - python library
+
+Foundational work has been done to research how the Chromecast protocol works and these protocol libraries have been developed in a variety of languages.
+These are simple multipurpose bindings rather than logical implementations. A lot of the headless senders are built off of these.
+
+### Browser Senders
+* [dashcast](https://github.com/stestagg/dashcast) - simple dashboard display application 
+* [chromecast-dashboard](https://github.com/boombatower/chromecast-dashboard) - similar to dashcast
+
+These applications cast directly from your browser. You may need to have your browser running. There are usually no persistence or reconnect capability.
+
+### Headless Senders
+* [greenscreen](https://github.com/groupon/greenscreen) - original digital signage implementation
+* [multicast](https://github.com/superhawk610/multicast) - a fork/refactor of greenscreen
+* [Chromecast-Kiosk](https://github.com/mrothenbuecher/Chromecast-Kiosk) - similar to greenscreen or multicast
+
+These applications cast without a Chrome browser running, rather they utilized the Chromecast protocol to establish a communication session with the devices.
+They provide a level of persistence in the event of failures. They utilize a variety of storage backends and have varying degrees of setup and configuration.
+They may utilize multicast DNS service discovery.
+
+This application is most similar to the headless sender projects. It does not use a protocol implementation library.
 
 ## Name
 
