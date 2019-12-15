@@ -128,6 +128,7 @@ public final class GoogolplexServerHandler extends SimpleChannelInboundHandler<F
       configuredDevicesContent.append("<tr class='");
       if (ipAddress == null) {
         ipAddress = "Not Found";
+        configuredDevicesContent.append("table-warning");
       } else if (disconnected) {
         configuredDevicesContent.append("table-danger");
       }
