@@ -120,36 +120,43 @@ public final class GoogolplexServerHandler extends SimpleChannelInboundHandler<F
       String name = status.name;
       String duration = status.duration;
       boolean disconnected = duration == null;
-      if (disconnected) {
-        duration = "Not Connected";
-      }
       String ipAddress = status.ipAddress;
 
-      configuredDevicesContent.append("<tr class='");
-      if (ipAddress == null) {
-        ipAddress = "Not Found";
-        configuredDevicesContent.append("table-warning");
-      } else if (disconnected) {
-        configuredDevicesContent.append("table-danger");
-      }
-      configuredDevicesContent.append("'><td>");
-      configuredDevicesContent.append(name);
-      configuredDevicesContent.append("</td><td>");
-      configuredDevicesContent.append(ipAddress);
-      configuredDevicesContent.append("</td><td>");
-      configuredDevicesContent.append(duration);
-      configuredDevicesContent.append("</td><td><code class='settings'>");
-      configuredDevicesContent.append(PRETTY_PRINTER.writeValueAsString(status.settings));
-      configuredDevicesContent.append("</code></td><td><form method='post' action='");
+      configuredDevicesContent.append(
+          "<div class='col-md-6 p-1'><div class='card'><div class='card-body'>");
+      configuredDevicesContent.append("<div class='float-right'>");
+      configuredDevicesContent.append("<form method='post' action='");
       QueryStringEncoder encoder = new QueryStringEncoder("/refresh");
       encoder.addParam("name", name);
       configuredDevicesContent.append(encoder.toString());
       configuredDevicesContent.append(
-          "'><input class='btn btn-primary' type='submit' value='Refresh'");
+          "'><input class='btn btn-primary btn-sm' type='submit' value='Refresh'");
       if (disconnected) {
         configuredDevicesContent.append(" disabled");
       }
-      configuredDevicesContent.append("></form></td></tr>");
+      configuredDevicesContent.append("></form></div>");
+      configuredDevicesContent.append("<h5 class='card-title'>");
+      configuredDevicesContent.append(name);
+      configuredDevicesContent.append("</h5><div class='card-text'>");
+      if (ipAddress == null) {
+        configuredDevicesContent.append("<div class='alert alert-warning'>Device Not Found</div>");
+      } else {
+        if (disconnected) {
+          configuredDevicesContent.append("<div class='alert alert-danger'>");
+          configuredDevicesContent.append(ipAddress);
+          configuredDevicesContent.append(" - disconnected</div>");
+        } else {
+          configuredDevicesContent.append("<div class='alert alert-success'>");
+          configuredDevicesContent.append(ipAddress);
+          configuredDevicesContent.append(" - connected for ");
+          configuredDevicesContent.append(duration);
+          configuredDevicesContent.append("</div>");
+        }
+      }
+      configuredDevicesContent.append("<code class='settings'>");
+      configuredDevicesContent.append(PRETTY_PRINTER.writeValueAsString(status.settings));
+      configuredDevicesContent.append("</code>");
+      configuredDevicesContent.append("</div></div></div></div>");
     }
 
     StringBuilder unconfiguredDevicesContent = new StringBuilder();

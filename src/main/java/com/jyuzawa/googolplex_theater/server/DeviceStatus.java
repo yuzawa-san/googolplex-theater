@@ -66,14 +66,29 @@ public final class DeviceStatus implements Comparable<DeviceStatus> {
     if (instant == null) {
       return null;
     }
+    StringBuilder out = new StringBuilder();
     long deltaSeconds = Duration.between(instant, Instant.now()).getSeconds();
-    long days = deltaSeconds / 86400L;
-    deltaSeconds %= 86400L;
-    long hours = deltaSeconds / 3600L;
-    deltaSeconds %= 3600L;
-    long minutes = deltaSeconds / 60L;
-    deltaSeconds %= 60L;
-    return String.format("<pre>%02dd%02dh%02dm%02ds</pre>", days, hours, minutes, deltaSeconds);
+    long seconds = deltaSeconds;
+    long days = seconds / 86400L;
+    if (deltaSeconds > 86400L) {
+      out.append(days).append("d");
+    }
+    seconds %= 86400L;
+
+    long hours = seconds / 3600L;
+    if (deltaSeconds > 3600L) {
+      out.append(hours).append("h");
+    }
+    seconds %= 3600L;
+
+    long minutes = seconds / 60L;
+    if (deltaSeconds > 60L) {
+      out.append(minutes).append("m");
+    }
+    seconds %= 60L;
+
+    out.append(seconds).append("s");
+    return out.toString();
   }
 
   @Override
