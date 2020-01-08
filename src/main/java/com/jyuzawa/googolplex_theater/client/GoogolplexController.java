@@ -189,7 +189,7 @@ public final class GoogolplexController implements Closeable {
       /*
        * kill the channel, so it will reconnect and this method will be called again, but skip this code path.
        */
-      safeClose(name, oldChannel);
+      safeClose(oldChannel);
       return;
     }
     // ensure that there is enough information to connect
@@ -264,9 +264,7 @@ public final class GoogolplexController implements Closeable {
    * @param channel
    * @return
    */
-  private void safeClose(String name, Channel channel) {
-    // reset the retry backoff
-    nameToBackoffSeconds.remove(name);
+  private void safeClose(Channel channel) {
     if (channel != null) {
       // mark the reload key, so the connection will roll over immediately
       channel.attr(GoogolplexClientHandler.RELOAD_KEY).set(Boolean.TRUE);
@@ -311,13 +309,13 @@ public final class GoogolplexController implements Closeable {
     // closing channels will cause them to reconnect
     if (name == null) {
       // close all channels
-      for (Map.Entry<String, Channel> entry : nameToChannel.entrySet()) {
-        safeClose(entry.getKey(), entry.getValue());
+      for (Channel channel : nameToChannel.values()) {
+        safeClose(channel);
       }
     } else {
       // close specific channel
       Channel channel = nameToChannel.get(name);
-      safeClose(name, channel);
+      safeClose(channel);
     }
   }
 
