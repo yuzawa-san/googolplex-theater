@@ -36,6 +36,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
       AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_device");
   public static final AttributeKey<Instant> CONNECTION_BIRTH_KEY =
       AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_birth");
+  public static final AttributeKey<Boolean> RELOAD_KEY =
+      AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_reload");
 
   /**
    * This is a published application for public use. The URL is
@@ -46,7 +48,6 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   private static final String DEFAULT_RECEIVER_ID = "receiver-0";
   private static final int HEARTBEAT_SECONDS = 5;
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
-  private static final int ERROR_RETRY_SECONDS = 60;
 
   /** This custom namespace is used to identify messages related to our application. */
   private static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
@@ -222,14 +223,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
     if (receiverPayload.reason != null) {
       // the presence of the reason indicates the launch likely failed for some reason
       LOG.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
-      // do not close immediately, so we can avoid reconnecting incessantly
-      ctx.executor()
-          .schedule(
-              () -> {
-                ctx.close();
-              },
-              ERROR_RETRY_SECONDS,
-              TimeUnit.SECONDS);
+      // close to reload connection
+      ctx.close();
       return;
     }
     if (!receiverPayload.isApplicationStatus()) {
@@ -241,7 +236,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
        * refresh.
        */
       LOG.info("DOWN '{}'", name);
-      ctx.channel().close();
+      ctx.close();
       return;
     }
     String transportId = receiverPayload.getApplicationTransportId(appId);
@@ -262,6 +257,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
       custom.put("requestId", requestId++);
       CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, transportId, custom);
       ctx.writeAndFlush(customMessage);
+      ctx.channel().attr(RELOAD_KEY).set(Boolean.FALSE);
     }
   }
 

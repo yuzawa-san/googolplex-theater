@@ -35,7 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import org.slf4j.Logger;
@@ -51,7 +53,10 @@ public final class GoogolplexController implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexController.class);
 
   private static final int CONNECT_TIMEOUT_MILLIS = 5000;
-  private static final int CONNECTION_RETRY_SECONDS = 60;
+
+  private static final int BASE_RECONNECT_SECONDS = 15;
+  private static final int RECONNECT_NOISE_SECONDS = 5;
+  private static final int RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
 
   private final EventLoopGroup eventLoopGroup;
   private final EventLoop eventLoop;
@@ -60,6 +65,7 @@ public final class GoogolplexController implements Closeable {
   private final Map<String, String> serviceNameToName;
   private final Map<String, InetSocketAddress> nameToAddress;
   private final Map<String, Channel> nameToChannel;
+  private final Map<String, Integer> nameToBackoffSeconds;
 
   public GoogolplexController(String appId) throws IOException {
     // the state is maintained in these maps
@@ -67,6 +73,7 @@ public final class GoogolplexController implements Closeable {
     this.serviceNameToName = new ConcurrentHashMap<>();
     this.nameToAddress = new ConcurrentHashMap<>();
     this.nameToChannel = new ConcurrentHashMap<>();
+    this.nameToBackoffSeconds = new ConcurrentHashMap<>();
     this.eventLoopGroup = new NioEventLoopGroup();
     this.eventLoop = eventLoopGroup.next();
     SslContext sslContext =
@@ -182,7 +189,7 @@ public final class GoogolplexController implements Closeable {
       /*
        * kill the channel, so it will reconnect and this method will be called again, but skip this code path.
        */
-      oldChannel.close();
+      safeClose(name, oldChannel);
       return;
     }
     // ensure that there is enough information to connect
@@ -204,6 +211,18 @@ public final class GoogolplexController implements Closeable {
                    * NOTE: this callback is not executed from the controller's eventLoop, so we must use eventLoop.execute and
                    * eventLoop.schedule to ensure concurrency.
                    */
+                  Consumer<Integer> reconnection =
+                      (retrySeconds) -> {
+                        // schedule a reconnection in a certain amount of seconds in the future
+                        LOG.info("RECONNECTING '{}' in {}s", name, retrySeconds);
+                        eventLoop.schedule(
+                            () -> {
+                              nameToChannel.remove(name);
+                              apply(name);
+                            },
+                            retrySeconds,
+                            TimeUnit.SECONDS);
+                      };
                   if (f.isSuccess()) {
                     LOG.info("CONNECTED '{}'", name);
                     Channel ch = f.channel();
@@ -218,11 +237,12 @@ public final class GoogolplexController implements Closeable {
                         .addListener(
                             (ChannelFuture closeFuture) -> {
                               LOG.info("DISCONNECTED '{}'", name);
-                              eventLoop.execute(
-                                  () -> {
-                                    nameToChannel.remove(name);
-                                    apply(name);
-                                  });
+                              Boolean reload =
+                                  closeFuture
+                                      .channel()
+                                      .attr(GoogolplexClientHandler.RELOAD_KEY)
+                                      .get();
+                              reconnection.accept(getRetrySeconds(reload, name));
                             });
                   } else {
                     Throwable cause = f.cause();
@@ -231,19 +251,55 @@ public final class GoogolplexController implements Closeable {
                         name,
                         cause.getClass().getSimpleName(),
                         cause.getMessage());
-                    // reschedule a reconnect.
-                    // TODO: exponential backoff?
-                    eventLoop.schedule(
-                        () -> {
-                          nameToChannel.remove(name);
-                          apply(name);
-                        },
-                        CONNECTION_RETRY_SECONDS,
-                        TimeUnit.SECONDS);
+                    reconnection.accept(getRetrySeconds(null, name));
                   }
                 })
             .channel();
     nameToChannel.put(name, channel);
+  }
+
+  /**
+   * This closes a connection to a device and causes it to reconnect immediately.
+   *
+   * @param channel
+   * @return
+   */
+  private void safeClose(String name, Channel channel) {
+    // reset the retry backoff
+    nameToBackoffSeconds.remove(name);
+    if (channel != null) {
+      // mark the reload key, so the connection will roll over immediately
+      channel.attr(GoogolplexClientHandler.RELOAD_KEY).set(Boolean.TRUE);
+      channel.close();
+    }
+  }
+
+  /**
+   * Calculate a retry time, based on an exponential backoff
+   *
+   * @param reload whether an immediate reload should occur
+   * @param name device name
+   * @return seconds
+   */
+  private Integer getRetrySeconds(Boolean reload, String name) {
+    if (reload != null) {
+      if (reload) {
+        // the channel should reload immediately
+        return 0;
+      }
+      // the channel was up and running, so reset the backoff
+      nameToBackoffSeconds.remove(name);
+    }
+    // retry based on an exponential backoff
+    return nameToBackoffSeconds.compute(
+            name,
+            (k, v) -> {
+              if (v == null) {
+                return BASE_RECONNECT_SECONDS;
+              }
+              return v * RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER;
+            })
+        + ThreadLocalRandom.current().nextInt(RECONNECT_NOISE_SECONDS);
   }
 
   /**
@@ -255,15 +311,13 @@ public final class GoogolplexController implements Closeable {
     // closing channels will cause them to reconnect
     if (name == null) {
       // close all channels
-      for (Channel channel : nameToChannel.values()) {
-        channel.close();
+      for (Map.Entry<String, Channel> entry : nameToChannel.entrySet()) {
+        safeClose(entry.getKey(), entry.getValue());
       }
     } else {
       // close specific channel
       Channel channel = nameToChannel.get(name);
-      if (channel != null) {
-        channel.close();
-      }
+      safeClose(name, channel);
     }
   }
 
