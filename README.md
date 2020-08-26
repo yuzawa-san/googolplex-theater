@@ -24,7 +24,7 @@ The receiver application can be customized easily to suit your needs.
 ./gradlew shadowJar
 ```
 
-The result of this is a fat-JAR (a JAR with all dependencies): `build/libs/googolplex-theater-all.jar`
+The result of this is a fat-JAR (a JAR with all dependencies): `build/libs/googolplex-theater-VERSION-all.jar`
 
 ## Configuration
 
@@ -37,12 +37,12 @@ Some example use cases involve using cron and putting your config under version 
 ## Running
 
 ```
-java -jar build/libs/googolplex-theater-all.jar --help
+java -jar build/libs/googolplex-theater-VERSION-all.jar --help
 ```
 will show all usage options.
 
 ```
-java -jar build/libs/googolplex-theater-all.jar
+java -jar build/libs/googolplex-theater-VERSION-all.jar
 ```
 will run the application with default settings.
 
