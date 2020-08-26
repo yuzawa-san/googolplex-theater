@@ -64,7 +64,7 @@ The maintainer has used this to show statistics dashboards in an software engine
 * Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * Run the application as a daemon using systemd or upstart or whatever you want.
 * Config is updated periodically by the platform health tean as our dashboard needs change.
-* In the event that a screen needs to be refreshed by any staff member by accessing the UI and hitting a few buttons.s
+* In the event that a screen needs to be refreshed by any staff member by accessing the UI and hitting a few buttons.
 
 ### Using a Custom Receiver
 
@@ -83,6 +83,11 @@ Pass your APP_ID in as a command line argument when you run, and your receiver w
 This is intended to be minimalist and easy to set up, so advanced features are not the goal here. Some other projects listed below may be more suited for your use case.
 
 This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
+
+The protobuf must be compiled manually prior to IDE development:
+```
+./gradlew generateProto
+```
 
 Run [spotless](https://github.com/diffplug/spotless) to ensure everything is properly formatted:
 
