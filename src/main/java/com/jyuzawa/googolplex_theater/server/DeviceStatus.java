@@ -7,6 +7,7 @@ import io.netty.channel.Channel;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * A representation of a device's name, settings, current address, and connection age.
@@ -94,5 +95,25 @@ public final class DeviceStatus implements Comparable<DeviceStatus> {
   @Override
   public int compareTo(DeviceStatus o) {
     return name.compareTo(o.name);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null) {
+      return false;
+    }
+    if (o == this) {
+      return true;
+    }
+    if (!(o instanceof DeviceStatus)) {
+      return false;
+    }
+    DeviceStatus other = (DeviceStatus) o;
+    return Objects.equals(name, other.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return name.hashCode();
   }
 }

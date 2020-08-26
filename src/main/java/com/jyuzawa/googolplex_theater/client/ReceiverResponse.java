@@ -1,5 +1,7 @@
 package com.jyuzawa.googolplex_theater.client;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
@@ -16,13 +18,28 @@ public final class ReceiverResponse {
   public String reason;
 
   private static final class Status {
-    public List<ReceiverResponse.Application> applications;
+    private final List<ReceiverResponse.Application> applications;
+
+    @JsonCreator
+    public Status(@JsonProperty("applications") List<ReceiverResponse.Application> applications) {
+      this.applications = applications;
+    }
   }
 
   private static final class Application {
-    public String appId;
-    public boolean isIdleScreen;
-    public String transportId;
+    private final String appId;
+    private final boolean isIdleScreen;
+    private final String transportId;
+
+    @JsonCreator
+    public Application(
+        @JsonProperty("appId") String appId,
+        @JsonProperty("isIdleScreen") boolean isIdleScreen,
+        @JsonProperty("transportId") String transportId) {
+      this.appId = appId;
+      this.isIdleScreen = isIdleScreen;
+      this.transportId = transportId;
+    }
   }
 
   /**
