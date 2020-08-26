@@ -89,10 +89,9 @@ The protobuf must be compiled manually prior to IDE development:
 ./gradlew generateProto
 ```
 
-Run [spotless](https://github.com/diffplug/spotless) to ensure everything is properly formatted:
-
+This will run all of the checks:
 ```
-./gradlew spotlessApply
+./gradlew build
 ```
 
 ## Related Projects

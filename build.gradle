@@ -35,11 +35,7 @@ protobuf {
 
 spotless {
 	java {
-		target project.fileTree(project.rootDir) {
-			include 'src/**/*.java'
-			// ignored compiled protobuf
-			exclude '${protobuf.generatedFilesBaseDir}/main/java/**/*.*'
-		}
+		targetExclude("**/CastMessages.java")
 		removeUnusedImports()
 		googleJavaFormat()
 	}
@@ -83,6 +79,7 @@ shadowJar {
 
 spotbugs {
 	ignoreFailures = true
+	excludeFilter = file('spotbugs_exclude.xml')
 }
 
 spotbugsMain {
