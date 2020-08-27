@@ -1,4 +1,5 @@
 # googolplex-theater
+by yuzawa-san
 
 ![Icon](src/main/resources/favicon.png)
 
@@ -17,37 +18,41 @@ The receiver application can be customized easily to suit your needs.
 * The application must run on the same network as your Chromecasts.
 * Multicast DNS must work on your network and on the machine you run the application on.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
+* Linux or MacOS is preferred. Windows is not tested.
 
-## Compilation
+## Installation
+
+Download a [release version](https://github.com/yuzawa-san/googolplex-theater/releases) ZIP archive.
+
+Alternatively, clone/download this repo, and run:
+```
+./gradlew distZip
+```
+This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
+
+Expand the archive and cd into directory.
 
 ```
-./gradlew shadowJar
+./bin/googolplex-theater --help
 ```
+will show all options.
 
-The result of this is a fat-JAR (a JAR with all dependencies): `build/libs/googolplex-theater-VERSION-all.jar`
+```
+./bin/googolplex-theater
+```
+will run the application with default settings.
 
-## Configuration
+### Configuration
 
-A sample cast configuration is provided in `SAMPLE_cast_config.json`.
-Copy over to `cast_config.json` and edit accordingly.
+The cast configuration is defined in `./conf/cast_config.json`.
 The location of your configuration can be customized using a command line argument.
 The file is automatically watched for changes.
 Some example use cases involve using cron and putting your config under version control and pulling from origin periodically, or downloading from S3/web, or updating using rsync/scp.
 
-## Running
-
-```
-java -jar build/libs/googolplex-theater-VERSION-all.jar --help
-```
-will show all usage options.
-
-```
-java -jar build/libs/googolplex-theater-VERSION-all.jar
-```
-will run the application with default settings.
+### Running as Daemon
 
 To provide resiliency, it is recommended to run the application as a daemon.
-See service descriptor files for [upstart](daemon/googolplex-theater.conf), [systemd](daemon/googolplex-theater.service), [launchd](daemon/com.jyuzawa.googolplex-theater.plist). They should work with minor modifications. Please refer to their respective installation guides to enable on your system.
+See service descriptor files for upstart, systemd, and launchd in the `./service/` directory. They should work with minor modifications. Please refer to their respective installation guides to enable on your system.
 
 ### Case Study: Grafana Dashboards
 
@@ -57,14 +62,13 @@ The maintainer has used this to show statistics dashboards in an software engine
 * Create one Grafana playlist per device.
 * Figure out how to use proper Grafana auth (proxy, token, etc).
 * Make your cast config file with each playlist url per device.
-* Place the cast config file under version control (git) or store it someplace accessible (http/s3/scp).
-* Compile application locally.
-* Copy application over to Raspberry Pi.
-* Use a Raspberry Pi and install Java runtime.
+* Place the cast config file under version control (git) or store it someplace accessible (http/s3/gcs).
+* Download application on Raspberry Pi.
+* Install Java runtime.
 * Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * Run the application as a daemon using systemd or upstart or whatever you want.
-* Config is updated periodically by the platform health tean as our dashboard needs change.
-* In the event that a screen needs to be refreshed by any staff member by accessing the UI and hitting a few buttons.
+* Config is updated periodically as our dashboard needs change. The updates are automatically picked up.
+* If a screen needs to be refreshed, one can do so by accessing the UI and hitting a few buttons.
 
 ### Using a Custom Receiver
 
@@ -78,21 +82,29 @@ Host your modified file via HTTP on your hosting provider of choice. Then point 
 
 Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
 
-## Contributions
+## Contributing
+
+_NOTE: due to COVID-19 the maintainer does not have regular access to the hardware to test this application._
 
 This is intended to be minimalist and easy to set up, so advanced features are not the goal here. Some other projects listed below may be more suited for your use case.
 
 This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
 
-The protobuf must be compiled manually prior to IDE development:
+### Compilation
+
+```
+./gradlew build
+```
+will compile, check, and build a JAR.
+
+NOTE: Sometimes it may be necessary to compile protobuf manually prior to IDE development:
 ```
 ./gradlew generateProto
 ```
 
-This will run all of the checks:
-```
-./gradlew build
-```
+### TODO
+
+* Dockerfile?
 
 ## Related Projects
 

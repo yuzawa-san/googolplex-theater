@@ -99,6 +99,14 @@ jar {
 	}
 }
 
+distributions {
+	main {
+		contents {
+			from 'LICENSE'
+		}
+	}
+}
+
 spotbugs {
 	ignoreFailures = true
 	excludeFilter = file('spotbugs_exclude.xml')

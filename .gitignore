@@ -17,4 +17,3 @@ cmake-build-*/
 .project
 .classpath
 bin/
-cast_config.json
