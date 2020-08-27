@@ -12,4 +12,4 @@ Restart=on-failure
 RestartSec=1
 StartLimitInterval=60
 StartLimitBurst=5
-ExecStart=/usr/bin/java -jar /path/to/you/googolplex-theater-all.jar --cast-config /path/to/your/config.json
+ExecStart=/path/to/your/googolplex-theater-VERSION/bin/googolplex-theater

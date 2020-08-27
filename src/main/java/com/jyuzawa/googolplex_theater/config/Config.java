@@ -95,7 +95,10 @@ public final class Config {
     if (line.hasOption("cast-config")) {
       this.castConfigPath = Paths.get(line.getOptionValue("cast-config")).toAbsolutePath();
     } else {
-      this.castConfigPath = Paths.get(CastConfigLoader.DEFAULT_PATH).toAbsolutePath();
+      // NOTE: gradle does not expose APP_HOME, but they do expose OLDPWD.
+      String appHome = System.getenv().getOrDefault("OLDPWD", ".");
+      this.castConfigPath =
+          Paths.get(appHome + "/" + CastConfigLoader.DEFAULT_PATH).toAbsolutePath();
     }
     File castConfigFile = getCastConfigPath().toFile();
     if (!castConfigFile.exists() || !castConfigFile.isFile()) {

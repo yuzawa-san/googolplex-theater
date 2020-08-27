@@ -26,7 +26,7 @@ Download a [release version](https://github.com/yuzawa-san/googolplex-theater/re
 
 Alternatively, clone/download this repo, and run:
 ```
-./gradlew distZip
+./gradlew build distZip
 ```
 This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
 
@@ -90,13 +90,6 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 
 This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
 
-### Compilation
-
-```
-./gradlew build
-```
-will compile, check, and build a JAR.
-
 NOTE: Sometimes it may be necessary to compile protobuf manually prior to IDE development:
 ```
 ./gradlew generateProto
@@ -104,7 +97,7 @@ NOTE: Sometimes it may be necessary to compile protobuf manually prior to IDE de
 
 ### TODO
 
-* Dockerfile?
+* Dockerfile? (may not work with mdns)
 
 ## Related Projects
 

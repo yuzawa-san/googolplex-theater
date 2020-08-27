@@ -50,7 +50,7 @@ public final class GoogolplexTheater {
     } catch (ParseException e) {
       System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("java -jar googolplex-theater-all.jar", Config.OPTIONS, true);
+      formatter.printHelp("googolplex-theater", Config.OPTIONS, true);
       System.exit(1);
     } catch (Exception e) {
       LOG.error("Failed to start", e);

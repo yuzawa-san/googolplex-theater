@@ -7,11 +7,7 @@
     <string>com.jyuzawa.googolplex-theater</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/usr/bin/java</string>
-      <string>-jar</string>
-      <string>/path/to/you/googolplex-theater-all.jar</string>
-      <string>--cast-config</string>
-      <string>/path/to/your/config.json</string>
+      <string>/path/to/your/googolplex-theater-VERSION/bin/googolplex-theater</string>
     </array>
     <key>KeepAlive</key>
     <true />

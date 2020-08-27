@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public final class CastConfigLoader implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(CastConfigLoader.class);
 
-  public static final String DEFAULT_PATH = "cast_config.json";
+  public static final String DEFAULT_PATH = "conf/cast_config.json";
 
   private final ExecutorService executor;
   private final Path path;
