@@ -3,7 +3,6 @@ plugins {
 	id "com.google.protobuf" version "0.8.13"
 	id "com.diffplug.spotless" version "5.2.0"
 	id "com.github.spotbugs" version "4.5.0"
-	id "com.github.johnrengelman.shadow" version "6.0.0"
 	id "com.github.ben-manes.versions" version "0.29.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 }
@@ -11,6 +10,7 @@ plugins {
 apply plugin: "java"
 apply plugin: "eclipse"
 apply plugin: "idea"
+apply plugin: "application"
 
 repositories {
 	mavenCentral()
@@ -83,11 +83,11 @@ def getGitHash = { ->
 	return stdout.toString().trim()
 }
 
-shadowJar {
-	mergeServiceFiles()
+mainClassName = 'com.jyuzawa.googolplex_theater.GoogolplexTheater'
+
+jar {
 	manifest {
 		attributes(
-			'Main-Class'     : 'com.jyuzawa.googolplex_theater.GoogolplexTheater',
 			'Built-By'       : System.properties['user.name'],
 			'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
 			'Build-Revision' : getGitHash(),
