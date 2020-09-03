@@ -1,5 +1,7 @@
 package com.jyuzawa.googolplex_theater.config;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Collections;
 import java.util.List;
@@ -13,11 +15,26 @@ import java.util.Objects;
  * @author jyuzawa
  */
 public final class CastConfig {
-  public List<DeviceInfo> devices = Collections.emptyList();
+  public final List<DeviceInfo> devices;
+
+  @JsonCreator
+  public CastConfig(@JsonProperty List<DeviceInfo> devices) {
+    if (devices == null) {
+      this.devices = Collections.emptyList();
+    } else {
+      this.devices = Collections.unmodifiableList(devices);
+    }
+  }
 
   public static final class DeviceInfo {
-    public String name;
-    public JsonNode settings;
+    public final String name;
+    public final JsonNode settings;
+
+    @JsonCreator
+    public DeviceInfo(@JsonProperty String name, @JsonProperty JsonNode settings) {
+      this.name = name;
+      this.settings = settings;
+    }
 
     @Override
     /**
@@ -36,6 +53,11 @@ public final class CastConfig {
       }
       DeviceInfo other = (DeviceInfo) o;
       return Objects.equals(name, other.name) && Objects.equals(settings, other.settings);
+    }
+
+    @Override
+    public int hashCode() {
+      return name.hashCode() + settings.hashCode();
     }
   }
 }

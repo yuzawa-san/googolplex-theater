@@ -208,6 +208,9 @@ public final class GoogolplexServerHandler extends SimpleChannelInboundHandler<F
   private static byte[] loadBytes(String resource) {
     try {
       InputStream inputStream = GoogolplexServerHandler.class.getResourceAsStream(resource);
+      if (inputStream == null) {
+        throw new IllegalArgumentException("Resource could not be found");
+      }
       try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
         byte[] b = new byte[512];
         int n = 0;
@@ -215,6 +218,8 @@ public final class GoogolplexServerHandler extends SimpleChannelInboundHandler<F
           output.write(b, 0, n);
         }
         return output.toByteArray();
+      } finally {
+        inputStream.close();
       }
     } catch (Exception e) {
       LOG.error("Failed to load resource", e);
