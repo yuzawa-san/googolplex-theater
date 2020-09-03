@@ -18,7 +18,7 @@ public final class CastConfig {
   public final List<DeviceInfo> devices;
 
   @JsonCreator
-  public CastConfig(@JsonProperty List<DeviceInfo> devices) {
+  public CastConfig(@JsonProperty("devices") List<DeviceInfo> devices) {
     if (devices == null) {
       this.devices = Collections.emptyList();
     } else {
@@ -31,7 +31,8 @@ public final class CastConfig {
     public final JsonNode settings;
 
     @JsonCreator
-    public DeviceInfo(@JsonProperty String name, @JsonProperty JsonNode settings) {
+    public DeviceInfo(
+        @JsonProperty("name") String name, @JsonProperty("settings") JsonNode settings) {
       this.name = name;
       this.settings = settings;
     }

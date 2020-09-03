@@ -20,10 +20,10 @@ public final class ReceiverResponse {
 
   @JsonCreator
   public ReceiverResponse(
-      @JsonProperty int requestId,
-      @JsonProperty String type,
-      @JsonProperty ReceiverResponse.Status status,
-      @JsonProperty String reason) {
+      @JsonProperty("requestId") int requestId,
+      @JsonProperty("type") String type,
+      @JsonProperty("status") ReceiverResponse.Status status,
+      @JsonProperty("reason") String reason) {
     this.requestId = requestId;
     this.type = type;
     this.status = status;
@@ -34,7 +34,7 @@ public final class ReceiverResponse {
     public final List<ReceiverResponse.Application> applications;
 
     @JsonCreator
-    public Status(@JsonProperty List<ReceiverResponse.Application> applications) {
+    public Status(@JsonProperty("applications") List<ReceiverResponse.Application> applications) {
       if (applications == null) {
         this.applications = Collections.emptyList();
       } else {
@@ -50,9 +50,9 @@ public final class ReceiverResponse {
 
     @JsonCreator
     public Application(
-        @JsonProperty String appId,
-        @JsonProperty boolean isIdleScreen,
-        @JsonProperty String transportId) {
+        @JsonProperty("appId") String appId,
+        @JsonProperty("isIdleScreen") boolean isIdleScreen,
+        @JsonProperty("transportId") String transportId) {
       this.appId = appId;
       this.isIdleScreen = isIdleScreen;
       this.transportId = transportId;
