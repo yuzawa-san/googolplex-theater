@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author jyuzawa
  */
-public final class GoogolplexController implements Closeable {
+public final class GoogolplexController implements Closeable, Consumer<CastConfig> {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexController.class);
 
   private static final int CONNECT_TIMEOUT_MILLIS = 5000;
@@ -111,7 +111,8 @@ public final class GoogolplexController implements Closeable {
    *
    * @param config the settings loaded from the file
    */
-  public void loadConfig(CastConfig config) {
+  @Override
+  public void accept(CastConfig config) {
     eventLoop.execute(
         () -> {
           Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());

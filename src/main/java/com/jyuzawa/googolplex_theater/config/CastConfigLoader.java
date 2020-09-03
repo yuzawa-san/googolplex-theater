@@ -1,6 +1,5 @@
 package com.jyuzawa.googolplex_theater.config;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,6 +11,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +28,10 @@ public final class CastConfigLoader implements Closeable {
 
   private final ExecutorService executor;
   private final Path path;
-  private final GoogolplexController controller;
+  private final Consumer<CastConfig> consumer;
 
-  public CastConfigLoader(GoogolplexController controller, Path castConfigPath) throws IOException {
-    this.controller = controller;
+  public CastConfigLoader(Consumer<CastConfig> consumer, Path castConfigPath) throws IOException {
+    this.consumer = consumer;
     this.executor = Executors.newSingleThreadExecutor();
     this.path = castConfigPath;
     LOG.info("Using cast config: {}", castConfigPath.toAbsolutePath());
@@ -83,7 +83,7 @@ public final class CastConfigLoader implements Closeable {
   private void load() throws IOException {
     LOG.info("Reloading cast config");
     CastConfig out = JsonUtil.MAPPER.readValue(path.toFile(), CastConfig.class);
-    controller.loadConfig(out);
+    consumer.accept(out);
   }
 
   @Override
