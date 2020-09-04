@@ -2,8 +2,8 @@ language: java
 install: true
 
 os: linux
-dist: trusty
-jdk: oraclejdk8
+dist: focal
+jdk: openjdk11
 
 env:
   - CI=true
