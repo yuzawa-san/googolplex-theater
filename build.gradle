@@ -86,6 +86,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
 	implementation 'org.jmdns:jmdns:3.5.5'
 	implementation 'commons-cli:commons-cli:1.4'
+	testImplementation 'org.mockito:mockito-core:3.5.9'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 }

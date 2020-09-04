@@ -11,7 +11,7 @@ import java.util.List;
  * @author jyuzawa
  */
 public final class ReceiverResponse {
-  private static final String TYPE_RECEIVER_STATUS = "RECEIVER_STATUS";
+  static final String TYPE_RECEIVER_STATUS = "RECEIVER_STATUS";
 
   public final int requestId;
   public final String type;
@@ -30,7 +30,7 @@ public final class ReceiverResponse {
     this.reason = reason;
   }
 
-  private static final class Status {
+  static final class Status {
     public final List<ReceiverResponse.Application> applications;
 
     @JsonCreator
@@ -43,7 +43,7 @@ public final class ReceiverResponse {
     }
   }
 
-  private static final class Application {
+  static final class Application {
     public final String appId;
     public final boolean isIdleScreen;
     public final String transportId;

@@ -25,7 +25,7 @@ import org.apache.commons.cli.ParseException;
 public final class Config {
 
   public static final Options OPTIONS = generateOptions();
-  private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]{8}$");
+  private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
 
   private final String appId;
   private final Path castConfigPath;
@@ -83,7 +83,7 @@ public final class Config {
 
     // application id: check against pattern.
     if (line.hasOption("app-id")) {
-      this.appId = line.getOptionValue("app_id");
+      this.appId = line.getOptionValue("app-id");
     } else {
       this.appId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
     }

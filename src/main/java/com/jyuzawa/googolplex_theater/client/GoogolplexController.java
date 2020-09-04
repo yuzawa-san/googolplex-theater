@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -54,8 +55,8 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
 
   private static final int CONNECT_TIMEOUT_MILLIS = 5000;
 
-  private static final int BASE_RECONNECT_SECONDS = 15;
-  private static final int RECONNECT_NOISE_SECONDS = 5;
+  private static final int DEFAULT_BASE_RECONNECT_SECONDS = 15;
+  private static final int DEFAULT_RECONNECT_NOISE_SECONDS = 5;
   private static final int RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
 
   private final EventLoopGroup eventLoopGroup;
@@ -66,14 +67,23 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
   private final Map<String, InetSocketAddress> nameToAddress;
   private final Map<String, Channel> nameToChannel;
   private final Map<String, Integer> nameToBackoffSeconds;
+  private final int baseReconnectSeconds;
+  private final int reconnectNoiseSeconds;
 
   public GoogolplexController(String appId) throws IOException {
+    this(appId, DEFAULT_BASE_RECONNECT_SECONDS, DEFAULT_RECONNECT_NOISE_SECONDS);
+  }
+
+  public GoogolplexController(String appId, int baseReconnectSeconds, int reconnectNoiseSeconds)
+      throws IOException {
     // the state is maintained in these maps
     this.nameToDeviceInfo = new ConcurrentHashMap<>();
     this.serviceNameToName = new ConcurrentHashMap<>();
     this.nameToAddress = new ConcurrentHashMap<>();
     this.nameToChannel = new ConcurrentHashMap<>();
     this.nameToBackoffSeconds = new ConcurrentHashMap<>();
+    this.baseReconnectSeconds = baseReconnectSeconds;
+    this.reconnectNoiseSeconds = reconnectNoiseSeconds;
     this.eventLoopGroup = new NioEventLoopGroup();
     this.eventLoop = eventLoopGroup.next();
     SslContext sslContext =
@@ -113,28 +123,34 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
    */
   @Override
   public void accept(CastConfig config) {
-    eventLoop.execute(
-        () -> {
-          Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-          for (DeviceInfo deviceInfo : config.devices) {
-            String name = deviceInfo.name;
-            // mark that we should not remove this device
-            namesToRemove.remove(name);
-            DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
-            // ignore unchanged devices
-            if (!deviceInfo.equals(oldDeviceInfo)) {
-              LOG.info("CONFIG_UPDATED '{}'", name);
-              nameToDeviceInfo.put(name, deviceInfo);
-              apply(name);
-            }
-          }
-          // remove devices that were missing in the new config
-          for (String name : namesToRemove) {
-            LOG.info("CONFIG_REMOVED '{}'", name);
-            nameToDeviceInfo.remove(name);
-            apply(name);
-          }
-        });
+    try {
+      eventLoop
+          .submit(
+              () -> {
+                Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
+                for (DeviceInfo deviceInfo : config.devices) {
+                  String name = deviceInfo.name;
+                  // mark that we should not remove this device
+                  namesToRemove.remove(name);
+                  DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
+                  // ignore unchanged devices
+                  if (!deviceInfo.equals(oldDeviceInfo)) {
+                    LOG.info("CONFIG_UPDATED '{}'", name);
+                    nameToDeviceInfo.put(name, deviceInfo);
+                    apply(name);
+                  }
+                }
+                // remove devices that were missing in the new config
+                for (String name : namesToRemove) {
+                  LOG.info("CONFIG_REMOVED '{}'", name);
+                  nameToDeviceInfo.remove(name);
+                  apply(name);
+                }
+              })
+          .get();
+    } catch (Exception e) {
+      LOG.error("Failed to load config", e);
+    }
   }
 
   /**
@@ -142,38 +158,46 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
    * already.
    *
    * @param event mdns info
+   * @throws ExecutionException
+   * @throws InterruptedException
    */
   public void register(ServiceEvent event) {
-    eventLoop.execute(
-        () -> {
-          // the device information may not be full
-          ServiceInfo info = event.getInfo();
-          String name = info.getPropertyString("fn");
-          if (name == null) {
-            LOG.debug("Found unnamed cast:\n{}", info);
-            return;
-          }
-          String serviceName = event.getName();
-          serviceNameToName.put(serviceName, name);
-          InetAddress[] addresses = info.getInetAddresses();
-          if (addresses == null || addresses.length == 0) {
-            LOG.debug("Found unaddressable cast:\n{}", info);
-            return;
-          }
-          /*
-           * we choose the first address. there should usually be just one. the mdns library returns ipv4 addresses
-           * before ipv6.
-           */
-          InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
-          InetSocketAddress oldAddress = nameToAddress.put(name, address);
-          if (!address.equals(oldAddress)) {
-            /*
-             * this is a newly discovered device, or an existing device whose address was updated.
-             */
-            LOG.info("REGISTER '{}' {}", name, address);
-            apply(name);
-          }
-        });
+    try {
+      eventLoop
+          .submit(
+              () -> {
+                // the device information may not be full
+                ServiceInfo info = event.getInfo();
+                String name = info.getPropertyString("fn");
+                if (name == null) {
+                  LOG.debug("Found unnamed cast:\n{}", info);
+                  return;
+                }
+                String serviceName = event.getName();
+                serviceNameToName.put(serviceName, name);
+                InetAddress[] addresses = info.getInetAddresses();
+                if (addresses == null || addresses.length == 0) {
+                  LOG.debug("Found unaddressable cast:\n{}", info);
+                  return;
+                }
+                /*
+                 * we choose the first address. there should usually be just one. the mdns library returns ipv4
+                 * addresses before ipv6.
+                 */
+                InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
+                InetSocketAddress oldAddress = nameToAddress.put(name, address);
+                if (!address.equals(oldAddress)) {
+                  /*
+                   * this is a newly discovered device, or an existing device whose address was updated.
+                   */
+                  LOG.info("REGISTER '{}' {}", name, address);
+                  apply(name);
+                }
+              })
+          .get();
+    } catch (Exception e) {
+      LOG.error("Failed to register cast", e);
+    }
   }
 
   /**
@@ -290,15 +314,19 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
       nameToBackoffSeconds.remove(name);
     }
     // retry based on an exponential backoff
-    return nameToBackoffSeconds.compute(
+    int backoffSeconds =
+        nameToBackoffSeconds.compute(
             name,
             (k, v) -> {
               if (v == null) {
-                return BASE_RECONNECT_SECONDS;
+                return baseReconnectSeconds;
               }
               return v * RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER;
-            })
-        + ThreadLocalRandom.current().nextInt(RECONNECT_NOISE_SECONDS);
+            });
+    if (reconnectNoiseSeconds > 0) {
+      backoffSeconds += ThreadLocalRandom.current().nextInt(reconnectNoiseSeconds);
+    }
+    return backoffSeconds;
   }
 
   /**
@@ -345,6 +373,6 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
 
   @Override
   public void close() {
-    eventLoopGroup.shutdownGracefully();
+    eventLoopGroup.shutdownGracefully().syncUninterruptibly();
   }
 }
