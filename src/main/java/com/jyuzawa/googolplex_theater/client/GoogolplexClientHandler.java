@@ -201,6 +201,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
         break;
       case NAMESPACE_CUSTOM:
         LOG.info("MESSAGE '{}' {}", name, msg.getPayloadUtf8());
+        break;
       default:
         LOG.debug("other message");
         break;

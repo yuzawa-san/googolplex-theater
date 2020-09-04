@@ -83,7 +83,7 @@ public final class Config {
 
     // application id: check against pattern.
     if (line.hasOption("app-id")) {
-      this.appId = line.getOptionValue("app_id");
+      this.appId = line.getOptionValue("app-id");
     } else {
       this.appId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
     }
