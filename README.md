@@ -4,6 +4,7 @@ by yuzawa-san
 ![Icon](src/main/resources/favicon.png)
 
 [![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
+![Coveralls github branch](https://img.shields.io/coveralls/github/yuzawa-san/googolplex-theater/master)
 
 Persistently maintain multiple Chromecast screens on you local network without using your browser.
 Ideal for digital signage applications.
