@@ -5,6 +5,7 @@ import com.jyuzawa.googolplex_theater.config.CastConfigLoader;
 import com.jyuzawa.googolplex_theater.config.Config;
 import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
+import io.vertx.core.Vertx;
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.List;
@@ -27,13 +28,15 @@ public final class GoogolplexTheater {
       Config config = new Config(args);
       LOG.info("Starting up Googolplex Theater!");
       LOG.info("Website: " + PROJECT_WEBSITE);
-      GoogolplexController controller = new GoogolplexController(config.getAppId());
-      GoogolplexServer server = new GoogolplexServer(controller, config.getServerPort());
+      Vertx vertx = Vertx.vertx();
+      GoogolplexController controller =
+          new GoogolplexController(vertx.nettyEventLoopGroup(), config.getAppId());
+      vertx.deployVerticle(new GoogolplexServer(controller, config.getServerPort()));
       CastConfigLoader configLoader = new CastConfigLoader(controller, config.getCastConfigPath());
       ServiceDiscovery serviceDiscovery =
           new ServiceDiscovery(controller, config.getInterfaceAddress());
       // collect items to close on shutdown
-      List<Closeable> tasks = Arrays.asList(configLoader, serviceDiscovery, server, controller);
+      List<Closeable> tasks = Arrays.asList(configLoader, serviceDiscovery);
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(
@@ -46,6 +49,7 @@ public final class GoogolplexTheater {
                         LOG.warn("Failed to shut down", e);
                       }
                     }
+                    vertx.close();
                   }));
     } catch (ParseException e) {
       System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());

@@ -7,10 +7,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.jyuzawa.googolplex_theater.config.CastConfig;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
-import com.jyuzawa.googolplex_theater.server.DeviceStatus;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.vertx.core.json.JsonObject;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +36,9 @@ class GoogolplexControllerTest {
 
   @BeforeAll
   static void setUpBeforeClass() throws Exception {
-    controller = new GoogolplexController(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 0, 0);
     workerGroup = new NioEventLoopGroup(1);
+    controller =
+        new GoogolplexController(workerGroup, GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 0, 0);
     cast1 = new FakeCast(workerGroup, 9001);
     cast2 = new FakeCast(workerGroup, 9002);
     cast3 = new FakeCast(workerGroup, 9003);
@@ -48,7 +49,6 @@ class GoogolplexControllerTest {
   static void tearDownAfterClass() throws Exception {
     CastConfig newConfig = new CastConfig(Collections.emptyList());
     controller.accept(newConfig);
-    controller.close();
     cast1.close();
     cast2.close();
     cast3.close();
@@ -83,17 +83,17 @@ class GoogolplexControllerTest {
     Mockito.when(noAddrInfo.getInetAddresses()).thenReturn(new InetAddress[] {});
     controller.register(noAddr);
 
-    List<DeviceStatus> unconfigureds = controller.getUnconfiguredDevices();
+    List<JsonObject> unconfigureds = controller.getUnconfiguredDevices();
     assertEquals(1, unconfigureds.size());
-    DeviceStatus unconfigured = unconfigureds.get(0);
-    assertEquals("UnknownCast", unconfigured.name);
+    JsonObject unconfigured = unconfigureds.get(0);
+    assertEquals("UnknownCast", unconfigured.getString("name"));
 
-    List<DeviceStatus> configureds = controller.getConfiguredDevices();
+    List<JsonObject> configureds = controller.getConfiguredDevices();
     assertEquals(4, configureds.size());
-    assertEquals(cast1.name, configureds.get(0).name);
-    assertEquals(cast2.name, configureds.get(1).name);
-    assertEquals(cast3.name, configureds.get(2).name);
-    assertEquals(cast4.name, configureds.get(3).name);
+    assertEquals(cast1.name, configureds.get(0).getString("name"));
+    assertEquals(cast2.name, configureds.get(1).getString("name"));
+    assertEquals(cast3.name, configureds.get(2).getString("name"));
+    assertEquals(cast4.name, configureds.get(3).getString("name"));
 
     assertTransaction(cast1);
     assertTransaction(cast2);
@@ -116,20 +116,20 @@ class GoogolplexControllerTest {
     controller.accept(newConfig);
     assertTransaction(cast1);
 
-    List<DeviceStatus> unconfigureds2 = controller.getUnconfiguredDevices();
+    List<JsonObject> unconfigureds2 = controller.getUnconfiguredDevices();
     assertEquals(2, unconfigureds2.size());
     List<String> unconfigureds2Names = new ArrayList<>();
-    for (DeviceStatus device : unconfigureds2) {
-      unconfigureds2Names.add(device.name);
+    for (JsonObject device : unconfigureds2) {
+      unconfigureds2Names.add(device.getString("name"));
     }
     assertTrue(unconfigureds2Names.contains(cast4.name));
     assertTrue(unconfigureds2Names.contains("UnknownCast"));
 
-    List<DeviceStatus> configureds2 = controller.getConfiguredDevices();
+    List<JsonObject> configureds2 = controller.getConfiguredDevices();
     assertEquals(3, configureds2.size());
     List<String> configureds2Name = new ArrayList<>();
-    for (DeviceStatus device : configureds2) {
-      configureds2Name.add(device.name);
+    for (JsonObject device : configureds2) {
+      configureds2Name.add(device.getString("name"));
     }
     assertTrue(configureds2Name.contains(cast1.name));
     assertTrue(configureds2Name.contains(cast2.name));

@@ -1,0 +1,56 @@
+{{#partial "content" }}
+<div class="float-right">
+	<form method="post" action="/refresh">
+		<input class="btn btn-primary" type="submit" value="Refresh All">
+	</form>
+</div>
+<h2>Configured Devices</h2>
+<div class="row">
+	{{#each configuredDevices}}
+    <div class="col-md-6 p-1">
+    	<div class="card">
+    		<div class="card-body">
+				<div class="float-right">
+					<form method="post" action="/refresh">
+						<input type="hidden" name="name" value="{{this.name}}">
+						<input class="btn btn-primary btn-sm" type="submit" value="Refresh"{{#unless this.duration}} disabled{{/unless}}>
+      				</form>
+      			</div>
+      			<h5 class="card-title">{{this.name}}</h5>
+      			<div class="card-text">
+      				{{#if this.ipAddress}}
+      				{{#if this.duration}}
+      				<div class="alert alert-success">{{this.ipAddress}} - connected for {{this.duration}}</div>
+      				{{else}}
+          			<div class="alert alert-danger">{{this.ipAddress}} - disconnected</div>
+          			{{/if}}
+      				{{else}}
+        			<div class="alert alert-warning">Device Not Found</div>
+      				{{/if}}
+      				<code class="settings">{{this.settings}}</code>
+      			</div>
+      		</div>
+      	</div>
+    </div>
+	{{/each}}
+</div>
+<h2>Unconfigured Devices</h2>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Address</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{#each unconfiguredDevices}}
+    	<tr>
+    		<td>{{this.name}}</td>
+    		<td>{{this.ipAddress}}</td>
+    	</tr>
+		{{/each}}
+	</tbody>
+</table>
+{{/partial}}
+
+{{> main}}

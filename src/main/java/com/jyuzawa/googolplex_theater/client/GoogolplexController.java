@@ -3,7 +3,6 @@ package com.jyuzawa.googolplex_theater.client;
 import com.jyuzawa.googolplex_theater.config.CastConfig;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
-import com.jyuzawa.googolplex_theater.server.DeviceStatus;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -12,7 +11,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -23,13 +21,15 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import java.io.Closeable;
+import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author jyuzawa
  */
-public final class GoogolplexController implements Closeable, Consumer<CastConfig> {
+public final class GoogolplexController implements Consumer<CastConfig> {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexController.class);
 
   private static final int CONNECT_TIMEOUT_MILLIS = 5000;
@@ -70,11 +70,15 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
   private final int baseReconnectSeconds;
   private final int reconnectNoiseSeconds;
 
-  public GoogolplexController(String appId) throws IOException {
-    this(appId, DEFAULT_BASE_RECONNECT_SECONDS, DEFAULT_RECONNECT_NOISE_SECONDS);
+  public GoogolplexController(EventLoopGroup eventLoopGroup, String appId) throws IOException {
+    this(eventLoopGroup, appId, DEFAULT_BASE_RECONNECT_SECONDS, DEFAULT_RECONNECT_NOISE_SECONDS);
   }
 
-  public GoogolplexController(String appId, int baseReconnectSeconds, int reconnectNoiseSeconds)
+  public GoogolplexController(
+      EventLoopGroup eventLoopGroup,
+      String appId,
+      int baseReconnectSeconds,
+      int reconnectNoiseSeconds)
       throws IOException {
     // the state is maintained in these maps
     this.nameToDeviceInfo = new ConcurrentHashMap<>();
@@ -84,7 +88,7 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
     this.nameToBackoffSeconds = new ConcurrentHashMap<>();
     this.baseReconnectSeconds = baseReconnectSeconds;
     this.reconnectNoiseSeconds = reconnectNoiseSeconds;
-    this.eventLoopGroup = new NioEventLoopGroup();
+    this.eventLoopGroup = eventLoopGroup;
     this.eventLoop = eventLoopGroup.next();
     SslContext sslContext =
         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
@@ -348,31 +352,81 @@ public final class GoogolplexController implements Closeable, Consumer<CastConfi
     }
   }
 
+  private static final Comparator<JsonObject> COMPARATOR =
+      (a, b) -> a.getString("name").compareTo(b.getString("name"));
+
   /** @return a list of device information, address, connection age */
-  public List<DeviceStatus> getConfiguredDevices() {
-    List<DeviceStatus> out = new ArrayList<>();
+  public List<JsonObject> getConfiguredDevices() {
+    List<JsonObject> out = new ArrayList<>();
     for (Map.Entry<String, DeviceInfo> entry : nameToDeviceInfo.entrySet()) {
       String name = entry.getKey();
-      out.add(new DeviceStatus(entry.getValue(), nameToAddress.get(name), nameToChannel.get(name)));
+      JsonObject device = new JsonObject();
+      device.put("name", name);
+      device.put("settings", entry.getValue().settings.toPrettyString());
+      InetSocketAddress ipAddress = nameToAddress.get(name);
+      if (ipAddress != null) {
+        device.put("ipAddress", ipAddress.getAddress().getHostAddress());
+      }
+      Channel channel = nameToChannel.get(name);
+      if (channel != null) {
+        String duration =
+            calculateDuration(channel.attr(GoogolplexClientHandler.CONNECTION_BIRTH_KEY).get());
+        device.put("duration", duration);
+      }
+      out.add(device);
     }
-    Collections.sort(out);
+    Collections.sort(out, COMPARATOR);
     return out;
   }
 
   /** @return a list of device names and addresses */
-  public List<DeviceStatus> getUnconfiguredDevices() {
-    List<DeviceStatus> out = new ArrayList<>();
+  public List<JsonObject> getUnconfiguredDevices() {
+    List<JsonObject> out = new ArrayList<>();
     for (Map.Entry<String, InetSocketAddress> entry : nameToAddress.entrySet()) {
       String name = entry.getKey();
       if (!nameToDeviceInfo.containsKey(name)) {
-        out.add(new DeviceStatus(name, entry.getValue()));
+        JsonObject device = new JsonObject();
+        device.put("name", name);
+        device.put("ipAddress", entry.getValue().getAddress().getHostAddress());
+        out.add(device);
       }
     }
+    Collections.sort(out, COMPARATOR);
     return out;
   }
 
-  @Override
-  public void close() {
-    eventLoopGroup.shutdownGracefully().syncUninterruptibly();
+  /**
+   * Generate a human readable connection age string.
+   *
+   * @param instant
+   * @return
+   */
+  private static String calculateDuration(Instant instant) {
+    if (instant == null) {
+      return null;
+    }
+    StringBuilder out = new StringBuilder();
+    long deltaSeconds = Duration.between(instant, Instant.now()).getSeconds();
+    long seconds = deltaSeconds;
+    long days = seconds / 86400L;
+    if (deltaSeconds > 86400L) {
+      out.append(days).append("d");
+    }
+    seconds %= 86400L;
+
+    long hours = seconds / 3600L;
+    if (deltaSeconds > 3600L) {
+      out.append(hours).append("h");
+    }
+    seconds %= 3600L;
+
+    long minutes = seconds / 60L;
+    if (deltaSeconds > 60L) {
+      out.append(minutes).append("m");
+    }
+    seconds %= 60L;
+
+    out.append(seconds).append("s");
+    return out.toString();
   }
 }

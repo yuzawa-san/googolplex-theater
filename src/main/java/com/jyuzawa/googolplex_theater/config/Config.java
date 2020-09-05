@@ -96,7 +96,8 @@ public final class Config {
       this.castConfigPath = Paths.get(line.getOptionValue("cast-config")).toAbsolutePath();
     } else {
       // NOTE: gradle does not expose APP_HOME, but they do expose OLDPWD.
-      String appHome = System.getenv().getOrDefault("OLDPWD", ".");
+      // Default allows the application to run in IDE
+      String appHome = System.getenv().getOrDefault("OLDPWD", "src/dist");
       this.castConfigPath =
           Paths.get(appHome + "/" + CastConfigLoader.DEFAULT_PATH).toAbsolutePath();
     }
