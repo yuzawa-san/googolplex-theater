@@ -6,7 +6,7 @@ by yuzawa-san
 [![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
 [![Code Coverage](https://img.shields.io/codecov/c/github/yuzawa-san/googolplex-theater/master.svg)](https://codecov.io/github/yuzawa-san/googolplex-theater?branch=master)
 
-Persistently maintain multiple Chromecast screens on you local network without using your browser.
+Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
@@ -17,7 +17,7 @@ The receiver application can be customized easily to suit your needs.
 
 ## Requirements
 
-* Java 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
+* Java 11 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
 * The application must run on the same network as your Chromecasts.
 * Multicast DNS must work on your network and on the machine you run the application on.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
@@ -31,19 +31,20 @@ Alternatively, clone/download this repo, and run:
 ```
 ./gradlew build distZip
 ```
+
 This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
 
-Expand the archive and cd into directory.
+Once you have the ZIP archive, expand it in the desired destination location and `cd` into directory.
 
+To show all options:
 ```
 ./bin/googolplex-theater --help
 ```
-will show all options.
 
+To run the application with default settings:
 ```
 ./bin/googolplex-theater
 ```
-will run the application with default settings.
 
 ### Configuration
 
