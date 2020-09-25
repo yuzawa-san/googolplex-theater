@@ -6,7 +6,7 @@ by yuzawa-san
 [![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
 [![Code Coverage](https://img.shields.io/codecov/c/github/yuzawa-san/googolplex-theater/master.svg)](https://codecov.io/github/yuzawa-san/googolplex-theater?branch=master)
 
-Persistently maintain multiple Chromecast screens on you local network without using your browser.
+Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
@@ -29,21 +29,22 @@ Download a [release version](https://github.com/yuzawa-san/googolplex-theater/re
 
 Alternatively, clone/download this repo, and run:
 ```
-./gradlew build distZip
+./gradlew build
 ```
+
 This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
 
-Expand the archive and cd into directory.
+Once you have the ZIP archive, expand it in the desired destination location and `cd` into directory.
 
+To show all options:
 ```
 ./bin/googolplex-theater --help
 ```
-will show all options.
 
+To run the application with default settings:
 ```
 ./bin/googolplex-theater
 ```
-will run the application with default settings.
 
 ### Configuration
 
