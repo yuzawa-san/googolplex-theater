@@ -17,7 +17,7 @@ The receiver application can be customized easily to suit your needs.
 
 ## Requirements
 
-* Java 11 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
+* Java 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
 * The application must run on the same network as your Chromecasts.
 * Multicast DNS must work on your network and on the machine you run the application on.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
@@ -29,7 +29,7 @@ Download a [release version](https://github.com/yuzawa-san/googolplex-theater/re
 
 Alternatively, clone/download this repo, and run:
 ```
-./gradlew build distZip
+./gradlew build
 ```
 
 This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
