@@ -37,8 +37,7 @@ public final class GoogolplexServer extends AbstractVerticle {
         .handler(
             ctx -> {
               JsonObject data = new JsonObject();
-              data.put("configuredDevices", controller.getConfiguredDevices());
-              data.put("unconfiguredDevices", controller.getUnconfiguredDevices());
+              data.put("devices", controller.getDeviceInfo());
               engine.render(
                   data,
                   "templates/overview.hbs",
@@ -79,12 +78,11 @@ public final class GoogolplexServer extends AbstractVerticle {
                       });
             });
     router
-        .get("/favicon.ico")
+        .get("/favicon.png")
         .handler(
             ctx -> {
               ctx.response().putHeader("content-type", "image/png").sendFile("favicon.png");
             });
-    // start a HTTP web server on port 8080
     vertx.createHttpServer().requestHandler(router).listen(port);
     LOG.info("Running server on port " + port);
   }

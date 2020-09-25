@@ -4,53 +4,48 @@
 		<input class="btn btn-primary" type="submit" value="Refresh All">
 	</form>
 </div>
-<h2>Configured Devices</h2>
+<h2>Devices</h2>
 <div class="row">
-	{{#each configuredDevices}}
-    <div class="col-md-6 p-1">
-    	<div class="card">
-    		<div class="card-body">
-				<div class="float-right">
+	{{#each devices}}
+	<div class="col-lg-6 pb-1">
+		<div class="card">
+			<div class="card-header">
+				<div class="float-right"> 
 					<form method="post" action="/refresh">
 						<input type="hidden" name="name" value="{{this.name}}">
+						{{#if this.settings}}
+							{{#if this.ipAddress}}
+								{{#if this.duration}}
+									<span class="badge badge-success">Connected for {{this.duration}}</span>
+								{{else}}
+									<span class="badge badge-warning">Disconnected</span>
+								{{/if}}
+							{{else}}
+								<span class="badge badge-danger">Not Found</span>
+							{{/if}}
+						{{else}}
+							<span class="badge badge-secondary">Not Configured</span>
+						{{/if}}
 						<input class="btn btn-primary btn-sm" type="submit" value="Refresh"{{#unless this.duration}} disabled{{/unless}}>
-      				</form>
-      			</div>
-      			<h5 class="card-title">{{this.name}}</h5>
-      			<div class="card-text">
-      				{{#if this.ipAddress}}
-      				{{#if this.duration}}
-      				<div class="alert alert-success">{{this.ipAddress}} - connected for {{this.duration}}</div>
-      				{{else}}
-          			<div class="alert alert-danger">{{this.ipAddress}} - disconnected</div>
-          			{{/if}}
-      				{{else}}
-        			<div class="alert alert-warning">Device Not Found</div>
-      				{{/if}}
-      				<code class="settings">{{this.settings}}</code>
-      			</div>
-      		</div>
-      	</div>
-    </div>
+					</form>
+				</div>
+				<h5 class="mb-0">
+					{{this.name}}
+				</h5>
+			</div>
+			<div class="card-body">
+				<p><strong>IP Address:</strong> {{#if this.ipAddress}}{{this.ipAddress}}{{else}}not found{{/if}}</p>
+				{{#if this.settings}}
+					<p><strong>Settings:</strong></p>
+					<code class="settings">{{this.settings}}</code>
+				{{/if}}
+			</div>
+		</div>
+	</div>
+	{{else}}
+	<div class="col-md-12"><div class="card"><div class="card-body">No devices configured or discovered!</div></div></div>
 	{{/each}}
 </div>
-<h2>Unconfigured Devices</h2>
-<table class="table table-striped">
-	<thead>
-		<tr>
-			<th>Name</th>
-			<th>Address</th>
-		</tr>
-	</thead>
-	<tbody>
-		{{#each unconfiguredDevices}}
-    	<tr>
-    		<td>{{this.name}}</td>
-    		<td>{{this.ipAddress}}</td>
-    	</tr>
-		{{/each}}
-	</tbody>
-</table>
 {{/partial}}
 
 {{> main}}
