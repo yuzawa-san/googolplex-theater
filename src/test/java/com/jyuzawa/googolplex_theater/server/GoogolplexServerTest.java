@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 @ExtendWith(VertxExtension.class)
 class GoogolplexServerTest {
   static final GoogolplexController controller = Mockito.mock(GoogolplexController.class);
+  static final int port = 9101;
 
   @BeforeEach
   void setup(Vertx vertx, VertxTestContext testContext) {
@@ -27,7 +28,7 @@ class GoogolplexServerTest {
     device.put("name", "my device");
     List<JsonObject> devices = Collections.singletonList(device);
     Mockito.when(controller.getDeviceInfo()).thenReturn(devices);
-    GoogolplexServer server = new GoogolplexServer(controller, 9001);
+    GoogolplexServer server = new GoogolplexServer(controller, port);
     vertx.deployVerticle(server, testContext.completing());
   }
 
@@ -35,7 +36,7 @@ class GoogolplexServerTest {
   void indexTest(Vertx vertx, VertxTestContext testContext) {
     WebClient client = WebClient.create(vertx);
     client
-        .get(9001, "localhost", "/")
+        .get(port, "localhost", "/")
         .as(BodyCodec.string())
         .send(
             testContext.succeeding(
@@ -54,7 +55,7 @@ class GoogolplexServerTest {
     MultiMap form = MultiMap.caseInsensitiveMultiMap();
     form.add("name", "my device");
     client
-        .post(9001, "localhost", "/refresh")
+        .post(port, "localhost", "/refresh")
         .as(BodyCodec.string())
         .sendForm(
             form,
@@ -73,7 +74,7 @@ class GoogolplexServerTest {
     WebClient client = WebClient.create(vertx);
     MultiMap form = MultiMap.caseInsensitiveMultiMap();
     client
-        .post(9001, "localhost", "/refresh")
+        .post(port, "localhost", "/refresh")
         .as(BodyCodec.string())
         .sendForm(
             form,
