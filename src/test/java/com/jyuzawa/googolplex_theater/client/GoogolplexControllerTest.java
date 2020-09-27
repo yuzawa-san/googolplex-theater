@@ -12,6 +12,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.vertx.core.json.JsonObject;
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -202,5 +203,14 @@ class GoogolplexControllerTest {
       }
     }
     return out;
+  }
+
+  @Test
+  public void durationTest() {
+    assertEquals("1s", GoogolplexControllerImpl.calculateDuration(Duration.ofSeconds(1)));
+    assertEquals("1m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofMinutes(1)));
+    assertEquals("1h0m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofHours(1)));
+    assertEquals("1d0h0m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofDays(1)));
+    assertEquals("1d1h1m1s", GoogolplexControllerImpl.calculateDuration(Duration.ofSeconds(90061)));
   }
 }

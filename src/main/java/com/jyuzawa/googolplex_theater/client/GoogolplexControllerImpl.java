@@ -359,6 +359,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
     Set<String> allNames = new TreeSet<>();
     allNames.addAll(nameToDeviceInfo.keySet());
     allNames.addAll(nameToAddress.keySet());
+    Instant now = Instant.now();
     for (String name : allNames) {
       JsonObject device = new JsonObject();
       device.put("name", name);
@@ -372,9 +373,11 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
       }
       Channel channel = nameToChannel.get(name);
       if (channel != null) {
-        String duration =
-            calculateDuration(channel.attr(GoogolplexClientHandler.CONNECTION_BIRTH_KEY).get());
-        device.put("duration", duration);
+        Instant birth = channel.attr(GoogolplexClientHandler.CONNECTION_BIRTH_KEY).get();
+        if (birth != null) {
+          String duration = calculateDuration(Duration.between(birth, now));
+          device.put("duration", duration);
+        }
       }
       out.add(device);
     }
@@ -384,30 +387,27 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   /**
    * Generate a human readable connection age string.
    *
-   * @param instant
+   * @param duration
    * @return
    */
-  private static String calculateDuration(Instant instant) {
-    if (instant == null) {
-      return null;
-    }
+  static String calculateDuration(Duration duration) {
     StringBuilder out = new StringBuilder();
-    long deltaSeconds = Duration.between(instant, Instant.now()).getSeconds();
+    long deltaSeconds = duration.getSeconds();
     long seconds = deltaSeconds;
     long days = seconds / 86400L;
-    if (deltaSeconds > 86400L) {
+    if (deltaSeconds >= 86400L) {
       out.append(days).append("d");
     }
     seconds %= 86400L;
 
     long hours = seconds / 3600L;
-    if (deltaSeconds > 3600L) {
+    if (deltaSeconds >= 3600L) {
       out.append(hours).append("h");
     }
     seconds %= 3600L;
 
     long minutes = seconds / 60L;
-    if (deltaSeconds > 60L) {
+    if (deltaSeconds >= 60L) {
       out.append(minutes).append("m");
     }
     seconds %= 60L;
