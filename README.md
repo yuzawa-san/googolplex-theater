@@ -82,7 +82,7 @@ For custom receivers, you will be required to [sign up as a Chromecast developer
 
 Currently the device name and settings are printed to the screen. Customize the listener handler to do as you wish.
 
-Host your modified file via HTTP on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
+Host your modified file via HTTPS on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
 
 Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
 
