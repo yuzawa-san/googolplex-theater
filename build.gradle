@@ -5,7 +5,7 @@ plugins {
 	id "com.github.spotbugs" version "4.5.0"
 	id "com.github.ben-manes.versions" version "0.29.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
-	id 'com.github.jk1.dependency-license-report' version '1.13'
+	id 'com.github.jk1.dependency-license-report' version '1.14'
 }
 
 apply plugin: "java"
