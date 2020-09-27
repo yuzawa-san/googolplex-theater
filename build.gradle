@@ -1,11 +1,11 @@
 plugins {
 	id "net.researchgate.release" version "2.8.1"
 	id "com.google.protobuf" version "0.8.13"
-	id "com.diffplug.spotless" version "5.3.0"
+	id "com.diffplug.spotless" version "5.6.1"
 	id "com.github.spotbugs" version "4.5.0"
-	id "com.github.ben-manes.versions" version "0.29.0"
+	id "com.github.ben-manes.versions" version "0.33.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
-	id 'com.github.jk1.dependency-license-report' version '1.13'
+	id 'com.github.jk1.dependency-license-report' version '1.14'
 }
 
 apply plugin: "java"
@@ -84,22 +84,22 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.13.3'
 	implementation 'org.slf4j:slf4j-api:1.7.30'
 	implementation 'com.google.protobuf:protobuf-java:3.13.0'
-	implementation 'io.vertx:vertx-core:3.9.2'
-	implementation 'io.vertx:vertx-web:3.9.2'
-	implementation 'io.vertx:vertx-web-templ-handlebars:3.9.2'
-	implementation 'io.netty:netty-common:4.1.51.Final'
-	implementation 'io.netty:netty-transport:4.1.51.Final'
-	implementation 'io.netty:netty-codec:4.1.51.Final'
-	implementation 'io.netty:netty-handler:4.1.51.Final'
+	implementation 'io.vertx:vertx-core:3.9.3'
+	implementation 'io.vertx:vertx-web:3.9.3'
+	implementation 'io.vertx:vertx-web-templ-handlebars:3.9.3'
+	implementation 'io.netty:netty-common:4.1.52.Final'
+	implementation 'io.netty:netty-transport:4.1.52.Final'
+	implementation 'io.netty:netty-codec:4.1.52.Final'
+	implementation 'io.netty:netty-handler:4.1.52.Final'
 	implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
 	implementation 'org.jmdns:jmdns:3.5.5'
 	implementation 'commons-cli:commons-cli:1.4'
-	testImplementation 'org.mockito:mockito-core:3.5.9'
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
-	testImplementation 'io.vertx:vertx-junit5:3.9.2'
-	testImplementation 'io.vertx:vertx-junit5-web-client:3.9.2'
+	testImplementation 'org.mockito:mockito-core:3.5.13'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+	testImplementation 'io.vertx:vertx-junit5:3.9.3'
+	testImplementation 'io.vertx:vertx-junit5-web-client:3.9.3'
 }
 
 test {
