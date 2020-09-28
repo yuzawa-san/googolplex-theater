@@ -7,9 +7,6 @@ import com.jyuzawa.googolplex_theater.config.Config;
 import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.vertx.core.Vertx;
-import java.io.Closeable;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
@@ -36,21 +33,18 @@ public final class GoogolplexTheater {
       CastConfigLoader configLoader = new CastConfigLoader(controller, config.getCastConfigPath());
       ServiceDiscovery serviceDiscovery =
           new ServiceDiscovery(controller, config.getInterfaceAddress());
-      // collect items to close on shutdown
-      List<Closeable> tasks = Arrays.asList(configLoader, serviceDiscovery);
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(
                   () -> {
                     LOG.info("Shutting down Googolplex Theater!");
-                    for (Closeable task : tasks) {
-                      try {
-                        task.close();
-                      } catch (Exception e) {
-                        LOG.warn("Failed to shut down", e);
-                      }
+                    try {
+                      configLoader.close();
+                      serviceDiscovery.close();
+                      vertx.close();
+                    } catch (Exception e) {
+                      LOG.warn("Failed to shut down", e);
                     }
-                    vertx.close();
                   }));
     } catch (ParseException e) {
       System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
