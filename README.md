@@ -17,11 +17,20 @@ The receiver application can be customized easily to suit your needs.
 
 ## Requirements
 
-* Java 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
-* The application must run on the same network as your Chromecasts.
-* Multicast DNS must work on your network and on the machine you run the application on.
-* IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
-* Linux or MacOS is preferred. Windows is not tested.
+This application has very minimal runtime requirements:
+
+* Java runtime version 8 or later.
+* Linux or MacOS is preferred. Windows is not currently tested.
+
+There are certain requirements for networking which are beyond the realm of this project, but should be noted:
+
+* This application must run on the same network as your Chromecasts.
+* Multicast DNS must work on your network and on the machine you run the application on. This is how the devices and the application discover each other.
+* IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
+
+Development requirements:
+
+* JDK 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
 
 ## Installation
 
@@ -102,6 +111,7 @@ NOTE: Sometimes it may be necessary to compile protobuf manually prior to IDE de
 ### TODO
 
 * Dockerfile? (may not work with mdns)
+* Framing proxy (may not be feasible or allowed under HTTPS)
 
 ## Related Projects
 
