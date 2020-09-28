@@ -84,12 +84,12 @@ public final class CastConfigLoader implements Closeable {
   private void load() throws IOException {
     LOG.info("Reloading cast config");
     CastConfig out = JsonUtil.MAPPER.readValue(path.toFile(), CastConfig.class);
-    controller.accept(out);
+    controller.processConfig(out);
   }
 
   @Override
   public void close() throws IOException {
-    controller.accept(new CastConfig(Collections.emptyList()));
+    controller.processConfig(new CastConfig(Collections.emptyList()));
     executor.shutdownNow();
   }
 }

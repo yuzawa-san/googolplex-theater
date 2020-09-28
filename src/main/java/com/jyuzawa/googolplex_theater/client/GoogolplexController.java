@@ -19,7 +19,7 @@ public interface GoogolplexController {
    *
    * @param config the settings loaded from the file
    */
-  void accept(CastConfig config);
+  void processConfig(CastConfig config);
 
   /**
    * Add a discovered device and initialize a new connection to the device if one does not exist

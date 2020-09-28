@@ -125,7 +125,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
    * @param config the settings loaded from the file
    */
   @Override
-  public void accept(CastConfig config) {
+  public void processConfig(CastConfig config) {
     try {
       eventLoop
           .submit(

@@ -50,7 +50,7 @@ class CastConfigLoaderTest {
           }
 
           @Override
-          public void accept(CastConfig config) {
+          public void processConfig(CastConfig config) {
             queue.add(config);
           }
         };

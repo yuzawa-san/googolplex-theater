@@ -52,7 +52,7 @@ class GoogolplexControllerTest {
   @AfterAll
   static void tearDownAfterClass() throws Exception {
     CastConfig newConfig = new CastConfig(Collections.emptyList());
-    controller.accept(newConfig);
+    controller.processConfig(newConfig);
     cast1.close();
     cast2.close();
     cast3.close();
@@ -70,7 +70,7 @@ class GoogolplexControllerTest {
     CastConfig config = new CastConfig(devices);
     controller.register(cast1.event());
     controller.register(cast2.event());
-    controller.accept(config);
+    controller.processConfig(config);
     controller.register(cast3.event());
     controller.register(cast4.event());
     controller.register(FakeCast.event(9005, "UnknownCast"));
@@ -116,7 +116,7 @@ class GoogolplexControllerTest {
     devices.set(0, cast1.device());
     devices.remove(3);
     CastConfig newConfig = new CastConfig(devices);
-    controller.accept(newConfig);
+    controller.processConfig(newConfig);
     assertTransaction(cast1);
 
     deviceInfos = controller.getDeviceInfo();
