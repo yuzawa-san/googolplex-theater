@@ -2,7 +2,7 @@ package com.jyuzawa.googolplex_theater.client;
 
 import com.jyuzawa.googolplex_theater.config.CastConfig;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;

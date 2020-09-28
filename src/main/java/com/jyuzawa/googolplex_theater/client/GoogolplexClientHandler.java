@@ -1,9 +1,9 @@
 package com.jyuzawa.googolplex_theater.client;
 
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage.PayloadType;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage.ProtocolVersion;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.ProtocolVersion;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jyuzawa.googolplex_theater.config.CastConfig;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
