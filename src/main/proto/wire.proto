@@ -1,5 +1,5 @@
 // adapted from https://source.chromium.org/chromium/chromium/src/+/master:third_party/openscreen/src/cast/common/channel/proto/cast_channel.proto
-syntax = "proto3";
+syntax = "proto2";
 package com.jyuzawa.googolplex_theater.protobuf;
 message CastMessage {
 	enum ProtocolVersion {
@@ -18,10 +18,10 @@ message CastMessage {
 		STRING = 0;
 		BINARY = 1;
 	}
-	ProtocolVersion protocol_version = 1;
-	string source_id = 2;
-	string destination_id = 3;
-	string namespace = 4;
-	PayloadType payload_type = 5;
-	string payload_utf8 = 6;
+	optional ProtocolVersion protocol_version = 1;
+	optional string source_id = 2;
+	optional string destination_id = 3;
+	optional string namespace = 4;
+	optional PayloadType payload_type = 5;
+	optional string payload_utf8 = 6;
 }
