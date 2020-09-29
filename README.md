@@ -10,6 +10,8 @@ Persistently maintain multiple Chromecast devices on you local network without u
 Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
+![Example](docs/example.jpg)
+
 There are several tools and libraries out there (see below), but this project is intended to be very minimalist.
 There is a simple web UI to check device info and trigger refreshes.
 
