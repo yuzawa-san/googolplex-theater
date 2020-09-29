@@ -11,9 +11,14 @@ Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
 There are several tools and libraries out there (see below), but this project is intended to be very minimalist.
-There is a simple web UI to check device info and trigger refreshes. There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
-The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an iframe.
+There is a simple web UI to check device info and trigger refreshes.
+
+![Screenshot](docs/screenshot.png)
+
+There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
+The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an IFRAME.
 The receiver application can be customized easily to suit your needs.
+The application will try to reconnect if a session is ended for whatever reason.
 
 ## Requirements
 
@@ -72,7 +77,7 @@ See service descriptor files for upstart, systemd, and launchd in the `./service
 
 ### Case Study: Grafana Dashboards
 
-The maintainer has used this to show statistics dashboards in an software engineering context.
+The maintainer has used this to show statistics dashboards in a software engineering context.
 
 * Configure and name your Chromecasts.
 * Create one Grafana playlist per device.
@@ -84,7 +89,7 @@ The maintainer has used this to show statistics dashboards in an software engine
 * Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * Run the application as a daemon using systemd or upstart or whatever you want.
 * Config is updated periodically as our dashboard needs change. The updates are automatically picked up.
-* If a screen needs to be refreshed, one can do so by accessing the UI and hitting a few buttons.
+* If a screen needs to be refreshed, one can do so by accessing the web UI and hitting a few buttons.
 
 ### Using a Custom Receiver
 
@@ -106,13 +111,14 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 
 This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
 
-NOTE: Sometimes it may be necessary to compile protobuf manually prior to IDE development:
+NOTE: It may be necessary to compile protobuf manually prior to IDE development:
 ```
 ./gradlew generateProto
 ```
 
 ### TODO
 
+* Split screen layouts
 * Dockerfile? (may not work with mdns)
 * Framing proxy (may not be feasible or allowed under HTTPS)
 
@@ -126,23 +132,20 @@ This application overlaps in functionality with some of these fine projects:
 * [chromecast-java-api-v2](https://github.com/vitalidze/chromecast-java-api-v2) - java library
 * [pychromecast](https://github.com/balloob/pychromecast) - python library
 
-Foundational work has been done to research how the Chromecast protocol works and these protocol libraries have been developed in a variety of languages.
-These are simple multipurpose bindings rather than logical implementations. A lot of the headless senders are built off of these.
+Foundational work has been done to research how the Chromecast protocol works and these protocol libraries have been developed in a variety of languages. A lot of the headless senders are built off of these.
 
 ### Browser Senders
 * [dashcast](https://github.com/stestagg/dashcast) - simple dashboard display application 
 * [chromecast-dashboard](https://github.com/boombatower/chromecast-dashboard) - similar to dashcast
 
-These applications cast directly from your browser. You may need to have your browser running. There are usually no persistence or reconnect capability.
+These applications cast directly from your browser. You may need to have your browser up and running all of the time.
 
 ### Headless Senders
 * [greenscreen](https://github.com/groupon/greenscreen) - original digital signage implementation
 * [multicast](https://github.com/superhawk610/multicast) - a fork/refactor of greenscreen
 * [Chromecast-Kiosk](https://github.com/mrothenbuecher/Chromecast-Kiosk) - similar to greenscreen or multicast
 
-These applications cast without a Chrome browser running, rather they utilized the Chromecast protocol to establish a communication session with the devices.
-They provide a level of persistence in the event of failures. They utilize a variety of storage backends and have varying degrees of setup and configuration.
-They may utilize multicast DNS service discovery.
+These applications cast without a Chrome browser running, rather they utilize the Chromecast protocol to establish a communication session with the devices directly.
 
 This application is most similar to the headless sender projects. It does not use a protocol implementation library.
 
