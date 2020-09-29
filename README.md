@@ -32,6 +32,9 @@ Development requirements:
 
 * JDK 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
 
+NOTE: The Java 8 is the minimum target version to support some older versions of 
+Raspberry Pi OS (Raspbian). This may be subject to change.
+
 ## Installation
 
 Download a [release version](https://github.com/yuzawa-san/googolplex-theater/releases) ZIP archive.
