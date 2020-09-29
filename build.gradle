@@ -32,7 +32,7 @@ jacocoTestReport {
 	}
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
-			fileTree(dir: it, exclude: '**/*CastMessages**')
+			fileTree(dir: it, exclude: '**/*Wire**')
 		}))
 	}
 }
@@ -62,7 +62,7 @@ protobuf {
 
 spotless {
 	java {
-		targetExclude("**/CastMessages.java")
+		targetExclude("**/Wire.java")
 		removeUnusedImports()
 		googleJavaFormat()
 	}
