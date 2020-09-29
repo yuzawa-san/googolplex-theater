@@ -107,14 +107,9 @@ Pass your APP_ID in as a command line argument when you run, and your receiver w
 
 _NOTE: due to COVID-19 the maintainer does not have regular access to the hardware to test this application._
 
+See [CONTRIBUTING.md](contributing.md) for more details.
+
 This is intended to be minimalist and easy to set up, so advanced features are not the goal here. Some other projects listed below may be more suited for your use case.
-
-This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
-
-NOTE: It may be necessary to compile protobuf manually prior to IDE development:
-```
-./gradlew generateProto
-```
 
 ### TODO
 
