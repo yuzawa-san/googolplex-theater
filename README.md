@@ -4,7 +4,11 @@ by yuzawa-san
 ![Icon](src/main/resources/favicon.png)
 
 [![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
-[![Code Coverage](https://img.shields.io/codecov/c/github/yuzawa-san/googolplex-theater/master.svg)](https://codecov.io/github/yuzawa-san/googolplex-theater?branch=master)
+[![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=yuzawa-san/googolplex-theater)](https://dependabot.com)
+![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)
+![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
