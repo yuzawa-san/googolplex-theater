@@ -84,27 +84,20 @@ class CastConfigLoaderTest {
           new Config(new String[] {"-c", "my_missing_config.json"});
         });
 
-    assertThrows(
-        ParseException.class,
-        () -> {
-          // fake interface
-          new Config(new String[] {"-i", "en1234", "-c", confJson});
-        });
-
     Config config =
         new Config(
             new String[] {
-              "-a", "ABCDEFGH", "-p", "9999", "-c", "./src/dist/conf/cast_config.json"
+              "-i", "en0", "-a", "ABCDEFGH", "-p", "9999", "-c", "./src/dist/conf/cast_config.json"
             });
     assertEquals("ABCDEFGH", config.getAppId());
     assertEquals(9999, config.getServerPort());
+    assertEquals("en0", config.getPreferredInterface());
     assertTrue(config.getCastConfigPath().toFile().exists());
-    assertNull(config.getInterfaceAddress());
 
-    Config config2 = new Config(new String[] {"-c", "./src/dist/conf/cast_config.json"});
+    Config config2 = new Config(new String[] {"-c", confJson});
     assertEquals(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, config2.getAppId());
     assertEquals(GoogolplexServer.DEFAULT_PORT, config2.getServerPort());
     assertTrue(config2.getCastConfigPath().toFile().exists());
-    assertNull(config2.getInterfaceAddress());
+    assertNull(config2.getPreferredInterface());
   }
 }

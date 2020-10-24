@@ -1,12 +1,12 @@
 package com.jyuzawa.googolplex_theater.config;
 
+import com.jyuzawa.googolplex_theater.GoogolplexTheater;
 import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -16,6 +16,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class represents the values of all of the CLI arguments.
@@ -23,13 +25,17 @@ import org.apache.commons.cli.ParseException;
  * @author jyuzawa
  */
 public final class Config {
-
+  private static final Logger LOG = LoggerFactory.getLogger(Config.class);
+  private static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
+  private static final List<String> DIAGNOSTIC_PROPERTIES =
+      Collections.unmodifiableList(
+          Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
   public static final Options OPTIONS = generateOptions();
   private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
 
   private final String appId;
   private final Path castConfigPath;
-  private final InetAddress interfaceAddress;
+  private final String preferredInterface;
   private final int port;
 
   private static Options generateOptions() {
@@ -107,36 +113,25 @@ public final class Config {
           "cast-config file does not exist: " + castConfigFile.getAbsolutePath());
     }
 
-    // interface: missing will cause the mdns client to autochoose the interface.
-    InetAddress theInterfaceAddress = null;
-    if (line.hasOption("interface")) {
-      String interfaceValue = line.getOptionValue("interface");
-      try {
-        // this will throw if the interface does not exist
-        NetworkInterface iface = NetworkInterface.getByName(interfaceValue);
-        // if it does exist, use the first address
-        List<InetAddress> addresses = Collections.list(iface.getInetAddresses());
-        if (addresses.isEmpty()) {
-          throw new IllegalArgumentException("interface " + interfaceValue + " has no addresses");
-        }
-        theInterfaceAddress = addresses.get(0);
-      } catch (Exception e) {
-        throw new ParseException(
-            "failed to get address for interface "
-                + interfaceValue
-                + " - "
-                + e.getClass().getSimpleName()
-                + ": "
-                + e.getMessage());
-      }
-    }
-    this.interfaceAddress = theInterfaceAddress;
+    this.preferredInterface = line.getOptionValue("interface");
 
     // server port
     if (line.hasOption("port")) {
       this.port = Integer.parseInt(line.getOptionValue("port"));
     } else {
       this.port = GoogolplexServer.DEFAULT_PORT;
+    }
+
+    // print some diagnostic information
+    LOG.info("Starting up Googolplex Theater!");
+    LOG.info("Website: " + PROJECT_WEBSITE);
+    Package thePackage = GoogolplexTheater.class.getPackage();
+    LOG.info(
+        "Version: {} ({})",
+        thePackage.getSpecificationVersion(),
+        thePackage.getImplementationVersion());
+    for (String property : DIAGNOSTIC_PROPERTIES) {
+      LOG.info("Runtime[{}]: {}", property, System.getProperty(property));
     }
   }
 
@@ -150,9 +145,12 @@ public final class Config {
     return castConfigPath;
   }
 
-  /** @return the IP address for the network interface to use for service discovery. */
-  public InetAddress getInterfaceAddress() {
-    return interfaceAddress;
+  /**
+   * @return the name, hostname, or IP address for the network interface to use for service
+   *     discovery.
+   */
+  public String getPreferredInterface() {
+    return preferredInterface;
   }
 
   /** @return the port to run the web UI server on */

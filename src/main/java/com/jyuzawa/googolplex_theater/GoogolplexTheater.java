@@ -7,9 +7,6 @@ import com.jyuzawa.googolplex_theater.config.Config;
 import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.vertx.core.Vertx;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
@@ -22,31 +19,17 @@ import org.slf4j.LoggerFactory;
  */
 public final class GoogolplexTheater {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexTheater.class);
-  public static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
-  private static final List<String> DIAGNOSTIC_PROPERTIES =
-      Collections.unmodifiableList(
-          Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
 
   public static void main(String[] args) {
     try {
       Config config = new Config(args);
-      LOG.info("Starting up Googolplex Theater!");
-      LOG.info("Website: " + PROJECT_WEBSITE);
-      Package thePackage = GoogolplexTheater.class.getPackage();
-      LOG.info(
-          "Version: {} ({})",
-          thePackage.getSpecificationVersion(),
-          thePackage.getImplementationVersion());
-      for (String property : DIAGNOSTIC_PROPERTIES) {
-        LOG.info("Runtime[{}]: {}", property, System.getProperty(property));
-      }
       Vertx vertx = Vertx.vertx();
       GoogolplexController controller =
           new GoogolplexControllerImpl(vertx.nettyEventLoopGroup(), config.getAppId());
       vertx.deployVerticle(new GoogolplexServer(controller, config.getServerPort()));
       CastConfigLoader configLoader = new CastConfigLoader(controller, config.getCastConfigPath());
       ServiceDiscovery serviceDiscovery =
-          new ServiceDiscovery(controller, config.getInterfaceAddress());
+          new ServiceDiscovery(controller, config.getPreferredInterface());
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(
