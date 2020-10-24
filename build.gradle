@@ -99,7 +99,7 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 	testImplementation 'io.vertx:vertx-junit5:3.9.4'
-	testImplementation 'io.vertx:vertx-junit5-web-client:3.9.3'
+	testImplementation 'io.vertx:vertx-junit5-web-client:3.9.4'
 }
 
 test {
