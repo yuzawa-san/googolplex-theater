@@ -28,11 +28,6 @@ class ServiceDiscoveryTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          ServiceDiscovery.getInterfaceAddress("en27");
-        });
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
           ServiceDiscovery.getInterfaceAddress("jyuzawa.com");
         });
   }
