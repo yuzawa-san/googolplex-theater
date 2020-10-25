@@ -58,10 +58,10 @@ public final class ServiceDiscovery implements Closeable {
 
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {
     List<InetAddress> ipAddresses = Collections.list(iface.getInetAddresses());
-    LOG.info("Found network interface {} - {}", iface, ipAddresses);
     if (!iface.isUp() || !iface.supportsMulticast() || iface.isLoopback()) {
       return null;
     }
+    LOG.info("Found network interface {} - {}", iface, ipAddresses);
     for (InetAddress ipAddress : ipAddresses) {
       if (!ipAddress.isLoopbackAddress()
           && !ipAddress.isLinkLocalAddress()
