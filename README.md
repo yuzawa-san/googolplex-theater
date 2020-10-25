@@ -5,7 +5,6 @@ by yuzawa-san
 
 [![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
 [![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=yuzawa-san/googolplex-theater)](https://dependabot.com)
 ![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)
 ![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)
