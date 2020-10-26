@@ -30,7 +30,7 @@ The application will try to reconnect if a session is ended for whatever reason.
 This application has very minimal runtime requirements:
 
 * Java runtime version 8 or later.
-* Linux or MacOS is preferred. Windows is not currently tested.
+* Linux or MacOS is preferred. Windows appears to work, but the maintainer lacks access to the hardware to test, so your mileage may vary.
 
 There are certain requirements for networking which are beyond the realm of this project, but should be noted:
 
@@ -107,6 +107,15 @@ Currently the device name and settings are printed to the screen. Customize the 
 Host your modified file via HTTPS on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
 
 Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
+
+### Troubleshooting
+
+There may be some issues related to discovering the Chromecast devices on your network.
+It is important that the service discovery uses the network interface and IP address attached to the network with the Chromecasts.
+The application will make decent attempt to find the proper network interface to use.
+There is a chance it may find the wrong interface/address based on your system configration (wireless internet vs ethernet, VPN, ordering).
+Some diagnostic information is printed in the application output annotated with `com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery`.
+There is a command line argument (`-i`) which allows the desired network interface (by name) or IP address to be provided.
 
 ## Contributing
 

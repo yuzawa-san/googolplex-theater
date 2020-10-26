@@ -57,16 +57,16 @@ public final class Config {
     options.addOption(
         Option.builder("i")
             .longOpt("interface")
-            .desc("multicast network interface")
+            .desc("network interface name or IP address to use for service discovery")
             .hasArg()
-            .argName("IFACE")
+            .argName("IFACE_NAME_OR_IP")
             .build());
     options.addOption(
         Option.builder("p")
             .longOpt("port")
             .desc("server port number")
             .hasArg()
-            .argName("PORTNUM")
+            .argName("PORT_NUM")
             .build());
     options.addOption(Option.builder("h").longOpt("help").desc("show usage").build());
     return options;
