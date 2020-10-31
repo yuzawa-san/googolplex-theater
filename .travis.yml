@@ -1,0 +1,23 @@
+language: java
+install: true
+
+os: linux
+dist: focal
+jdk: openjdk11
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
+env:
+  - CI=true
+
+script:
+  - ./gradlew build -s
+
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/modules-2/
+    - $HOME/.gradle/wrapper/dists/

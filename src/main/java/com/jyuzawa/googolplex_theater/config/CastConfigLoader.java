@@ -10,6 +10,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
@@ -83,11 +84,12 @@ public final class CastConfigLoader implements Closeable {
   private void load() throws IOException {
     LOG.info("Reloading cast config");
     CastConfig out = JsonUtil.MAPPER.readValue(path.toFile(), CastConfig.class);
-    controller.loadConfig(out);
+    controller.processConfig(out);
   }
 
   @Override
   public void close() throws IOException {
+    controller.processConfig(new CastConfig(Collections.emptyList()));
     executor.shutdownNow();
   }
 }

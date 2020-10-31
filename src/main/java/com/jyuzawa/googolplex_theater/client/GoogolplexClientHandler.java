@@ -1,9 +1,9 @@
 package com.jyuzawa.googolplex_theater.client;
 
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage.PayloadType;
-import com.jyuzawa.googolplex_theater.protobuf.CastMessages.CastMessage.ProtocolVersion;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
+import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.ProtocolVersion;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -45,16 +45,16 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    */
   public static final String DEFAULT_APPLICATION_ID = "B1A3B99B";
 
-  private static final String DEFAULT_RECEIVER_ID = "receiver-0";
+  static final String DEFAULT_RECEIVER_ID = "receiver-0";
   private static final int HEARTBEAT_SECONDS = 5;
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
 
   /** This custom namespace is used to identify messages related to our application. */
-  private static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
+  static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
 
-  private static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
-  private static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
-  private static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
+  static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
+  static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
+  static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
 
   private static final Map<String, Object> CONNECT_MESSAGE = messagePayload("CONNECT");
   private static final Map<String, Object> PING_MESSAGE = messagePayload("PING");
@@ -78,7 +78,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    * @param type
    * @return a simple message with no fields
    */
-  private static final Map<String, Object> messagePayload(String type) {
+  static final Map<String, Object> messagePayload(String type) {
     Map<String, Object> out = new HashMap<>();
     out.put("type", type);
     return Collections.unmodifiableMap(out);
@@ -95,6 +95,21 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    */
   private CastMessage generateMessage(
       String namespace, String destinationId, Map<String, Object> payload) throws IOException {
+    return generateMessage(namespace, senderId, destinationId, payload);
+  }
+
+  /**
+   * Generates a protobuf message with the given payload.
+   *
+   * @param namespace the label to determine which message stream this belongs to
+   * @param senderId the sender
+   * @param destinationId either the default value or the value established for the session
+   * @param payload a series of key values to turn into a JSON string
+   * @return a fully constructed message
+   * @throws IOException when JSON serialization fails
+   */
+  static CastMessage generateMessage(
+      String namespace, String senderId, String destinationId, Object payload) throws IOException {
     CastMessage.Builder out = CastMessage.newBuilder();
     out.setDestinationId(destinationId);
     out.setSourceId(senderId);
@@ -201,6 +216,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
         break;
       case NAMESPACE_CUSTOM:
         LOG.info("MESSAGE '{}' {}", name, msg.getPayloadUtf8());
+        break;
       default:
         LOG.debug("other message");
         break;

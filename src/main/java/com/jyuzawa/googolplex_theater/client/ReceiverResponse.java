@@ -1,5 +1,8 @@
 package com.jyuzawa.googolplex_theater.client;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -8,21 +11,52 @@ import java.util.List;
  * @author jyuzawa
  */
 public final class ReceiverResponse {
-  private static final String TYPE_RECEIVER_STATUS = "RECEIVER_STATUS";
+  static final String TYPE_RECEIVER_STATUS = "RECEIVER_STATUS";
 
-  public int requestId;
-  public String type;
-  public ReceiverResponse.Status status;
-  public String reason;
+  public final int requestId;
+  public final String type;
+  public final ReceiverResponse.Status status;
+  public final String reason;
 
-  private static final class Status {
-    public List<ReceiverResponse.Application> applications;
+  @JsonCreator
+  public ReceiverResponse(
+      @JsonProperty("requestId") int requestId,
+      @JsonProperty("type") String type,
+      @JsonProperty("status") ReceiverResponse.Status status,
+      @JsonProperty("reason") String reason) {
+    this.requestId = requestId;
+    this.type = type;
+    this.status = status;
+    this.reason = reason;
   }
 
-  private static final class Application {
-    public String appId;
-    public boolean isIdleScreen;
-    public String transportId;
+  static final class Status {
+    public final List<ReceiverResponse.Application> applications;
+
+    @JsonCreator
+    public Status(@JsonProperty("applications") List<ReceiverResponse.Application> applications) {
+      if (applications == null) {
+        this.applications = Collections.emptyList();
+      } else {
+        this.applications = Collections.unmodifiableList(applications);
+      }
+    }
+  }
+
+  static final class Application {
+    public final String appId;
+    public final boolean isIdleScreen;
+    public final String transportId;
+
+    @JsonCreator
+    public Application(
+        @JsonProperty("appId") String appId,
+        @JsonProperty("isIdleScreen") boolean isIdleScreen,
+        @JsonProperty("transportId") String transportId) {
+      this.appId = appId;
+      this.isIdleScreen = isIdleScreen;
+      this.transportId = transportId;
+    }
   }
 
   /**
@@ -32,10 +66,7 @@ public final class ReceiverResponse {
    * @return whether this message is an application status
    */
   public boolean isApplicationStatus() {
-    return TYPE_RECEIVER_STATUS.equals(type)
-        && status != null
-        && status.applications != null
-        && !status.applications.isEmpty();
+    return TYPE_RECEIVER_STATUS.equals(type) && status != null && !status.applications.isEmpty();
   }
 
   /**

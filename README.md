@@ -3,22 +3,47 @@ by yuzawa-san
 
 ![Icon](src/main/resources/favicon.png)
 
-Persistently maintain multiple Chromecast screens on you local network without using your browser.
+[![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
+[![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
+![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)
+![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)
+
+Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
 Originally developed to display statistics dashboards.
 
+![Example](docs/example.jpg)
+
 There are several tools and libraries out there (see below), but this project is intended to be very minimalist.
-There is a simple UI to trigger refreshes. There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
-The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an iframe.
+There is a simple web UI to check device info and trigger refreshes.
+
+![Screenshot](docs/screenshot.png)
+
+There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
+The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an IFRAME.
 The receiver application can be customized easily to suit your needs.
+The application will try to reconnect if a session is ended for whatever reason.
 
 ## Requirements
 
-* Java 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application.
-* The application must run on the same network as your Chromecasts.
-* Multicast DNS must work on your network and on the machine you run the application on.
-* IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) 
-* Linux or MacOS is preferred. Windows is not tested.
+This application has very minimal runtime requirements:
+
+* Java runtime version 8 or later.
+* Linux or MacOS is preferred. Windows appears to work, but the maintainer lacks access to the hardware to test, so your mileage may vary.
+
+There are certain requirements for networking which are beyond the realm of this project, but should be noted:
+
+* This application must run on the same network as your Chromecasts.
+* Multicast DNS must work on your network and on the machine you run the application on. This is how the devices and the application discover each other.
+* IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
+
+Development requirements:
+
+* JDK 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
+
+NOTE: The Java 8 is the minimum target version to support some older versions of 
+Raspberry Pi OS (Raspbian). This may be subject to change.
 
 ## Installation
 
@@ -26,21 +51,22 @@ Download a [release version](https://github.com/yuzawa-san/googolplex-theater/re
 
 Alternatively, clone/download this repo, and run:
 ```
-./gradlew build distZip
+./gradlew build
 ```
+
 This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
 
-Expand the archive and cd into directory.
+Once you have the ZIP archive, expand it in the desired destination location and `cd` into directory.
 
+To show all options:
 ```
 ./bin/googolplex-theater --help
 ```
-will show all options.
 
+To run the application with default settings:
 ```
 ./bin/googolplex-theater
 ```
-will run the application with default settings.
 
 ### Configuration
 
@@ -56,7 +82,7 @@ See service descriptor files for upstart, systemd, and launchd in the `./service
 
 ### Case Study: Grafana Dashboards
 
-The maintainer has used this to show statistics dashboards in an software engineering context.
+The maintainer has used this to show statistics dashboards in a software engineering context.
 
 * Configure and name your Chromecasts.
 * Create one Grafana playlist per device.
@@ -68,7 +94,7 @@ The maintainer has used this to show statistics dashboards in an software engine
 * Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * Run the application as a daemon using systemd or upstart or whatever you want.
 * Config is updated periodically as our dashboard needs change. The updates are automatically picked up.
-* If a screen needs to be refreshed, one can do so by accessing the UI and hitting a few buttons.
+* If a screen needs to be refreshed, one can do so by accessing the web UI and hitting a few buttons.
 
 ### Using a Custom Receiver
 
@@ -78,26 +104,32 @@ For custom receivers, you will be required to [sign up as a Chromecast developer
 
 Currently the device name and settings are printed to the screen. Customize the listener handler to do as you wish.
 
-Host your modified file via HTTP on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
+Host your modified file via HTTPS on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
 
 Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
+
+### Troubleshooting
+
+There may be some issues related to discovering the Chromecast devices on your network.
+It is important that the service discovery uses the network interface and IP address attached to the network with the Chromecasts.
+The application will make decent attempt to find the proper network interface to use.
+There is a chance it may find the wrong interface/address based on your system configration (wireless internet vs ethernet, VPN, ordering).
+Some diagnostic information is printed in the application output annotated with `com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery`.
+There is a command line argument (`-i`) which allows the desired network interface (by name) or IP address to be provided.
 
 ## Contributing
 
 _NOTE: due to COVID-19 the maintainer does not have regular access to the hardware to test this application._
 
+See [CONTRIBUTING.md](contributing.md) for more details.
+
 This is intended to be minimalist and easy to set up, so advanced features are not the goal here. Some other projects listed below may be more suited for your use case.
-
-This is a side project, so the maintainer provides no guarantee to the speed at which submissions can be accepted given the need to test this with hardware.
-
-NOTE: Sometimes it may be necessary to compile protobuf manually prior to IDE development:
-```
-./gradlew generateProto
-```
 
 ### TODO
 
+* Split screen layouts
 * Dockerfile? (may not work with mdns)
+* Framing proxy (may not be feasible or allowed under HTTPS)
 
 ## Related Projects
 
@@ -109,23 +141,20 @@ This application overlaps in functionality with some of these fine projects:
 * [chromecast-java-api-v2](https://github.com/vitalidze/chromecast-java-api-v2) - java library
 * [pychromecast](https://github.com/balloob/pychromecast) - python library
 
-Foundational work has been done to research how the Chromecast protocol works and these protocol libraries have been developed in a variety of languages.
-These are simple multipurpose bindings rather than logical implementations. A lot of the headless senders are built off of these.
+Foundational work has been done to research how the Chromecast protocol works and these protocol libraries have been developed in a variety of languages. A lot of the headless senders are built off of these.
 
 ### Browser Senders
 * [dashcast](https://github.com/stestagg/dashcast) - simple dashboard display application 
 * [chromecast-dashboard](https://github.com/boombatower/chromecast-dashboard) - similar to dashcast
 
-These applications cast directly from your browser. You may need to have your browser running. There are usually no persistence or reconnect capability.
+These applications cast directly from your browser. You may need to have your browser up and running all of the time.
 
 ### Headless Senders
 * [greenscreen](https://github.com/groupon/greenscreen) - original digital signage implementation
 * [multicast](https://github.com/superhawk610/multicast) - a fork/refactor of greenscreen
 * [Chromecast-Kiosk](https://github.com/mrothenbuecher/Chromecast-Kiosk) - similar to greenscreen or multicast
 
-These applications cast without a Chrome browser running, rather they utilized the Chromecast protocol to establish a communication session with the devices.
-They provide a level of persistence in the event of failures. They utilize a variety of storage backends and have varying degrees of setup and configuration.
-They may utilize multicast DNS service discovery.
+These applications cast without a Chrome browser running, rather they utilize the Chromecast protocol to establish a communication session with the devices directly.
 
 This application is most similar to the headless sender projects. It does not use a protocol implementation library.
 
