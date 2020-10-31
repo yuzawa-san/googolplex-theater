@@ -1,4 +1,4 @@
-FROM circleci/openjdk:11-jdk-stretch AS BUILD_STAGE
+FROM openjdk:11-jdk AS BUILD_STAGE
 USER root
 WORKDIR /app
 RUN mkdir -p src/main/java
