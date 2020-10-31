@@ -107,9 +107,6 @@ test {
 }
 
 def getGitHash = { ->
-	if (!(new File(".git").exists())) {
-		return "unknown"
-	}
 	def stdout = new ByteArrayOutputStream()
 	exec {
 		commandLine 'git', 'rev-parse', 'HEAD'
