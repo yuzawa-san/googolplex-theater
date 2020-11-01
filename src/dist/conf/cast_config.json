@@ -1,6 +1,6 @@
 {
 	"devices": [{
-		"name": "NameOfYourDevice",
+		"name": "NameOfYourDevicefa",
 		"settings": {
 			"url": "https://example.com/",
 			"refreshSeconds": 3600

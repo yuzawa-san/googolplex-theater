@@ -8,6 +8,7 @@ by yuzawa-san
 ![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)
 ![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)
+[![Dockerhub release](https://img.shields.io/docker/v/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
@@ -67,6 +68,22 @@ To run the application with default settings:
 ```
 ./bin/googolplex-theater
 ```
+
+### Docker Installation
+
+The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
+This may be comparatively easier versus getting a proper Java runtime installed.
+This is released in a few common processor architecures: amd64 and arm64.
+The latter should work for newer Raspberry Pi models.
+[Older models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) which use older ARM versions are not supported.
+
+To run a specific `VERSION` of the application:
+```
+docker run --net=host -v /path/to/your/conf:/opt/java-app/conf yuzawa/googolplex-theater:VERSION
+```
+For the service discovery to work correctly, you will need the `--net=host` option.
+There is no safer way to get this working at this point in time.
+The `conf` directory is mounted as a docker volume.
 
 ### Configuration
 

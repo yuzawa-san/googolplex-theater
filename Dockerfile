@@ -6,10 +6,13 @@ COPY build.gradle gradlew ./
 COPY gradle gradle
 RUN ./gradlew --version
 COPY . .
-RUN ./gradlew build installDist
+RUN ./gradlew installDist
 
 FROM openjdk:11-jre-slim
 WORKDIR /opt/java-app
 COPY --from=BUILD_STAGE /app/build/install/googolplex-theater/ .
-EXPOSE 8080
+ENV JAVA_OPTS=""
+EXPOSE 8000
+EXPOSE 5353/udp
+VOLUME ["/opt/java-app/conf"]
 ENTRYPOINT ["./bin/googolplex-theater"]
