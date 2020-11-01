@@ -89,6 +89,8 @@ docker run --net=host -v /path/to/your/conf:/opt/java-app/conf yuzawa/googolplex
 
 For the service discovery to work correctly, you will need the `--net=host` option.
 There is no safer way to get this working at this point in time.
+Sadly, this option does not work in Mac.
+If you get warnings about port 5353 being in use, you may need to disable Avahi on Linux.
 The `conf` directory is mounted as a docker volume.
 This will seamlessly map your local configuration into the Docker runtime.
 
