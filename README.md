@@ -120,6 +120,8 @@ The maintainer has used this to show statistics dashboards in a software enginee
 * Config is updated periodically as our dashboard needs change. The updates are automatically picked up.
 * If a screen needs to be refreshed, one can do so by accessing the web UI and hitting a few buttons.
 
+Alternatively, you may use Docker if you Pi is newer.
+
 ### Using a Custom Receiver
 
 If you wish to customize the behavior of the receiver from just displaying a single URL in an IFRAME, see the example custom receiver in `receiver/custom.html`.
@@ -152,7 +154,6 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 ### TODO
 
 * Split screen layouts
-* Dockerfile? (may not work with mdns)
 * Framing proxy (may not be feasible or allowed under HTTPS)
 
 ## Related Projects
