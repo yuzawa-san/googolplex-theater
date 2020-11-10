@@ -6,8 +6,10 @@ by yuzawa-san
 [![Build Status](https://travis-ci.org/yuzawa-san/googolplex-theater.svg?branch=master)](https://travis-ci.org/yuzawa-san/googolplex-theater)
 [![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
 ![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)
-![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
+[![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/yuzawa/googolplex-theater?label=docker%20image%20size)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
+[![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
 
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
@@ -74,8 +76,6 @@ To run the application with default settings:
 ### Docker Installation
 
 The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
-
-[![Dockerhub release](https://img.shields.io/docker/v/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
 
 This may be comparatively easier versus getting a proper Java runtime installed.
 This is released in a few common processor architecures: amd64 and arm64.
