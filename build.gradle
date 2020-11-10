@@ -142,6 +142,16 @@ distributions {
 	}
 }
 
+task dockerBuild(type:Exec) {
+	def args = ['docker','buildx','build','--platform','linux/amd64,linux/arm64']
+	if (!version.contains('-SNAPSHOT')) {
+		args += ['-t','yuzawa/googolplex-theater:latest']
+	}
+	args += ['-t',"yuzawa/googolplex-theater:v${version}",'--push','.']
+	commandLine args
+}
+beforeReleaseBuild.dependsOn dockerBuild
+
 spotbugs {
 	ignoreFailures = true
 	excludeFilter = file('spotbugs_exclude.xml')
