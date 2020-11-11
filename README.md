@@ -78,9 +78,9 @@ To run the application with default settings:
 The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
 
 This may be comparatively easier versus getting a proper Java runtime installed.
-This is released in a few common processor architecures: amd64 and arm64.
-The latter should work for newer Raspberry Pi models.
-[Older models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) which use older ARM versions are not supported.
+This is released in a few common processor architectures: amd64 and arm64.
+The latter should work for newer Raspberry Pi models with architecture ARMv8-A (64/32-bit).
+[Older models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) such as the "Zero" which use older ARM versions are not supported.
 
 To run a specific `VERSION` of the application:
 ```
