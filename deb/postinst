@@ -1,0 +1,5 @@
+#!/bin/sh
+
+debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
+$debsystemctl enable googolplex-theater
+$debsystemctl restart googolplex-theater

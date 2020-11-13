@@ -1,0 +1,4 @@
+#!/bin/sh
+
+debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
+$debsystemctl stop googolplex-theater

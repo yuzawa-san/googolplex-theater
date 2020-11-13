@@ -6,6 +6,7 @@ plugins {
 	id "com.github.ben-manes.versions" version "0.36.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '1.16'
+	id "nebula.deb" version "8.4.1"
 }
 
 apply plugin: "java"
@@ -13,9 +14,12 @@ apply plugin: "eclipse"
 apply plugin: "idea"
 apply plugin: "application"
 apply plugin: "jacoco"
+apply plugin: "nebula.ospackage"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+
+description="Persistently maintain multiple Chromecasts as digital signage without a browser."
 
 repositories {
 	mavenCentral()
@@ -149,6 +153,39 @@ task dockerBuild(type:Exec, dependsOn:installDist) {
 	}
 	args += ['-t',"yuzawa/googolplex-theater:v${version}",'--push','.']
 	commandLine args
+}
+
+buildDeb {
+	dependsOn installDist
+	license "MIT"
+	url "https://github.com/yuzawa-san/googolplex-theater"
+	packager "James Yuzawa"
+	into '/opt/googolplex-theater'
+	user 'googolplex-theater'
+	permissionGroup 'googolplex-theater'
+	requires("openjdk-11-jre-headless").or("openjdk-8-jre-headless")
+	from("${project.buildDir}/install/googolplex-theater") {
+		exclude 'conf'
+		exclude 'service'
+		fileMode 0755
+	}
+	from("${project.buildDir}/install/googolplex-theater/conf") {
+		fileType CONFIG | NOREPLACE
+		fileMode 0644
+		into 'conf'
+	}
+	configurationFile("/opt/googolplex-theater/conf/cast-config.json")
+	from("${projectDir}/deb/googolplex-theater.service") {
+		fileType CONFIG | NOREPLACE
+		addParentDirs = false
+		fileMode 0644
+		into "/usr/lib/systemd/system"
+	}
+	configurationFile("/usr/lib/systemd/system/googolplex-theater.service")
+	preInstall file("${projectDir}/deb/preinst")
+	postInstall file("${projectDir}/deb/postinst")
+	preUninstall file("${projectDir}/deb/prerm")
+	postUninstall file("${projectDir}/deb/postrm")
 }
 
 spotbugs {

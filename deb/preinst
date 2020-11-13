@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if ! getent group googolplex-theater >/dev/null; then
+    addgroup --system googolplex-theater
+fi
+
+if ! getent passwd googolplex-theater >/dev/null; then
+    adduser --quiet \
+            --system \
+            --ingroup googolplex-theater \
+            --quiet \
+            --disabled-login \
+            --disabled-password \
+            --home /opt/googolplex-theater \
+            --no-create-home \
+            -gecos "Googolplex-Theater service" \
+            googolplex-theater
+fi
