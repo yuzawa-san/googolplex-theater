@@ -40,6 +40,7 @@ There are certain requirements for networking which are beyond the realm of this
 * This application must run on the same network as your Chromecasts.
 * Multicast DNS must work on your network and on the machine you run the application on. This is how the devices and the application discover each other.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
+* It is strongly recommended to use a piece of dedicated hardware (like the inexpensive Raspberry Pi) to run this application.
 
 Development requirements:
 
@@ -50,9 +51,56 @@ Raspberry Pi OS (Raspbian). This may be subject to change.
 
 ## Installation
 
-You may download the application and run natively, or alternative run using Docker (see below).
+There are few options for installation:
 
-Download a [release version](https://github.com/yuzawa-san/googolplex-theater/releases) ZIP archive.
+* Download a Debian package (Respberry Pi compatible) from the [releases page](https://github.com/yuzawa-san/googolplex-theater/releases).
+* Use a Docker image published to Dockerhub.
+* Download a [release ZIP archive](https://github.com/yuzawa-san/googolplex-theater/releases) or build the application locally.
+
+### Package Installation
+
+The Raspberry Pi is a cost-effective piece of hardware to run this application, so Raspberry Pi OS (Raspbian) is the main build target for this package.
+The package should theoretically work with other Debian distros as well.
+
+Download a Debian package from [the releases page](https://github.com/yuzawa-san/googolplex-theater/releases) using wget or curl. Then install:
+```
+sudo apt install ./googolplex-theater......deb
+```
+
+It may prompt you to install a version of Java.
+This automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
+This application is registered as a systemd service, so the `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
+
+Perhaps this package will be released in the public repositories one day, but manual download is the only option available currently.
+
+### Docker Installation
+
+The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
+
+This may be comparatively easier versus getting a proper Java runtime installed.
+This is released in a few common processor architectures: amd64, arm64/v8, arm/v7.
+The latter should work for newer Raspberry Pi models with architecture ARMv8-A (64/32-bit).
+Nuance: The kernel of Raspberry Pi OS is generally built for 32-bit, so the despite the hardware physically supporting arm64/v8, both the native runtime and docker runtime is pinned to arm/v7.
+[Older models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) such as the "Zero" which use older ARM versions are not supported.
+
+To run a specific `VERSION` of the application:
+```
+docker run --net=host -v /path/to/your/conf:/opt/java-app/conf yuzawa/googolplex-theater:VERSION
+```
+
+For the service discovery to work correctly, you will need the `--net=host` option.
+There is no safer way to get this working at this point in time.
+Sadly, this option does not work in Mac.
+If you get warnings about port 5353 being in use, you may need to disable Avahi on Linux.
+The `conf` directory is mounted as a docker volume.
+This will seamlessly map your local configuration into the Docker runtime.
+Arguments like `--help` can be appended onto the end of the `docker run` example above.
+
+It is recommended to wrap your `docker run` in something to keep it running as a daemon or persistent service.
+
+### Manual Installation
+
+Download a ZIP archive from [the releases page](https://github.com/yuzawa-san/googolplex-theater/releases).
 
 Alternatively, clone/download this repo, and run:
 ```
@@ -73,56 +121,33 @@ To run the application with default settings:
 ./bin/googolplex-theater
 ```
 
-### Docker Installation
+#### Running as Daemon
 
-The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
+To provide resiliency, it is recommended to run the application as a daemon.
+See service descriptor files for upstart, systemd, and launchd in the `./service/` directory. They should work with minor modifications. Please refer to their respective installation guides to enable on your system.
 
-This may be comparatively easier versus getting a proper Java runtime installed.
-This is released in a few common processor architectures: amd64 and arm64.
-The latter should work for newer Raspberry Pi models with architecture ARMv8-A (64/32-bit).
-[Older models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) such as the "Zero" which use older ARM versions are not supported.
 
-To run a specific `VERSION` of the application:
-```
-docker run --net=host -v /path/to/your/conf:/opt/java-app/conf yuzawa/googolplex-theater:VERSION
-```
-
-For the service discovery to work correctly, you will need the `--net=host` option.
-There is no safer way to get this working at this point in time.
-Sadly, this option does not work in Mac.
-If you get warnings about port 5353 being in use, you may need to disable Avahi on Linux.
-The `conf` directory is mounted as a docker volume.
-This will seamlessly map your local configuration into the Docker runtime.
-
-### Configuration
+## Usage
 
 The cast configuration is defined in `./conf/cast_config.json`.
 The location of your configuration can be customized using a command line argument.
 The file is automatically watched for changes.
 Some example use cases involve using cron and putting your config under version control and pulling from origin periodically, or downloading from S3/web, or updating using rsync/scp.
 
-### Running as Daemon
-
-To provide resiliency, it is recommended to run the application as a daemon.
-See service descriptor files for upstart, systemd, and launchd in the `./service/` directory. They should work with minor modifications. Please refer to their respective installation guides to enable on your system.
-
 ### Case Study: Grafana Dashboards
 
 The maintainer has used this to show statistics dashboards in a software engineering context.
 
+* Buy a new Raspberry Pi and install the default Raspberry Pi OS (Raspbian).
 * Configure and name your Chromecasts.
+* Install application Debian package and Java runtime.
 * Create one Grafana playlist per device.
 * Figure out how to use proper Grafana auth (proxy, token, etc).
 * Make your cast config file with each playlist url per device.
 * Place the cast config file under version control (git) or store it someplace accessible (http/s3/gcs).
-* Download application on Raspberry Pi.
-* Install Java runtime.
 * Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
-* Run the application as a daemon using systemd or upstart or whatever you want.
 * Config is updated periodically as our dashboard needs change. The updates are automatically picked up.
-* If a screen needs to be refreshed, one can do so by accessing the web UI and hitting a few buttons.
-
-Alternatively, you may use Docker if you Pi is newer.
+* If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8000 and hitting a few buttons.
 
 ### Using a Custom Receiver
 
@@ -155,6 +180,7 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 
 ### TODO
 
+* Raspberry Pi OS package distribution
 * Split screen layouts
 * Framing proxy (may not be feasible or allowed under HTTPS)
 
