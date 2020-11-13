@@ -1,4 +1,4 @@
+.git
 **/.DS_Store
 **/Dockerfile
 bin/
-build/
