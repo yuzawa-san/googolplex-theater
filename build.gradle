@@ -175,7 +175,7 @@ buildDeb {
 		fileMode 0644
 		into 'conf'
 	}
-	configurationFile("/opt/googolplex-theater/conf/cast-config.json")
+	configurationFile("/opt/googolplex-theater/conf/cast_config.json")
 	from("${projectDir}/deb/googolplex-theater.service") {
 		fileType CONFIG | NOREPLACE
 		addParentDirs = false
