@@ -1,7 +1,7 @@
 FROM adoptopenjdk:11-jre-hotspot-focal
-WORKDIR /opt/java-app
+WORKDIR /opt/googolplex-theater
 COPY build/install/googolplex-theater/ .
 EXPOSE 8000
 EXPOSE 5353/udp
-VOLUME ["/opt/java-app/conf"]
+VOLUME ["/opt/googolplex-theater/conf"]
 ENTRYPOINT ["./bin/googolplex-theater"]

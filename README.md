@@ -69,7 +69,8 @@ sudo apt install ./googolplex-theater......deb
 
 It may prompt you to install a version of Java.
 This automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
-This application is registered as a systemd service, so the `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
+The application is installed in `/opt/googolplex-theater`.
+It is registered as a systemd service, so the `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
 
 Perhaps this package will be released in the public repositories one day, but manual download is the only option available currently.
 
@@ -85,7 +86,7 @@ Nuance: The kernel of Raspberry Pi OS is generally built for 32-bit, so the desp
 
 To run a specific `VERSION` of the application:
 ```
-docker run --net=host -v /path/to/your/conf:/opt/java-app/conf yuzawa/googolplex-theater:VERSION
+docker run --net=host -v /path/to/your/conf:/opt/googolplex-theater/conf yuzawa/googolplex-theater:VERSION
 ```
 
 For the service discovery to work correctly, you will need the `--net=host` option.
