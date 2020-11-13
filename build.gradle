@@ -150,7 +150,6 @@ task dockerBuild(type:Exec) {
 	args += ['-t',"yuzawa/googolplex-theater:v${version}",'--push','.']
 	commandLine args
 }
-beforeReleaseBuild.dependsOn dockerBuild
 
 spotbugs {
 	ignoreFailures = true
