@@ -24,7 +24,7 @@ There is a simple web UI to check device info and trigger refreshes.
 ![Screenshot](docs/screenshot.png)
 
 There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
-The JSON configuration is conveyed to the receiver application, which by default accepts url to display in an IFRAME.
+The JSON configuration is conveyed to the receiver application, which by default accepts a URL to display in an IFRAME.
 The receiver application can be customized easily to suit your needs.
 The application will try to reconnect if a session is ended for whatever reason.
 
@@ -70,7 +70,9 @@ sudo apt install ./googolplex-theater......deb
 It may prompt you to install a version of Java.
 This automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
 The application is installed in `/opt/googolplex-theater`.
-It is registered as a systemd service, so the `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
+It is registered as a systemd service enabled to launch at startup.
+The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service` if you wish to customize or update the program arguments.
+The `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
 
 Perhaps this package will be released in the public repositories one day, but manual download is the only option available currently.
 
