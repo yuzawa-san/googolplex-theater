@@ -48,6 +48,7 @@ public class FakeCast implements Closeable {
   private final int port;
   final String name;
   String custom;
+  boolean pongable;
 
   public FakeCast(EventLoopGroup workerGroup, int port) throws Exception {
     this.port = port;
@@ -161,16 +162,31 @@ public class FakeCast implements Closeable {
     // bad
     channel.writeAndFlush(CastMessage.newBuilder().setPayloadType(PayloadType.BINARY));
     // error
-    ReceiverResponse.Status status = new ReceiverResponse.Status(Collections.emptyList());
-    ReceiverResponse response =
-        new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, "BROKEN");
-    CastMessage launchedMessage =
-        GoogolplexClientHandler.generateMessage(
-            GoogolplexClientHandler.NAMESPACE_RECEIVER,
-            GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-            "*",
-            response);
-    channel.writeAndFlush(launchedMessage);
+    {
+      ReceiverResponse.Status status = new ReceiverResponse.Status(Collections.emptyList());
+      ReceiverResponse response =
+          new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, "BROKEN");
+      CastMessage launchedMessage =
+          GoogolplexClientHandler.generateMessage(
+              GoogolplexClientHandler.NAMESPACE_RECEIVER,
+              GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+              "*",
+              response);
+      channel.writeAndFlush(launchedMessage);
+    }
+    // empty application update
+    {
+      ReceiverResponse.Status status = new ReceiverResponse.Status(Collections.emptyList());
+      ReceiverResponse response =
+          new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, null);
+      CastMessage launchedMessage =
+          GoogolplexClientHandler.generateMessage(
+              GoogolplexClientHandler.NAMESPACE_RECEIVER,
+              GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+              "*",
+              response);
+      channel.writeAndFlush(launchedMessage);
+    }
   }
 
   public void loadIdleScreen() throws IOException {
@@ -192,18 +208,25 @@ public class FakeCast implements Closeable {
   private class FakeChromecastHandler extends SimpleChannelInboundHandler<CastMessage> {
 
     @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+      pongable = true;
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, CastMessage msg) throws Exception {
       channel = ctx.channel();
 
       switch (msg.getNamespace()) {
         case GoogolplexClientHandler.NAMESPACE_HEARTBEAT:
-          CastMessage heartbeatMessage =
-              GoogolplexClientHandler.generateMessage(
-                  GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
-                  GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-                  msg.getSourceId(),
-                  GoogolplexClientHandler.messagePayload("PONG"));
-          channel.writeAndFlush(heartbeatMessage);
+          if (pongable) {
+            CastMessage heartbeatMessage =
+                GoogolplexClientHandler.generateMessage(
+                    GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
+                    GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+                    msg.getSourceId(),
+                    GoogolplexClientHandler.messagePayload("PONG"));
+            channel.writeAndFlush(heartbeatMessage);
+          }
           break;
         case GoogolplexClientHandler.NAMESPACE_RECEIVER:
           ReceiverResponse.Application application =

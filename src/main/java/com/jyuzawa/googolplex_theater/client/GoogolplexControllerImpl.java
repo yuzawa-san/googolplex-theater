@@ -57,6 +57,8 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   private static final int DEFAULT_BASE_RECONNECT_SECONDS = 15;
   private static final int DEFAULT_RECONNECT_NOISE_SECONDS = 5;
   private static final int RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
+  private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
+  private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
 
   private final EventLoopGroup eventLoopGroup;
   private final EventLoop eventLoop;
@@ -70,14 +72,22 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   private final int reconnectNoiseSeconds;
 
   public GoogolplexControllerImpl(EventLoopGroup eventLoopGroup, String appId) throws IOException {
-    this(eventLoopGroup, appId, DEFAULT_BASE_RECONNECT_SECONDS, DEFAULT_RECONNECT_NOISE_SECONDS);
+    this(
+        eventLoopGroup,
+        appId,
+        DEFAULT_BASE_RECONNECT_SECONDS,
+        DEFAULT_RECONNECT_NOISE_SECONDS,
+        HEARTBEAT_INTERVAL_SECONDS,
+        HEARTBEAT_TIMEOUT_SECONDS);
   }
 
   public GoogolplexControllerImpl(
       EventLoopGroup eventLoopGroup,
       String appId,
       int baseReconnectSeconds,
-      int reconnectNoiseSeconds)
+      int reconnectNoiseSeconds,
+      int heartbeatIntervalSeconds,
+      int heartbeatTimeoutSeconds)
       throws IOException {
     // the state is maintained in these maps
     this.nameToDeviceInfo = new ConcurrentHashMap<>();
@@ -110,7 +120,10 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
             p.addLast("frameEncoder", new LengthFieldPrepender(4));
             p.addLast("protobufEncoder", new ProtobufEncoder());
             p.addLast("logger", new LoggingHandler());
-            p.addLast("handler", new GoogolplexClientHandler(appId));
+            p.addLast(
+                "handler",
+                new GoogolplexClientHandler(
+                    appId, heartbeatIntervalSeconds, heartbeatTimeoutSeconds));
           }
         });
   }

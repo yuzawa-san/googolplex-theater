@@ -5,9 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.jyuzawa.googolplex_theater.client.GoogolplexController;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 class ServiceDiscoveryTest {
 
@@ -30,5 +33,12 @@ class ServiceDiscoveryTest {
         () -> {
           ServiceDiscovery.getInterfaceAddress("jyuzawa.com");
         });
+  }
+
+  @Test
+  void instantiationTest() throws IOException {
+    GoogolplexController controller = Mockito.mock(GoogolplexController.class);
+    ServiceDiscovery sd = new ServiceDiscovery(controller, null);
+    sd.close();
   }
 }

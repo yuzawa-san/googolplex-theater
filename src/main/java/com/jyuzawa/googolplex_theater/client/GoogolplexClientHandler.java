@@ -10,8 +10,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.ScheduledFuture;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,8 +46,6 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   public static final String DEFAULT_APPLICATION_ID = "B1A3B99B";
 
   static final String DEFAULT_RECEIVER_ID = "receiver-0";
-  private static final int HEARTBEAT_SECONDS = 5;
-  private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
 
   /** This custom namespace is used to identify messages related to our application. */
   static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
@@ -66,12 +64,17 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
 
   private ScheduledFuture<?> heartbeatFuture;
   private Instant lastHeartbeat;
+  private final int heartbeatIntervalSeconds;
+  private final Duration heartbeatTimeout;
   private final CastMessage heartbeatMessage;
 
-  public GoogolplexClientHandler(String appId) throws IOException {
+  public GoogolplexClientHandler(
+      String appId, int heartbeatIntervalSeconds, int heartbeatTimeoutSeconds) throws IOException {
     this.appId = appId;
     this.senderId = "sender-" + System.identityHashCode(this);
     this.heartbeatMessage = generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);
+    this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
+    this.heartbeatTimeout = Duration.ofSeconds(heartbeatTimeoutSeconds);
   }
 
   /**
@@ -146,9 +149,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
         ctx.executor()
             .scheduleWithFixedDelay(
                 () -> {
-                  if (lastHeartbeat
-                      .plus(HEARTBEAT_TIMEOUT_SECONDS, ChronoUnit.SECONDS)
-                      .isBefore(Instant.now())) {
+                  if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
                     /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
                     String name = getDeviceInfo(ctx).name;
                     LOG.warn("EXPIRE '{}'", name);
@@ -158,8 +159,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
                     ctx.writeAndFlush(heartbeatMessage);
                   }
                 },
-                HEARTBEAT_SECONDS,
-                HEARTBEAT_SECONDS,
+                heartbeatIntervalSeconds,
+                heartbeatIntervalSeconds,
                 TimeUnit.SECONDS);
     /*
      * there was no heartbeat now, but we initialize with the start time, so we don't timeout immediately.
@@ -281,10 +282,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     // empirically, these are connection resets.
     DeviceInfo device = getDeviceInfo(ctx);
-    String name = "unknown";
-    if (device != null) {
-      name = device.name;
-    }
+    String name = (device == null) ? "unknown" : device.name;
     LOG.error("EXCEPTION '{}' {}: {}", name, cause.getClass().getSimpleName(), cause.getMessage());
     // this close will trigger the controller to reconnect
     ctx.close();

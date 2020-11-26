@@ -87,4 +87,20 @@ class GoogolplexServerTest {
                           testContext.completeNow();
                         })));
   }
+
+  @Test
+  void faviconTest(Vertx vertx, VertxTestContext testContext) {
+    WebClient client = WebClient.create(vertx);
+    client
+        .get(port, "localhost", "/favicon.png")
+        .as(BodyCodec.buffer())
+        .send(
+            testContext.succeeding(
+                response ->
+                    testContext.verify(
+                        () -> {
+                          assertTrue(response.body().length() > 0);
+                          testContext.completeNow();
+                        })));
+  }
 }

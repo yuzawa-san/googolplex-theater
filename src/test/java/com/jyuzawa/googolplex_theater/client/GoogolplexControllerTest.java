@@ -42,7 +42,7 @@ class GoogolplexControllerTest {
     workerGroup = new NioEventLoopGroup(1);
     controller =
         new GoogolplexControllerImpl(
-            workerGroup, GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 0, 0);
+            workerGroup, GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 0, 0, 1, 3);
     cast1 = new FakeCast(workerGroup, 9001);
     cast2 = new FakeCast(workerGroup, 9002);
     cast3 = new FakeCast(workerGroup, 9003);
@@ -139,6 +139,12 @@ class GoogolplexControllerTest {
     assertTransaction(cast1);
     assertTransaction(cast2);
     assertTransaction(cast3);
+
+    // test heatbeat (one cast has died)
+    cast2.pongable = false;
+    Thread.sleep(5000L);
+    // that last cast should have reconnected
+    assertTrue(cast2.pongable);
 
     // send broken messages which should restart 3
     cast3.sendBrokenMessages();
