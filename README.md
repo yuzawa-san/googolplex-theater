@@ -177,7 +177,7 @@ There is a command line argument (`-i`) which allows the desired network interfa
 
 _NOTE: due to COVID-19 the maintainer does not have regular access to the hardware to test this application._
 
-See [CONTRIBUTING.md](contributing.md) for more details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 This is intended to be minimalist and easy to set up, so advanced features are not the goal here. Some other projects listed below may be more suited for your use case.
 
