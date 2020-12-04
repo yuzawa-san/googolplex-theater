@@ -4,7 +4,7 @@ by yuzawa-san
 ![Icon](src/main/resources/favicon.png)
 
 
-[![Build Status](https://github.com/yuzawa-san/googolplex-theater/actions)](https://img.shields.io/github/workflow/status/yuzawa-san/googolplex-theater/Java%20CI)
+[![Build Status](https://img.shields.io/github/workflow/status/yuzawa-san/googolplex-theater/Java%20CI)](https://github.com/yuzawa-san/googolplex-theater/actions)
 [![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
 ![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
