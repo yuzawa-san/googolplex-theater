@@ -102,7 +102,7 @@ dependencies {
 	testImplementation 'org.mockito:mockito-core:3.6.28'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-	testImplementation 'io.vertx:vertx-junit5:3.9.4'
+	testImplementation 'io.vertx:vertx-junit5:4.0.0'
 	testImplementation 'io.vertx:vertx-junit5-web-client:3.9.4'
 }
 
