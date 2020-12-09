@@ -2,7 +2,7 @@ package com.jyuzawa.googolplex_theater.server;
 
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -30,7 +30,7 @@ public final class GoogolplexServer extends AbstractVerticle {
   }
 
   @Override
-  public void start(Future<Void> future) throws Exception {
+  public void start(Promise<Void> startPromise) throws Exception {
     Router router = Router.router(vertx);
     HandlebarsTemplateEngine engine = HandlebarsTemplateEngine.create(vertx);
     router
@@ -89,11 +89,11 @@ public final class GoogolplexServer extends AbstractVerticle {
         .requestHandler(router)
         .listen(
             port,
-            result -> {
-              if (result.succeeded()) {
-                future.complete();
+            res -> {
+              if (res.succeeded()) {
+                startPromise.complete();
               } else {
-                future.fail(result.cause());
+                startPromise.fail(res.cause());
               }
             });
     LOG.info("Running web-ui server on port " + port);

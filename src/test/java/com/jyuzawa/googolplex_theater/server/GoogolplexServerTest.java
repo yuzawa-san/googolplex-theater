@@ -29,7 +29,7 @@ class GoogolplexServerTest {
     List<JsonObject> devices = Collections.singletonList(device);
     Mockito.when(controller.getDeviceInfo()).thenReturn(devices);
     GoogolplexServer server = new GoogolplexServer(controller, port);
-    vertx.deployVerticle(server, testContext.completing());
+    vertx.deployVerticle(server, testContext.succeedingThenComplete());
   }
 
   @Test
