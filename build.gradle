@@ -157,6 +157,7 @@ task buildDocker(type:Exec, dependsOn:installDist) {
 afterReleaseBuild.dependsOn buildDocker
 
 buildDeb {
+	release '1'
 	dependsOn installDist
 	license "MIT"
 	url "https://github.com/yuzawa-san/googolplex-theater"
