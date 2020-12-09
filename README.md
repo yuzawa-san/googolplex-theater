@@ -65,7 +65,7 @@ The package should theoretically work with other Debian distros as well.
 
 Download a Debian package from [the releases page](https://github.com/yuzawa-san/googolplex-theater/releases) using wget or curl. Then install:
 ```
-sudo apt install ./googolplex-theater......deb
+sudo apt install ./googolplex-theater_VERSION-1_all.deb
 ```
 
 It may prompt you to install a version of Java.
