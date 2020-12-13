@@ -1,6 +1,7 @@
 package com.jyuzawa.googolplex_theater.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,28 +12,39 @@ import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.json.JsonObject;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
 import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class CastConfigLoaderTest {
 
   private static final String VALUE1 =
       "{ \"devices\": [{ \"name\": \"NameOfYourDevice2\", \"blah\":true, \"settings\": { \"url\": \"https://example2.com/\", \"refreshSeconds\": 9600 } }] }";
 
+  private static final String VALUE2 =
+      "{ \"devices\": [{ \"name\": \"NameOfYourDevice2\", \"blah\":true, \"settings\": { \"url\": \"https://example2.com/updated\", \"refreshSeconds\": 600 } }] }";
+
+  @TempDir File tempDir;
+
   @Test
   void loaderTest() throws IOException, InterruptedException {
-    File file = File.createTempFile("CastConfigLoaderTest-", ".json");
+    File file = new File(tempDir, "cast_config.json");
     Path path = file.toPath();
-    try (FileOutputStream fos = new FileOutputStream(file)) {
-      fos.write(VALUE1.getBytes(CharsetUtil.UTF_8));
+    try (BufferedWriter bufferedWriter =
+        Files.newBufferedWriter(
+            path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+      bufferedWriter.write(VALUE1);
     }
     BlockingQueue<CastConfig> queue = new ArrayBlockingQueue<>(10);
     GoogolplexController controller =
@@ -62,9 +74,21 @@ class CastConfigLoaderTest {
       assertEquals("NameOfYourDevice2", device.name);
       assertEquals("https://example2.com/", device.settings.get("url").asText());
       assertEquals(9600, device.settings.get("refreshSeconds").asInt());
+
+      // see if an update is detected
+      try (BufferedWriter bufferedWriter =
+          Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE)) {
+        bufferedWriter.write(VALUE2);
+      }
+      config = queue.poll(1, TimeUnit.MINUTES);
+      assertNotNull(config);
+      assertEquals(1, config.devices.size());
+      device = config.devices.get(0);
+      assertEquals("NameOfYourDevice2", device.name);
+      assertEquals("https://example2.com/updated", device.settings.get("url").asText());
+      assertEquals(600, device.settings.get("refreshSeconds").asInt());
     } finally {
       loader.close();
-      file.deleteOnExit();
     }
   }
 
