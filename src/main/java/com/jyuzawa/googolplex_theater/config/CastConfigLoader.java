@@ -4,7 +4,8 @@ import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -43,7 +44,7 @@ public final class CastConfigLoader implements Closeable {
             /*
              * the watch operation only works with directories, so we have to get the parent directory of the file.
              */
-            WatchService watchService = FileSystems.getDefault().newWatchService();
+            WatchService watchService = path.getFileSystem().newWatchService();
             Path directoryPath = path.getParent();
             directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             WatchKey key;
@@ -83,8 +84,10 @@ public final class CastConfigLoader implements Closeable {
    */
   private void load() throws IOException {
     LOG.info("Reloading cast config");
-    CastConfig out = JsonUtil.MAPPER.readValue(path.toFile(), CastConfig.class);
-    controller.processConfig(out);
+    try (InputStream stream = Files.newInputStream(path)) {
+      CastConfig out = JsonUtil.MAPPER.readValue(stream, CastConfig.class);
+      controller.processConfig(out);
+    }
   }
 
   @Override

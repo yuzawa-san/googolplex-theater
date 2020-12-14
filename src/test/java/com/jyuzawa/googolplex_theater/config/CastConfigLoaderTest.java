@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
@@ -13,8 +16,8 @@ import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -25,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
 import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 class CastConfigLoaderTest {
 
@@ -35,12 +37,18 @@ class CastConfigLoaderTest {
   private static final String VALUE2 =
       "{ \"devices\": [{ \"name\": \"NameOfYourDevice2\", \"blah\":true, \"settings\": { \"url\": \"https://example2.com/updated\", \"refreshSeconds\": 600 } }] }";
 
-  @TempDir File tempDir;
-
   @Test
   void loaderTest() throws IOException, InterruptedException {
-    File file = new File(tempDir, "cast_config.json");
-    Path path = file.toPath();
+    // For a simple file system with Unix-style paths and behavior:
+    FileSystem fs =
+        Jimfs.newFileSystem(
+            Configuration.unix().toBuilder()
+                .setWatchServiceConfiguration(
+                    WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
+                .build());
+    Path conf = fs.getPath("/conf");
+    Files.createDirectory(conf);
+    Path path = conf.resolve("cast_config.json");
     try (BufferedWriter bufferedWriter =
         Files.newBufferedWriter(
             path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
