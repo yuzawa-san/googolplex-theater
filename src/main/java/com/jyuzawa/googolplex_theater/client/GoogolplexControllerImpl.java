@@ -64,7 +64,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   private final EventLoop eventLoop;
   private final Bootstrap bootstrap;
   private final Map<String, DeviceInfo> nameToDeviceInfo;
-  private final Map<String, String> serviceNameToName;
   private final Map<String, InetSocketAddress> nameToAddress;
   private final Map<String, Channel> nameToChannel;
   private final Map<String, Integer> nameToBackoffSeconds;
@@ -91,7 +90,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
       throws IOException {
     // the state is maintained in these maps
     this.nameToDeviceInfo = new ConcurrentHashMap<>();
-    this.serviceNameToName = new ConcurrentHashMap<>();
     this.nameToAddress = new ConcurrentHashMap<>();
     this.nameToChannel = new ConcurrentHashMap<>();
     this.nameToBackoffSeconds = new ConcurrentHashMap<>();
@@ -190,8 +188,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                   LOG.debug("Found unnamed cast:\n{}", info);
                   return;
                 }
-                String serviceName = event.getName();
-                serviceNameToName.put(serviceName, name);
                 InetAddress[] addresses = info.getInetAddresses();
                 if (addresses == null || addresses.length == 0) {
                   LOG.debug("Found unaddressable cast:\n{}", info);
