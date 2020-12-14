@@ -3,15 +3,16 @@ by yuzawa-san
 
 ![Icon](src/main/resources/favicon.png)
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
+[![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
+[![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/yuzawa/googolplex-theater?label=docker%20image%20size)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
 
 [![build](https://github.com/yuzawa-san/googolplex-theater/workflows/build/badge.svg)](https://github.com/yuzawa-san/googolplex-theater/actions)
 [![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/yuzawa-san/googolplex-theater.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yuzawa-san/googolplex-theater/context:java)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/yuzawa-san/googolplex-theater.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yuzawa-san/googolplex-theater/context:javascript)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/yuzawa-san/googolplex-theater.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yuzawa-san/googolplex-theater/alerts/)
-![GitHub top language](https://img.shields.io/github/languages/top/yuzawa-san/googolplex-theater)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
-[![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/yuzawa/googolplex-theater?label=docker%20image%20size)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
-[![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
 
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
