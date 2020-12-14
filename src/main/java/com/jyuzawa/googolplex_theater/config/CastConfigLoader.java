@@ -4,7 +4,8 @@ import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -30,6 +31,7 @@ public final class CastConfigLoader implements Closeable {
   private final ExecutorService executor;
   private final Path path;
   private final GoogolplexController controller;
+  private final WatchService watchService;
 
   public CastConfigLoader(GoogolplexController controller, Path castConfigPath) throws IOException {
     this.controller = controller;
@@ -37,15 +39,18 @@ public final class CastConfigLoader implements Closeable {
     this.path = castConfigPath;
     LOG.info("Using cast config: {}", castConfigPath.toAbsolutePath());
     load();
+    this.watchService = path.getFileSystem().newWatchService();
+    /*
+     * the watch operation only works with directories, so we have to get the parent directory of the file.
+     */
+    Path directoryPath = path.getParent();
+    if (directoryPath == null) {
+      throw new IllegalArgumentException("Path has missing parent");
+    }
+    directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
     executor.submit(
         () -> {
           try {
-            /*
-             * the watch operation only works with directories, so we have to get the parent directory of the file.
-             */
-            WatchService watchService = FileSystems.getDefault().newWatchService();
-            Path directoryPath = path.getParent();
-            directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             WatchKey key;
             // this blocks until the system notifies us of any changes.
             while ((key = watchService.take()) != null) {
@@ -83,13 +88,16 @@ public final class CastConfigLoader implements Closeable {
    */
   private void load() throws IOException {
     LOG.info("Reloading cast config");
-    CastConfig out = JsonUtil.MAPPER.readValue(path.toFile(), CastConfig.class);
-    controller.processConfig(out);
+    try (InputStream stream = Files.newInputStream(path)) {
+      CastConfig out = JsonUtil.MAPPER.readValue(stream, CastConfig.class);
+      controller.processConfig(out);
+    }
   }
 
   @Override
   public void close() throws IOException {
     controller.processConfig(new CastConfig(Collections.emptyList()));
     executor.shutdownNow();
+    watchService.close();
   }
 }
