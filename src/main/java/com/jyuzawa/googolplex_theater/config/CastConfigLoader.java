@@ -31,6 +31,7 @@ public final class CastConfigLoader implements Closeable {
   private final ExecutorService executor;
   private final Path path;
   private final GoogolplexController controller;
+  private final WatchService watchService;
 
   public CastConfigLoader(GoogolplexController controller, Path castConfigPath) throws IOException {
     this.controller = controller;
@@ -38,15 +39,18 @@ public final class CastConfigLoader implements Closeable {
     this.path = castConfigPath;
     LOG.info("Using cast config: {}", castConfigPath.toAbsolutePath());
     load();
+    this.watchService = path.getFileSystem().newWatchService();
+    /*
+     * the watch operation only works with directories, so we have to get the parent directory of the file.
+     */
+    Path directoryPath = path.getParent();
+    if (directoryPath == null) {
+      throw new IllegalArgumentException("Path has missing parent");
+    }
+    directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
     executor.submit(
         () -> {
           try {
-            /*
-             * the watch operation only works with directories, so we have to get the parent directory of the file.
-             */
-            WatchService watchService = path.getFileSystem().newWatchService();
-            Path directoryPath = path.getParent();
-            directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             WatchKey key;
             // this blocks until the system notifies us of any changes.
             while ((key = watchService.take()) != null) {
@@ -94,5 +98,6 @@ public final class CastConfigLoader implements Closeable {
   public void close() throws IOException {
     controller.processConfig(new CastConfig(Collections.emptyList()));
     executor.shutdownNow();
+    watchService.close();
   }
 }
