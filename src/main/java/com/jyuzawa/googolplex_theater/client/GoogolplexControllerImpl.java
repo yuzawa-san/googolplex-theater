@@ -126,10 +126,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
         });
   }
 
-  public EventLoopGroup getEventLoopGroup() {
-    return eventLoopGroup;
-  }
-
   /**
    * Load the config and propagate the changes to the any currently connected devices.
    *
