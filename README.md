@@ -44,8 +44,9 @@ There are certain requirements for networking which are beyond the realm of this
  * Multicast DNS must work on your network and on the computer you run the application on. This is how the devices and the application discover each other.
 * It is strongly recommended to use a dedicated computer to run this application.
  * The [Raspberry Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) is a good, small, and cost-effective computer to use.
- * The [newer models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) with ARMv8 processors are most desirable. 
+ * The [newer models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) with ARMv8 processors are most desirable.
  * It is not advisable to use older models which use older processor architectures (ARMv6 or ARMv7), specifically the Raspberry Pi Zero.
+ * Most Model B's from around 2016 fulfill these recommendations.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
 
 Development requirements:
