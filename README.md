@@ -89,11 +89,13 @@ The application is also available on [dockerhub](https://hub.docker.com/reposito
 
 This may be comparatively easier versus getting a proper Java runtime installed.
 This is released in a few common processor architectures: amd64, arm64/v8, arm/v7.
-The latter should work for newer Raspberry Pi models with architecture ARMv8-A (64/32-bit).
-Nuance: The kernel of Raspberry Pi OS is generally built for 32-bit, so the despite the hardware physically supporting arm64/v8, both the native runtime and docker runtime is pinned to arm/v7.
-[Older models](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) such as the "Zero" which use older ARM versions are not supported.
 
-To run a specific `VERSION` of the application:
+To run a specific `VERSION` of the application, pull:
+```
+docker pull yuzawa/googolplex-theater:VERSION
+```
+
+And then to run the application:
 ```
 docker run --net=host -v /path/to/your/conf:/opt/googolplex-theater/conf yuzawa/googolplex-theater:VERSION
 ```
