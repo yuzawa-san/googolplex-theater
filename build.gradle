@@ -147,7 +147,8 @@ distributions {
 	}
 }
 
-task buildDocker(type:Exec, dependsOn:build) {
+task buildDocker(type:Exec) {
+	dependsOn installDist
 	def args = ['docker','buildx','build','--platform','linux/amd64,linux/arm/v7,linux/arm64/v8']
 	if (!version.contains('-SNAPSHOT')) {
 		args += ['-t','yuzawa/googolplex-theater:latest']
@@ -159,7 +160,7 @@ afterReleaseBuild.dependsOn buildDocker
 
 buildDeb {
 	release '1'
-	dependsOn build
+	dependsOn installDist
 	license "MIT"
 	url "https://github.com/yuzawa-san/googolplex-theater"
 	packager "James Yuzawa"
