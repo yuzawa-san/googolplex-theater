@@ -40,7 +40,7 @@ jobs:
         run: ./gradlew build buildDeb buildDocker -s
       - name: Get the tag
         id: get_tag
-        run: echo ::set-output name=tag::$(echo ${{ github.ref }} | cut -d / -f 3")
+        run: echo ::set-output name=tag::$(echo ${{ github.ref }} | cut -d / -f 3)
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
