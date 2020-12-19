@@ -153,7 +153,7 @@ task buildDocker(type:Exec) {
 	if (!version.contains('-SNAPSHOT')) {
 		args += ['-t','yuzawa/googolplex-theater:latest']
 	}
-	args += ['-t',"yuzawa/googolplex-theater:v${version}",'--push','.']
+	args += ['-t',"yuzawa/googolplex-theater:${version}",'--push','.']
 	commandLine args
 }
 afterReleaseBuild.dependsOn buildDocker
