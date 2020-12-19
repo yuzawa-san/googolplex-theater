@@ -55,7 +55,7 @@ jobs:
         id: get_zip
         run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*.zip"))
       - name: Upload Release ZIP
-        id: upload-release-asset 
+        id: upload-release-asset-zip
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +68,7 @@ jobs:
         id: get_deb
         run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*.deb"))
       - name: Upload Release DEB
-        id: upload-release-asset 
+        id: upload-release-asset-deb
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
