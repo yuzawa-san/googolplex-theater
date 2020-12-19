@@ -156,7 +156,6 @@ task buildDocker(type:Exec) {
 	args += ['-t',"yuzawa/googolplex-theater:${version}",'--push','.']
 	commandLine args
 }
-afterReleaseBuild.dependsOn buildDocker
 
 buildDeb {
 	release '1'
@@ -191,7 +190,6 @@ buildDeb {
 	preUninstall file("${projectDir}/deb/prerm")
 	postUninstall file("${projectDir}/deb/postrm")
 }
-afterReleaseBuild.dependsOn buildDeb
 
 spotbugs {
 	ignoreFailures = true
