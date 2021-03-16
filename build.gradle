@@ -1,12 +1,12 @@
 plugins {
 	id "net.researchgate.release" version "2.8.1"
 	id "com.google.protobuf" version "0.8.15"
-	id "com.diffplug.spotless" version "5.10.2"
-	id "com.github.spotbugs" version "4.6.2"
-	id "com.github.ben-manes.versions" version "0.36.0"
+	id "com.diffplug.spotless" version "5.11.0"
+	id "com.github.spotbugs" version "4.7.0"
+	id "com.github.ben-manes.versions" version "0.38.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '1.16'
-	id "nebula.deb" version "8.5.5"
+	id "nebula.deb" version "8.5.6"
 }
 
 apply plugin: "java"
@@ -56,7 +56,7 @@ sourceSets {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:3.15.3"
+		artifact = "com.google.protobuf:protoc:3.15.6"
 	}
 	generateProtoTasks {
 		all().each { task -> }
@@ -83,27 +83,27 @@ spotless {
 }
 
 dependencies {
-	implementation 'org.apache.logging.log4j:log4j-api:2.14.0'
-	implementation 'org.apache.logging.log4j:log4j-core:2.14.0'
-	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.0'
+	implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+	implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
+	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
 	implementation 'org.slf4j:slf4j-api:1.7.30'
-	implementation 'com.google.protobuf:protobuf-java:3.15.3'
-	implementation 'io.vertx:vertx-core:4.0.2'
-	implementation 'io.vertx:vertx-web:4.0.2'
-	implementation 'io.vertx:vertx-web-templ-handlebars:4.0.2'
-	implementation 'io.netty:netty-common:4.1.59.Final'
-	implementation 'io.netty:netty-transport:4.1.59.Final'
-	implementation 'io.netty:netty-codec:4.1.59.Final'
-	implementation 'io.netty:netty-handler:4.1.59.Final'
-	implementation 'com.fasterxml.jackson.core:jackson-core:2.12.1'
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.1'
+	implementation 'com.google.protobuf:protobuf-java:3.15.6'
+	implementation 'io.vertx:vertx-core:4.0.3'
+	implementation 'io.vertx:vertx-web:4.0.3'
+	implementation 'io.vertx:vertx-web-templ-handlebars:4.0.3'
+	implementation 'io.netty:netty-common:4.1.60.Final'
+	implementation 'io.netty:netty-transport:4.1.60.Final'
+	implementation 'io.netty:netty-codec:4.1.60.Final'
+	implementation 'io.netty:netty-handler:4.1.60.Final'
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.12.2'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.2'
 	implementation 'org.jmdns:jmdns:3.5.6'
 	implementation 'commons-cli:commons-cli:1.4'
 	testImplementation 'org.mockito:mockito-core:3.8.0'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
-	testImplementation 'io.vertx:vertx-junit5:4.0.2'
-	testImplementation 'io.vertx:vertx-web-client:4.0.2'
+	testImplementation 'io.vertx:vertx-junit5:4.0.3'
+	testImplementation 'io.vertx:vertx-web-client:4.0.3'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 }
 
@@ -127,7 +127,7 @@ jar {
 		attributes(
 			'Built-By'               : System.properties['user.name'],
 			'Build-Timestamp'        : new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
-			'Specification-Version'  : version,
+			'Specification-Version'  : project.version,
 			'Implementation-Version' : getGitHash(),
 			'Created-By'             : "Gradle ${gradle.gradleVersion}",
 			'Build-Jdk'              : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
