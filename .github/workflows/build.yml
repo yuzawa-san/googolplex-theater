@@ -32,3 +32,11 @@ jobs:
         run: ./gradlew build -s
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.0
+          bundler-cache: true
+      - name: packagecloud sanity check
+        run: package_cloud repository list
+        env:
+          PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
