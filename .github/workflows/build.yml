@@ -19,7 +19,9 @@ jobs:
           ruby-version: 3.0.0
           bundler-cache: true
       - name: packagecloud sanity check
-        run: ./vendor/bundle/package_cloud repository list
+        run: |
+          ls ./vendor/bundle
+          package_cloud repository list
         env:
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       - name: Set up JDK 11
