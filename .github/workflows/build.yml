@@ -20,8 +20,7 @@ jobs:
           bundler-cache: true
       - name: packagecloud sanity check
         run: |
-          ls -R ./vendor/bundle
-          package_cloud repository list
+          bundle exec package_cloud repository list
         env:
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       - name: Set up JDK 11
