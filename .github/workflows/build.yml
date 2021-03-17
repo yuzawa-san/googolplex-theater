@@ -16,7 +16,7 @@ jobs:
       - name: Install Ruby and Gems
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.0.0
+          ruby-version: 2.7.2
           bundler-cache: true
       - name: packagecloud sanity check
         run: |
