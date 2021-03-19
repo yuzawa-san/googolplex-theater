@@ -7,6 +7,7 @@ by yuzawa-san
 [![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
 [![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/yuzawa/googolplex-theater?label=docker%20image%20size)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
+[![packagecloud](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/yuzawa-san/googolplex-theater)
 
 [![build](https://github.com/yuzawa-san/googolplex-theater/workflows/build/badge.svg)](https://github.com/yuzawa-san/googolplex-theater/actions)
 [![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
@@ -59,28 +60,47 @@ Raspberry Pi OS (Raspbian). This may be subject to change.
 
 There are few options for installation:
 
-* Download a Debian package (Respberry Pi compatible) from the [releases page](https://github.com/yuzawa-san/googolplex-theater/releases).
+* Install a Debian package (Respberry Pi compatible) either using [packagecloud](#packagecloud) or [downloading manually](#manual-package-download).
 * Use a Docker image published to Dockerhub.
 * Download a [release ZIP archive](https://github.com/yuzawa-san/googolplex-theater/releases) or build the application locally.
 
 ### Package Installation
 
-The Raspberry Pi is a cost-effective piece of hardware to run this application, so Raspberry Pi OS (Raspbian) is the main build target for this package.
+This application is available as a `deb` package which can be installed using `apt`.
+The Raspberry Pi is a cost-effective piece of hardware to run this application, so Raspberry Pi OS (Raspbian) is the main build target for this project.
 The package should theoretically work with other Debian distros as well.
+
+The installation process may prompt you to install a version of Java.
+The packaging automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
+The application is installed in `/opt/googolplex-theater`.
+It is registered as a systemd service enabled to launch at startup.
+The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service` if you wish to customize or update the program arguments.
+The `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
+
+#### packagecloud
+
+[Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
+This is one of the easiest ways to install the application and keep it up to date.
+The following distros are currently supported: `raspbian/stretch`, `raspbian/buster`, `ubuntu/focal`, `ubuntu/bionic`.
+
+Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
+```
+curl -s https://packagecloud.io/install/repositories/yuzawa-san/googolplex-theater/script.deb.sh | sudo bash
+```
+Then install:
+```
+sudo apt install googolplex-theater
+```
+Since the repository has been added to the local `apt` system, the normal update + upgrade process will check and apply updates for this project.
+
+#### Manual Package Download
 
 Download a Debian package from [the releases page](https://github.com/yuzawa-san/googolplex-theater/releases) using wget or curl. Then install:
 ```
 sudo apt install ./googolplex-theater_VERSION-1_all.deb
 ```
 
-It may prompt you to install a version of Java.
-This automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
-The application is installed in `/opt/googolplex-theater`.
-It is registered as a systemd service enabled to launch at startup.
-The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service` if you wish to customize or update the program arguments.
-The `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
-
-Perhaps this package will be released in the public repositories one day, but manual download is the only option available currently.
+This process also requires manual updating.
 
 ### Docker Installation
 
