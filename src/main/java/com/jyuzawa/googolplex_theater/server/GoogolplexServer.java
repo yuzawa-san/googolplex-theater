@@ -1,5 +1,6 @@
 package com.jyuzawa.googolplex_theater.server;
 
+import com.jyuzawa.googolplex_theater.GoogolplexTheater;
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
@@ -33,12 +34,14 @@ public final class GoogolplexServer extends AbstractVerticle {
   public void start(Promise<Void> startPromise) throws Exception {
     Router router = Router.router(vertx);
     HandlebarsTemplateEngine engine = HandlebarsTemplateEngine.create(vertx);
+    Package thePackage = GoogolplexTheater.class.getPackage();
     router
         .get("/")
         .handler(
             ctx -> {
               JsonObject data = new JsonObject();
               data.put("devices", controller.getDeviceInfo());
+              data.put("tag", thePackage.getSpecificationVersion());
               engine.render(
                   data,
                   "templates/overview.hbs",
@@ -66,6 +69,7 @@ public final class GoogolplexServer extends AbstractVerticle {
                           name = "All Devices";
                         }
                         data.put("name", name);
+                        data.put("tag", thePackage.getSpecificationVersion());
                         engine.render(
                             data,
                             "templates/refresh.hbs",
