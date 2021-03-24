@@ -83,27 +83,31 @@ spotless {
 }
 
 dependencies {
-	implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
-	implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
-	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
+	implementation(platform('org.apache.logging.log4j:log4j-bom:2.14.1'))
+	implementation(platform('io.netty:netty-bom:4.1.60.Final'))
+	implementation(platform('io.vertx:vertx-stack-depchain:4.0.3'))
+	implementation(platform('com.fasterxml.jackson:jackson-bom:2.12.1'))
+	implementation 'org.apache.logging.log4j:log4j-api'
+	implementation 'org.apache.logging.log4j:log4j-core'
+	implementation 'org.apache.logging.log4j:log4j-slf4j-impl'
 	implementation 'org.slf4j:slf4j-api:1.7.30'
 	implementation 'com.google.protobuf:protobuf-java:3.15.6'
-	implementation 'io.vertx:vertx-core:4.0.3'
-	implementation 'io.vertx:vertx-web:4.0.3'
-	implementation 'io.vertx:vertx-web-templ-handlebars:4.0.3'
-	implementation 'io.netty:netty-common:4.1.60.Final'
-	implementation 'io.netty:netty-transport:4.1.60.Final'
-	implementation 'io.netty:netty-codec:4.1.60.Final'
-	implementation 'io.netty:netty-handler:4.1.60.Final'
-	implementation 'com.fasterxml.jackson.core:jackson-core:2.12.2'
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.2'
+	implementation 'io.vertx:vertx-core'
+	implementation 'io.vertx:vertx-web'
+	implementation 'io.vertx:vertx-web-templ-handlebars'
+	implementation 'io.netty:netty-common'
+	implementation 'io.netty:netty-transport'
+	implementation 'io.netty:netty-codec'
+	implementation 'io.netty:netty-handler'
+	implementation 'com.fasterxml.jackson.core:jackson-core'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'org.jmdns:jmdns:3.5.6'
 	implementation 'commons-cli:commons-cli:1.4'
 	testImplementation 'org.mockito:mockito-core:3.8.0'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
-	testImplementation 'io.vertx:vertx-junit5:4.0.3'
-	testImplementation 'io.vertx:vertx-web-client:4.0.3'
+	testImplementation 'io.vertx:vertx-junit5'
+	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 }
 
