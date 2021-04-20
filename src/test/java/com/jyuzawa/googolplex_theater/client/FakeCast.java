@@ -38,11 +38,8 @@ import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FakeCast implements Closeable {
-  private static final Logger LOG = LoggerFactory.getLogger(FakeCast.class);
   private static final InetAddress LOOPBACK = InetAddress.getLoopbackAddress();
 
   private final Channel serverChannel;
@@ -59,7 +56,6 @@ public class FakeCast implements Closeable {
     this.name = "FakeCastOnPort" + port;
     this.queue = new LinkedBlockingDeque<>();
     this.bossGroup = new NioEventLoopGroup(1);
-    LOG.info("starting cast on port " + port);
     ServerBootstrap serverBootstrap = new ServerBootstrap();
     SelfSignedCertificate ssc = new SelfSignedCertificate();
     SslContext sslContext =
@@ -82,7 +78,6 @@ public class FakeCast implements Closeable {
               }
             });
     this.serverChannel = serverBootstrap.bind(LOOPBACK, port).syncUninterruptibly().channel();
-    LOG.info("started cast on port " + port);
     this.custom = String.valueOf(ThreadLocalRandom.current().nextInt());
   }
 
