@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 public class FakeCast implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(FakeCast.class);
+  private static final InetAddress LOOPBACK = InetAddress.getLoopbackAddress();
 
   private final Channel serverChannel;
   private volatile Channel channel;
@@ -80,7 +81,7 @@ public class FakeCast implements Closeable {
                 p.addLast("handler", new FakeChromecastHandler());
               }
             });
-    this.serverChannel = serverBootstrap.bind(port).syncUninterruptibly().channel();
+    this.serverChannel = serverBootstrap.bind(LOOPBACK, port).syncUninterruptibly().channel();
     LOG.info("started cast on port " + port);
     this.custom = String.valueOf(ThreadLocalRandom.current().nextInt());
   }
@@ -99,8 +100,7 @@ public class FakeCast implements Closeable {
     ServiceInfo serviceInfo = Mockito.mock(ServiceInfo.class);
     Mockito.when(event.getInfo()).thenReturn(serviceInfo);
     Mockito.when(serviceInfo.getPropertyString(Mockito.anyString())).thenReturn(name);
-    Mockito.when(serviceInfo.getInetAddresses())
-        .thenReturn(new InetAddress[] {InetAddress.getLocalHost()});
+    Mockito.when(serviceInfo.getInetAddresses()).thenReturn(new InetAddress[] {LOOPBACK});
     Mockito.when(serviceInfo.getPort()).thenReturn(port);
     return event;
   }
