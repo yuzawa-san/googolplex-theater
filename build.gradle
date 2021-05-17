@@ -16,6 +16,12 @@ apply plugin: "application"
 apply plugin: "jacoco"
 apply plugin: "nebula.ospackage"
 
+configurations {
+	compileClasspath {
+		resolutionStrategy.activateDependencyLocking()
+	}
+}
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
