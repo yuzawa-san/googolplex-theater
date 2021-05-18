@@ -6,6 +6,7 @@ import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
 import com.jyuzawa.googolplex_theater.config.CastConfigLoader;
 import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
+import io.netty.channel.EventLoopGroup;
 import io.vertx.core.Vertx;
 import java.io.File;
 import java.nio.file.Paths;
@@ -72,8 +73,8 @@ public final class GoogolplexTheater implements Callable<Integer>, IVersionProvi
   public Integer call() throws Exception {
     validate();
     Vertx vertx = Vertx.vertx();
-    GoogolplexController controller =
-        new GoogolplexControllerImpl(vertx.nettyEventLoopGroup(), appId);
+    EventLoopGroup eventLoopGroup = vertx.nettyEventLoopGroup();
+    GoogolplexController controller = new GoogolplexControllerImpl(eventLoopGroup, appId);
     vertx.deployVerticle(new GoogolplexServer(controller, serverPort));
     CastConfigLoader configLoader = new CastConfigLoader(controller, castConfigFile.toPath());
     ServiceDiscovery serviceDiscovery = new ServiceDiscovery(controller, preferredInterface);
@@ -90,6 +91,7 @@ public final class GoogolplexTheater implements Callable<Integer>, IVersionProvi
                     LOG.warn("Failed to shut down", e);
                   }
                 }));
+    eventLoopGroup.terminationFuture().awaitUninterruptibly();
     return 0;
   }
 
