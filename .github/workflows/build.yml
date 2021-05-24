@@ -45,4 +45,5 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: monitor --all-projects
+          command: monitor
+          args: --all-projects
