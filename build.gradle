@@ -16,12 +16,6 @@ apply plugin: "application"
 apply plugin: "jacoco"
 apply plugin: "nebula.ospackage"
 
-configurations {
-	compileClasspath {
-		resolutionStrategy.activateDependencyLocking()
-	}
-}
-
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -62,7 +56,7 @@ sourceSets {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:3.17.0"
+		artifact = "com.google.protobuf:protoc:3.17.1"
 	}
 	generateProtoTasks {
 		all().each { task -> }
