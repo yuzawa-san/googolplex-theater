@@ -2,17 +2,12 @@ package com.jyuzawa.googolplex_theater.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
-import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
@@ -26,7 +21,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
-import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.Test;
 
 class CastConfigLoaderTest {
@@ -98,38 +92,5 @@ class CastConfigLoaderTest {
     } finally {
       loader.close();
     }
-  }
-
-  @Test
-  void cliTest() throws ParseException {
-    String confJson = "./src/dist/conf/cast_config.json";
-
-    assertThrows(
-        ParseException.class,
-        () -> {
-          new Config(new String[] {"-a", "blah12425"});
-        });
-
-    assertThrows(
-        ParseException.class,
-        () -> {
-          new Config(new String[] {"-c", "my_missing_config.json"});
-        });
-
-    Config config =
-        new Config(
-            new String[] {
-              "-i", "en0", "-a", "ABCDEFGH", "-p", "9999", "-c", "./src/dist/conf/cast_config.json"
-            });
-    assertEquals("ABCDEFGH", config.getAppId());
-    assertEquals(9999, config.getServerPort());
-    assertEquals("en0", config.getPreferredInterface());
-    assertTrue(config.getCastConfigPath().toFile().exists());
-
-    Config config2 = new Config(new String[] {"-c", confJson});
-    assertEquals(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, config2.getAppId());
-    assertEquals(GoogolplexServer.DEFAULT_PORT, config2.getServerPort());
-    assertTrue(config2.getCastConfigPath().toFile().exists());
-    assertNull(config2.getPreferredInterface());
   }
 }
