@@ -4,8 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.jyuzawa.googolplex_theater.config.CastConfig;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import io.netty.channel.EventLoopGroup;
@@ -51,8 +50,7 @@ class GoogolplexControllerTest {
 
   @AfterAll
   static void tearDownAfterClass() throws Exception {
-    CastConfig newConfig = new CastConfig(Collections.emptyList());
-    controller.processConfig(newConfig);
+    controller.processDevices(Collections.emptyList());
     cast1.close();
     cast2.close();
     cast3.close();
@@ -67,10 +65,9 @@ class GoogolplexControllerTest {
     devices.add(cast2.device());
     devices.add(cast3.device());
     devices.add(cast4.device());
-    CastConfig config = new CastConfig(devices);
     controller.register(cast1.event());
     controller.register(cast2.event());
-    controller.processConfig(config);
+    controller.processDevices(devices);
     controller.register(cast3.event());
     controller.register(cast4.event());
     controller.register(FakeCast.event(9005, "UnknownCast"));
@@ -115,8 +112,7 @@ class GoogolplexControllerTest {
     cast1.custom = "new";
     devices.set(0, cast1.device());
     devices.remove(3);
-    CastConfig newConfig = new CastConfig(devices);
-    controller.processConfig(newConfig);
+    controller.processDevices(devices);
     assertTransaction(cast1);
 
     deviceInfos = controller.getDeviceInfo();

@@ -1,7 +1,6 @@
 package com.jyuzawa.googolplex_theater.client;
 
-import com.jyuzawa.googolplex_theater.config.CastConfig;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -60,7 +59,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
   private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
 
-  private final EventLoopGroup eventLoopGroup;
   private final EventLoop eventLoop;
   private final Bootstrap bootstrap;
   private final Map<String, DeviceInfo> nameToDeviceInfo;
@@ -95,7 +93,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
     this.nameToBackoffSeconds = new ConcurrentHashMap<>();
     this.baseReconnectSeconds = baseReconnectSeconds;
     this.reconnectNoiseSeconds = reconnectNoiseSeconds;
-    this.eventLoopGroup = eventLoopGroup;
     this.eventLoop = eventLoopGroup.next();
     SslContext sslContext =
         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
@@ -132,13 +129,13 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
    * @param config the settings loaded from the file
    */
   @Override
-  public void processConfig(CastConfig config) {
+  public void processDevices(List<DeviceInfo> devices) {
     try {
       eventLoop
           .submit(
               () -> {
                 Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-                for (DeviceInfo deviceInfo : config.devices) {
+                for (DeviceInfo deviceInfo : devices) {
                   String name = deviceInfo.name;
                   // mark that we should not remove this device
                   namesToRemove.remove(name);

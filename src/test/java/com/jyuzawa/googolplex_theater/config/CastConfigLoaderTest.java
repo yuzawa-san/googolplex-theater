@@ -2,12 +2,12 @@ package com.jyuzawa.googolplex_theater.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
@@ -48,7 +48,7 @@ class CastConfigLoaderTest {
             path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
       bufferedWriter.write(VALUE1);
     }
-    BlockingQueue<CastConfig> queue = new ArrayBlockingQueue<>(10);
+    BlockingQueue<List<DeviceInfo>> queue = new ArrayBlockingQueue<>(10);
     GoogolplexController controller =
         new GoogolplexController() {
 
@@ -64,15 +64,16 @@ class CastConfigLoaderTest {
           }
 
           @Override
-          public void processConfig(CastConfig config) {
-            queue.add(config);
+          public void processDevices(List<DeviceInfo> devices) {
+            queue.add(devices);
           }
         };
-    CastConfigLoader loader = new CastConfigLoader(controller, path);
+    CastConfigLoader loader = new CastConfigLoader(path);
+    loader.watch(controller);
     try {
-      CastConfig config = queue.take();
-      assertEquals(1, config.devices.size());
-      DeviceInfo device = config.devices.get(0);
+      List<DeviceInfo> devices = queue.poll(1, TimeUnit.MINUTES);
+      assertEquals(1, devices.size());
+      DeviceInfo device = devices.get(0);
       assertEquals("NameOfYourDevice2", device.name);
       assertEquals("https://example2.com/", device.settings.get("url").asText());
       assertEquals(9600, device.settings.get("refreshSeconds").asInt());
@@ -82,15 +83,20 @@ class CastConfigLoaderTest {
           Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE)) {
         bufferedWriter.write(VALUE2);
       }
-      config = queue.poll(1, TimeUnit.MINUTES);
-      assertNotNull(config);
-      assertEquals(1, config.devices.size());
-      device = config.devices.get(0);
+      devices = queue.poll(1, TimeUnit.MINUTES);
+      assertNotNull(devices);
+      assertEquals(1, devices.size());
+      device = devices.get(0);
       assertEquals("NameOfYourDevice2", device.name);
       assertEquals("https://example2.com/updated", device.settings.get("url").asText());
       assertEquals(600, device.settings.get("refreshSeconds").asInt());
     } finally {
       loader.close();
     }
+    assertThrows(
+        IOException.class,
+        () -> {
+          new CastConfigLoader(conf.resolve("not_a_file.json"));
+        });
   }
 }

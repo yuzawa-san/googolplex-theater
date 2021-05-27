@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
 import com.jyuzawa.googolplex_theater.util.JsonUtil;

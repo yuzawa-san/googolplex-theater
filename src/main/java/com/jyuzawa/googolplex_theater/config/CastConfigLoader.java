@@ -1,17 +1,13 @@
 package com.jyuzawa.googolplex_theater.config;
 
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
-import com.jyuzawa.googolplex_theater.util.JsonUtil;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
@@ -30,16 +26,23 @@ public final class CastConfigLoader implements Closeable {
 
   private final ExecutorService executor;
   private final Path path;
-  private final GoogolplexController controller;
+  private final CastConfig initialConfig;
   private final WatchService watchService;
 
-  public CastConfigLoader(GoogolplexController controller, Path castConfigPath) throws IOException {
-    this.controller = controller;
+  public CastConfigLoader(Path path) throws IOException {
+    this.path = path;
     this.executor = Executors.newSingleThreadExecutor();
-    this.path = castConfigPath;
-    LOG.info("Using cast config: {}", castConfigPath.toAbsolutePath());
-    load();
+    LOG.info("Using cast config: {}", path);
+    this.initialConfig = CastConfig.fromPath(path);
     this.watchService = path.getFileSystem().newWatchService();
+  }
+
+  public CastConfig getInitialConfig() {
+    return initialConfig;
+  }
+
+  public void watch(GoogolplexController controller) throws IOException {
+    controller.processDevices(initialConfig.devices);
     /*
      * the watch operation only works with directories, so we have to get the parent directory of the file.
      */
@@ -64,7 +67,8 @@ public final class CastConfigLoader implements Closeable {
                    * indeed our config file.
                    */
                   if (path.endsWith(ev.context())) {
-                    load();
+                    LOG.info("Reloading cast config");
+                    controller.processDevices(CastConfig.fromPath(path).devices);
                   }
                 }
               } catch (Exception e) {
@@ -81,22 +85,8 @@ public final class CastConfigLoader implements Closeable {
         });
   }
 
-  /**
-   * Read the file, decode the file content, and inform the controller of the changes.
-   *
-   * @throws IOException when JSON deserialization fails
-   */
-  private void load() throws IOException {
-    LOG.info("Reloading cast config");
-    try (InputStream stream = Files.newInputStream(path)) {
-      CastConfig out = JsonUtil.MAPPER.readValue(stream, CastConfig.class);
-      controller.processConfig(out);
-    }
-  }
-
   @Override
   public void close() throws IOException {
-    controller.processConfig(new CastConfig(Collections.emptyList()));
     executor.shutdownNow();
     watchService.close();
   }
