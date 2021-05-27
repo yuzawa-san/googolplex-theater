@@ -47,9 +47,6 @@ public final class CastConfigLoader implements Closeable {
      * the watch operation only works with directories, so we have to get the parent directory of the file.
      */
     Path directoryPath = path.getParent();
-    if (directoryPath == null) {
-      throw new IllegalArgumentException("Path has missing parent");
-    }
     directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
     executor.submit(
         () -> {

@@ -1,8 +1,10 @@
 package com.jyuzawa.googolplex_theater.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -16,7 +18,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +76,7 @@ class CastConfigLoaderTest {
     loader.watch(controller);
     try {
       List<DeviceInfo> devices = queue.poll(1, TimeUnit.MINUTES);
+      assertEquals(devices, loader.getInitialConfig().devices);
       assertEquals(1, devices.size());
       DeviceInfo device = devices.get(0);
       assertEquals("NameOfYourDevice2", device.name);
@@ -90,6 +95,18 @@ class CastConfigLoaderTest {
       assertEquals("NameOfYourDevice2", device.name);
       assertEquals("https://example2.com/updated", device.settings.get("url").asText());
       assertEquals(600, device.settings.get("refreshSeconds").asInt());
+
+      // device equality
+      DeviceInfo duplicateDevice = new DeviceInfo(device.name, device.settings);
+      assertTrue(device.equals(device));
+      assertTrue(device.equals(duplicateDevice));
+      assertFalse(device.equals("a string"));
+      DeviceInfo otherDevice = new DeviceInfo("other", device.settings);
+      assertFalse(device.equals(otherDevice));
+      Set<DeviceInfo> set = new HashSet<>();
+      set.add(device);
+      set.add(duplicateDevice);
+      assertEquals(1, set.size());
     } finally {
       loader.close();
     }
@@ -97,6 +114,11 @@ class CastConfigLoaderTest {
         IOException.class,
         () -> {
           new CastConfigLoader(conf.resolve("not_a_file.json"));
+        });
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          new CastConfig("bad app id", null, null, null);
         });
   }
 }
