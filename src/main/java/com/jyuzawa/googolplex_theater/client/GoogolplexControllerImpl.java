@@ -124,9 +124,9 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   }
 
   /**
-   * Load the config and propagate the changes to the any currently connected devices.
+   * Load the devices.
    *
-   * @param config the settings loaded from the file
+   * @param devices the settings loaded from the file
    */
   @Override
   public void processDevices(List<DeviceInfo> devices) {
