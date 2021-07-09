@@ -1,6 +1,6 @@
 package com.jyuzawa.googolplex_theater.client;
 
-import com.jyuzawa.googolplex_theater.config.CastConfig;
+import com.jyuzawa.googolplex_theater.config.DeviceInfo;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -15,11 +15,11 @@ import javax.jmdns.ServiceEvent;
 public interface GoogolplexController {
 
   /**
-   * Load the config and propagate the changes to the any currently connected devices.
+   * Load the devices.
    *
-   * @param config the settings loaded from the file
+   * @param devices the settings loaded from the file
    */
-  void processConfig(CastConfig config);
+  void processDevices(List<DeviceInfo> devices);
 
   /**
    * Add a discovered device and initialize a new connection to the device if one does not exist
