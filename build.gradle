@@ -85,7 +85,7 @@ spotless {
 dependencies {
 	implementation(platform('org.apache.logging.log4j:log4j-bom:2.14.1'))
 	implementation(platform('io.netty:netty-bom:4.1.67.Final'))
-	implementation(platform('io.vertx:vertx-stack-depchain:4.1.2'))
+	implementation(platform('io.vertx:vertx-stack-depchain:4.1.3'))
 	implementation(platform('com.fasterxml.jackson:jackson-bom:2.12.5'))
 	implementation 'org.apache.logging.log4j:log4j-api'
 	implementation 'org.apache.logging.log4j:log4j-core'
