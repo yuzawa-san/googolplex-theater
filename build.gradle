@@ -5,7 +5,7 @@ plugins {
 	id "com.github.spotbugs" version "4.7.3"
 	id "com.github.ben-manes.versions" version "0.39.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
-	id 'com.github.jk1.dependency-license-report' version '1.17'
+	id 'com.github.jk1.dependency-license-report' version '2.0'
 	id "nebula.deb" version "8.6.3"
 }
 
