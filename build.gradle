@@ -105,7 +105,7 @@ dependencies {
 	implementation 'info.picocli:picocli:4.6.1'
 	testImplementation 'org.mockito:mockito-core:3.12.4'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.0'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.0'
 	testImplementation 'io.vertx:vertx-junit5'
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
