@@ -65,16 +65,6 @@ protobuf {
 }
 
 spotless {
-/*	java {
-		targetExclude("**/Wire.java")
-		removeUnusedImports()
-		googleJavaFormat()
-	}
-	format 'gradle', {
-		target '**/*.gradle'
-		trimTrailingWhitespace()
-		indentWithTabs()
-	}*/
 	format 'proto', {
 		target '**/*.proto'
 		trimTrailingWhitespace()
