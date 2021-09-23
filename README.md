@@ -14,7 +14,6 @@ by yuzawa-san
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/yuzawa-san/googolplex-theater.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yuzawa-san/googolplex-theater/context:java)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/yuzawa-san/googolplex-theater.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yuzawa-san/googolplex-theater/context:javascript)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/yuzawa-san/googolplex-theater.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yuzawa-san/googolplex-theater/alerts/)
-[![Known Vulnerabilities](https://snyk.io/test/github/yuzawa-san/googolplex-theater/badge.svg)](https://snyk.io/test/github/yuzawa-san/googolplex-theater)
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
