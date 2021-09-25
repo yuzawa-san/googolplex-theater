@@ -43,7 +43,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build with Gradle
-        run: ./gradlew build buildDeb buildDocker -x spotlessCheck -s
+        run: |
+          export _JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+          ./gradlew build buildDeb buildDocker -s
       - name: Get the tag
         id: get_tag
         run: echo ::set-output name=tag::$(echo ${{ github.ref }} | cut -d / -f 3)

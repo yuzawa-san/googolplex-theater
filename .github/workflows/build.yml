@@ -37,7 +37,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-caches-
       - name: Build with Gradle
         run: |
-          if [ "${{ matrix.java != '8' }}" = "true" ]; then 
+          if [ "${{ matrix.java == '17' }}" = "true" ]; then 
               echo "Configuring Spotless" 
               export _JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
           fi;
