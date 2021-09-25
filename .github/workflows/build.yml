@@ -44,4 +44,4 @@ jobs:
           ./gradlew build -s
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
-        if: ${{ matrix.java == '11' }}
+        if: ${{ matrix.java == '17' }}
