@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '11', '16', '17' ]
+        # LTS versions
+        java: [ '8', '11', '17' ]
     name: Java ${{ matrix.java }} build
     steps:
       - uses: actions/checkout@v2
@@ -36,6 +37,10 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-caches-
       - name: Build with Gradle
         run: |
+          if [ "${{ matrix.java == '8' }}" = "true" ]; then
+              # the spotless jvm args dont work in 8
+              rm gradle.properties
+          fi;
           ./gradlew build -s
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
