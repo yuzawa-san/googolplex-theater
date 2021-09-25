@@ -102,7 +102,7 @@ class GoogolplexServerTest {
                 response ->
                     testContext.verify(
                         () -> {
-                        	 assertEquals(200, response.statusCode());
+                          assertEquals(200, response.statusCode());
                           assertTrue(response.body().length() > 0);
                           testContext.completeNow();
                         })));
