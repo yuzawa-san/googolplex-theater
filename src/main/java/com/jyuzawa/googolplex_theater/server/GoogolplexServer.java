@@ -100,6 +100,5 @@ public final class GoogolplexServer extends AbstractVerticle {
                 startPromise.fail(res.cause());
               }
             });
-    LOG.info("Running web-ui server on port " + port);
   }
 }

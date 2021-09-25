@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +78,21 @@ public final class GoogolplexTheater implements Callable<Integer>, IVersionProvi
     Vertx vertx = Vertx.vertx();
     EventLoopGroup eventLoopGroup = vertx.nettyEventLoopGroup();
     GoogolplexController controller = new GoogolplexControllerImpl(eventLoopGroup, appId);
-    vertx.deployVerticle(new GoogolplexServer(controller, serverPort));
+    CompletableFuture<Boolean> serverFuture = new CompletableFuture<>();
+    vertx.deployVerticle(
+        new GoogolplexServer(controller, serverPort),
+        result -> {
+          if (result.succeeded()) {
+            LOG.info("Running web-ui server on port " + serverPort);
+            serverFuture.complete(Boolean.TRUE);
+          } else {
+            LOG.error("Failed to start web-ui server", result.cause());
+            serverFuture.complete(Boolean.FALSE);
+          }
+        });
+    if (!serverFuture.get(10, TimeUnit.SECONDS)) {
+      return 1;
+    }
     CastConfigLoader configLoader = new CastConfigLoader(controller, castConfigFile.toPath());
     ServiceDiscovery serviceDiscovery = new ServiceDiscovery(controller, preferredInterface);
     Runtime.getRuntime()
