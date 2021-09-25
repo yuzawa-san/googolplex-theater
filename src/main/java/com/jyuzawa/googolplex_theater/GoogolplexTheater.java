@@ -9,6 +9,7 @@ import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.netty.channel.EventLoopGroup;
 import io.vertx.core.Vertx;
 import java.io.File;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -116,10 +117,28 @@ public final class GoogolplexTheater implements Callable<Integer>, IVersionProvi
   }
 
   static File getDefaultCastConfig() {
-    // NOTE: gradle does not expose APP_HOME, but they do expose OLDPWD.
-    // Default allows the application to run in IDE
-    String appHome = System.getenv().getOrDefault("OLDPWD", "src/dist");
-    return Paths.get(appHome + "/" + CastConfigLoader.DEFAULT_PATH).toAbsolutePath().toFile();
+    try {
+      // NOTE: gradle does not expose APP_HOME, so we need to be creative
+      File installedFile =
+          Paths.get(
+                  GoogolplexTheater.class
+                      .getProtectionDomain()
+                      .getCodeSource()
+                      .getLocation()
+                      .toURI())
+              .getParent()
+              .getParent()
+              .resolve(CastConfigLoader.DEFAULT_PATH)
+              .toAbsolutePath()
+              .toFile();
+      if (installedFile.exists()) {
+        return installedFile;
+      }
+    } catch (URISyntaxException e) {
+      LOG.error("Failed to find default config", e);
+    }
+    // IDE case
+    return Paths.get("src/dist/" + CastConfigLoader.DEFAULT_PATH).toAbsolutePath().toFile();
   }
 
   public static void main(String[] args) {
