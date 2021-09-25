@@ -43,7 +43,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build with Gradle
-        run: ./gradlew build buildDeb buildDocker -s
+        run: ./gradlew build buildDeb buildDocker -x spotlessCheck -s
       - name: Get the tag
         id: get_tag
         run: echo ::set-output name=tag::$(echo ${{ github.ref }} | cut -d / -f 3)
