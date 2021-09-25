@@ -44,6 +44,7 @@ class GoogolplexServerTest {
                     testContext.verify(
                         () -> {
                           Mockito.verify(controller).getDeviceInfo();
+                          assertEquals(200, response.statusCode());
                           assertTrue(response.body().contains("my device"));
                           testContext.completeNow();
                         })));
@@ -64,6 +65,7 @@ class GoogolplexServerTest {
                     testContext.verify(
                         () -> {
                           Mockito.verify(controller).refresh("my device");
+                          assertEquals(200, response.statusCode());
                           assertTrue(response.body().contains("my device refreshing..."));
                           testContext.completeNow();
                         })));
@@ -83,6 +85,7 @@ class GoogolplexServerTest {
                     testContext.verify(
                         () -> {
                           Mockito.verify(controller).refresh(null);
+                          assertEquals(200, response.statusCode());
                           assertTrue(response.body().contains("All Devices refreshing..."));
                           testContext.completeNow();
                         })));
@@ -99,6 +102,7 @@ class GoogolplexServerTest {
                 response ->
                     testContext.verify(
                         () -> {
+                        	 assertEquals(200, response.statusCode());
                           assertTrue(response.body().length() > 0);
                           testContext.completeNow();
                         })));
