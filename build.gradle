@@ -64,21 +64,24 @@ protobuf {
 	}
 }
 
-spotless {
-	java {
-		targetExclude("**/Wire.java")
-		removeUnusedImports()
-		googleJavaFormat()
-	}
-	format 'gradle', {
-		target '**/*.gradle'
-		trimTrailingWhitespace()
-		indentWithTabs()
-	}
-	format 'proto', {
-		target '**/*.proto'
-		trimTrailingWhitespace()
-		indentWithTabs()
+// spotless requires java 11 or later
+if (JavaVersion.current().isJava11Compatible()) {
+	spotless {
+		java {
+			targetExclude("**/Wire.java")
+			removeUnusedImports()
+			googleJavaFormat()
+		}
+		format 'gradle', {
+			target '**/*.gradle'
+			trimTrailingWhitespace()
+			indentWithTabs()
+		}
+		format 'proto', {
+			target '**/*.proto'
+			trimTrailingWhitespace()
+			indentWithTabs()
+		}
 	}
 }
 
@@ -103,6 +106,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'org.jmdns:jmdns:3.5.7'
 	implementation 'info.picocli:picocli:4.6.1'
+	implementation 'org.bouncycastle:bcpkix-jdk15on:1.69'
 	testImplementation 'org.mockito:mockito-core:3.12.4'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.0'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.0'
