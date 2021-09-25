@@ -64,24 +64,21 @@ protobuf {
 	}
 }
 
-// spotless requires java 11 or later
-if (JavaVersion.current().isJava11Compatible()) {
-	spotless {
-		java {
-			targetExclude("**/Wire.java")
-			removeUnusedImports()
-			googleJavaFormat()
-		}
-		format 'gradle', {
-			target '**/*.gradle'
-			trimTrailingWhitespace()
-			indentWithTabs()
-		}
-		format 'proto', {
-			target '**/*.proto'
-			trimTrailingWhitespace()
-			indentWithTabs()
-		}
+spotless {
+	java {
+		targetExclude("**/Wire.java")
+		removeUnusedImports()
+		googleJavaFormat()
+	}
+	format 'gradle', {
+		target '**/*.gradle'
+		trimTrailingWhitespace()
+		indentWithTabs()
+	}
+	format 'proto', {
+		target '**/*.proto'
+		trimTrailingWhitespace()
+		indentWithTabs()
 	}
 }
 

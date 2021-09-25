@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # LTS versions
-        java: [ '8', '11', '17' ]
+        java: [ '11', '16', '17' ]
     name: Java ${{ matrix.java }} build
     steps:
       - uses: actions/checkout@v2
@@ -37,10 +36,6 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-caches-
       - name: Build with Gradle
         run: |
-          if [ "${{ matrix.java == '17' }}" = "true" ]; then 
-              echo "Configuring Spotless" 
-              export JAVA_TOOL_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
-          fi;
           ./gradlew build -s
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
