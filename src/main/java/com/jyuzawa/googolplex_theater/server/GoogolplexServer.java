@@ -10,6 +10,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
+import io.vertx.ext.web.templ.handlebars.impl.HandlebarsTemplateEngineImpl;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -37,7 +38,8 @@ public final class GoogolplexServer extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     Router router = Router.router(vertx);
-    HandlebarsTemplateEngine engine = HandlebarsTemplateEngine.create(vertx);
+    HandlebarsTemplateEngineImpl engine =
+        (HandlebarsTemplateEngineImpl) HandlebarsTemplateEngine.create(vertx);
     List<ValueResolver> newResolvers = new ArrayList<>();
     for (ValueResolver resolver : engine.getResolvers()) {
       if (resolver instanceof JavaBeanValueResolver) {
