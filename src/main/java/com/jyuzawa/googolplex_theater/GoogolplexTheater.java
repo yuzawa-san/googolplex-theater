@@ -142,9 +142,8 @@ public final class GoogolplexTheater implements Callable<Integer>, IVersionProvi
                       .getCodeSource()
                       .getLocation()
                       .toURI())
-              .getParent()
-              .getParent()
-              .resolve(CastConfigLoader.DEFAULT_PATH)
+              .resolve("../../" + CastConfigLoader.DEFAULT_PATH)
+              .normalize()
               .toAbsolutePath()
               .toFile();
       if (installedFile.exists()) {
