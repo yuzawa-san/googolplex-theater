@@ -1,8 +1,8 @@
 plugins {
 	id "net.researchgate.release" version "2.8.1"
 	id "com.google.protobuf" version "0.8.17"
-	id "com.diffplug.spotless" version "5.15.0"
-	id "com.github.spotbugs" version "4.7.5"
+	id "com.diffplug.spotless" version "5.15.2"
+	id "com.github.spotbugs" version "4.7.6"
 	id "com.github.ben-manes.versions" version "0.39.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '2.0'
@@ -108,8 +108,8 @@ dependencies {
 	implementation 'info.picocli:picocli:4.6.1'
 	implementation 'org.bouncycastle:bcpkix-jdk15on:1.69'
 	testImplementation 'org.mockito:mockito-core:3.12.4'
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.0'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 	testImplementation 'io.vertx:vertx-junit5'
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
