@@ -88,7 +88,7 @@ if (JavaVersion.current().isJava11Compatible()) {
 dependencies {
 	implementation(platform('org.apache.logging.log4j:log4j-bom:2.14.1'))
 	implementation(platform('io.netty:netty-bom:4.1.69.Final'))
-	implementation(platform('io.vertx:vertx-stack-depchain:4.1.5'))
+	implementation(platform('io.vertx:vertx-stack-depchain:4.2.0'))
 	implementation(platform('com.fasterxml.jackson:jackson-bom:2.13.0'))
 	implementation 'org.apache.logging.log4j:log4j-api'
 	implementation 'org.apache.logging.log4j:log4j-core'
