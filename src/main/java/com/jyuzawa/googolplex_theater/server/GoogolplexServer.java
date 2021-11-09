@@ -1,7 +1,5 @@
 package com.jyuzawa.googolplex_theater.server;
 
-import com.github.jknack.handlebars.ValueResolver;
-import com.github.jknack.handlebars.context.JavaBeanValueResolver;
 import com.jyuzawa.googolplex_theater.GoogolplexTheater;
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import io.vertx.core.AbstractVerticle;
@@ -10,9 +8,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
-import io.vertx.ext.web.templ.handlebars.impl.HandlebarsTemplateEngineImpl;
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +33,7 @@ public final class GoogolplexServer extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     Router router = Router.router(vertx);
-    HandlebarsTemplateEngineImpl engine =
-        (HandlebarsTemplateEngineImpl) HandlebarsTemplateEngine.create(vertx);
-    List<ValueResolver> newResolvers = new ArrayList<>();
-    for (ValueResolver resolver : engine.getResolvers()) {
-      if (resolver instanceof JavaBeanValueResolver) {
-        // this resolver has a bug:
-        // https://github.com/jknack/handlebars.java/issues/667
-        continue;
-      }
-      newResolvers.add(resolver);
-    }
-    engine.setResolvers(newResolvers.toArray(new ValueResolver[newResolvers.size()]));
+    HandlebarsTemplateEngine engine = HandlebarsTemplateEngine.create(vertx);
     Package thePackage = GoogolplexTheater.class.getPackage();
     router
         .get("/")
