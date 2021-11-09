@@ -113,6 +113,9 @@ dependencies {
 	testImplementation 'io.vertx:vertx-junit5'
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
+	testImplementation 'io.cucumber:cucumber-java:7.0.0'
+	testImplementation 'io.cucumber:cucumber-junit:7.0.0'
+	testImplementation 'org.junit.vintage:junit-vintage-engine:5.8.1'
 }
 
 test {
@@ -213,4 +216,21 @@ spotbugsMain {
 
 gitHooks {
 	hooks = ['pre-push': 'spotlessCheck']
+}
+
+configurations {
+	cucumberRuntime {
+		extendsFrom testImplementation
+	}
+}
+
+task cucumber() {
+	dependsOn assemble, testClasses
+	doLast {
+		javaexec {
+			main = "io.cucumber.core.cli.Main"
+			classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+			args = ['--plugin', 'pretty', '--glue', 'hellocucumber', 'src/test/resources']
+		}
+	}
 }
