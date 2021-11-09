@@ -114,12 +114,13 @@ dependencies {
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 	testImplementation 'io.cucumber:cucumber-java:7.0.0'
-	testImplementation 'io.cucumber:cucumber-junit:7.0.0'
-	testImplementation 'org.junit.vintage:junit-vintage-engine:5.8.1'
+	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.0.0'
+	testImplementation 'org.junit.platform:junit-platform-suite'
 }
 
 test {
 	useJUnitPlatform()
+	systemProperty("cucumber.junit-platform.naming-strategy", "long")
 }
 
 def getGitHash = { ->

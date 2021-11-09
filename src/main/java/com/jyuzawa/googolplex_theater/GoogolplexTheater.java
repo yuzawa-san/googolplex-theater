@@ -45,9 +45,15 @@ public final class GoogolplexTheater implements Callable<Integer>, IVersionProvi
   private static final List<String> DIAGNOSTIC_PROPERTIES =
       Collections.unmodifiableList(
           Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
+
   public static String isItFriday(String today) {
-      return "Friday".equals(today) ? "TGIF" : "Nope";
+    return "Friday".equals(today) ? "TGIF" : "Nope";
   }
+
+  public static String isItMonday(String today) {
+    return "Monday".equals(today) ? "TGIF" : "Nope";
+  }
+
   @Spec CommandSpec spec;
 
   @Option(
