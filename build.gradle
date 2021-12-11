@@ -1,8 +1,8 @@
 plugins {
 	id "net.researchgate.release" version "2.8.1"
 	id "com.google.protobuf" version "0.8.18"
-	id "com.diffplug.spotless" version "6.0.2"
-	id "com.github.spotbugs" version "5.0.0"
+	id "com.diffplug.spotless" version "6.0.4"
+	id "com.github.spotbugs" version "5.0.2"
 	id "com.github.ben-manes.versions" version "0.39.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '2.0'
@@ -87,7 +87,7 @@ if (JavaVersion.current().isJava11Compatible()) {
 
 dependencies {
 	implementation(platform('org.apache.logging.log4j:log4j-bom:2.15.0'))
-	implementation(platform('io.netty:netty-bom:4.1.70.Final'))
+	implementation(platform('io.netty:netty-bom:4.1.71.Final'))
 	implementation(platform('io.vertx:vertx-stack-depchain:4.2.1'))
 	implementation(platform('com.fasterxml.jackson:jackson-bom:2.13.0'))
 	implementation 'org.apache.logging.log4j:log4j-api'
@@ -136,7 +136,7 @@ jar {
 			'Built-By'               : System.properties['user.name'],
 			'Build-Timestamp'        : new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
 			'Specification-Version'  : project.version,
-			'Implementation-Version' : getGitHash(),
+			'Implementation-Version' : "${-> getGitHash()}",
 			'Created-By'             : "Gradle ${gradle.gradleVersion}",
 			'Build-Jdk'              : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
 			'Build-OS'               : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
