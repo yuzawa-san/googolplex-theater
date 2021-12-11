@@ -78,6 +78,7 @@ jobs:
         run: |
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/stretch ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/buster ./build/distributions/${{ steps.get_deb.outputs.filename }}
+          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bullseye ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/focal ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/bionic ./build/distributions/${{ steps.get_deb.outputs.filename }}
         env:
