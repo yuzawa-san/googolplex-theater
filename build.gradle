@@ -1,12 +1,12 @@
 plugins {
 	id "net.researchgate.release" version "2.8.1"
-	id "com.google.protobuf" version "0.8.15"
-	id "com.diffplug.spotless" version "5.11.0"
-	id "com.github.spotbugs" version "4.7.0"
-	id "com.github.ben-manes.versions" version "0.38.0"
+	id "com.google.protobuf" version "0.8.18"
+	id "com.diffplug.spotless" version "6.0.2"
+	id "com.github.spotbugs" version "5.0.0"
+	id "com.github.ben-manes.versions" version "0.39.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
-	id 'com.github.jk1.dependency-license-report' version '1.16'
-	id "nebula.deb" version "8.5.6"
+	id 'com.github.jk1.dependency-license-report' version '2.0'
+	id "nebula.deb" version "9.0.0"
 }
 
 apply plugin: "java"
@@ -99,6 +99,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.2'
 	implementation 'org.jmdns:jmdns:3.5.6'
 	implementation 'commons-cli:commons-cli:1.4'
+	implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
 	testImplementation 'org.mockito:mockito-core:3.8.0'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
