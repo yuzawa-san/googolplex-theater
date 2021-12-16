@@ -1,5 +1,5 @@
+serverHost: localhost
+serverPort: 8000
 # appId: B1A3B99B
-# serverHost: localhost
-# serverPort: 8000
 # preferredInterface: eth0
 # devicesPath: devices.yml
