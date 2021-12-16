@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A representation of the application config.
- * @author jtyuzawa
  *
+ * @author jtyuzawa
  */
 public final class GoogolplexTheaterConfig {
 
