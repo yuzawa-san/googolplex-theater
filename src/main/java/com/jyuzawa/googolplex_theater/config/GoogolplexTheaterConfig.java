@@ -29,6 +29,20 @@ public final class GoogolplexTheaterConfig {
   private static final List<String> DIAGNOSTIC_PROPERTIES =
       Collections.unmodifiableList(
           Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
+
+  static {
+    LOG.info("Starting up Googolplex Theater!");
+    LOG.info("Website: " + PROJECT_WEBSITE);
+    Package thePackage = GoogolplexTheater.class.getPackage();
+    LOG.info(
+        "Version: {} ({})",
+        thePackage.getSpecificationVersion(),
+        thePackage.getImplementationVersion());
+    for (String property : DIAGNOSTIC_PROPERTIES) {
+      LOG.info("Runtime[{}]: {}", property, System.getProperty(property));
+    }
+  }
+
   private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
   private static final String CONFIG_FILE_NAME = "config.yml";
   static final Path CONF_DIRECTORY = getConfDirectory();
@@ -56,7 +70,6 @@ public final class GoogolplexTheaterConfig {
       throw new IllegalArgumentException(
           "Devices file does not exist: " + devicesFile.getAbsolutePath());
     }
-    printDiagnosticInfo();
   }
 
   public static GoogolplexTheaterConfig load() throws IOException {
@@ -105,19 +118,6 @@ public final class GoogolplexTheaterConfig {
 
   public Path getDevicesPath() {
     return devicesPath;
-  }
-
-  private static void printDiagnosticInfo() {
-    LOG.info("Starting up Googolplex Theater!");
-    LOG.info("Website: " + PROJECT_WEBSITE);
-    Package thePackage = GoogolplexTheater.class.getPackage();
-    LOG.info(
-        "Version: {} ({})",
-        thePackage.getSpecificationVersion(),
-        thePackage.getImplementationVersion());
-    for (String property : DIAGNOSTIC_PROPERTIES) {
-      LOG.info("Runtime[{}]: {}", property, System.getProperty(property));
-    }
   }
 
   static class ConfigYaml {
