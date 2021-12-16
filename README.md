@@ -23,8 +23,8 @@ There is a simple web UI to check device info and trigger refreshes.
 
 ![Screenshot](docs/screenshot.png)
 
-There is no backing database or database dependencies, rather there is a simple JSON config file which is watched for changes.
-The JSON configuration is conveyed to the receiver application, which by default accepts a URL to display in an IFRAME.
+There is no backing database or database dependencies, rather there is a YAML files containing the devices which is watched for changes.
+The YAML configuration is conveyed to the receiver application, which by default accepts a URL to display in an IFRAME.
 The receiver application can be customized easily to suit your needs.
 The application will try to reconnect if a session is ended for whatever reason.
 
@@ -156,7 +156,7 @@ See service descriptor files for upstart, systemd, and launchd in the `./service
 
 ## Usage
 
-The cast configuration is defined in `./conf/cast_config.json`.
+The configuration is defined in `./conf/config.yml` and `./conf/devices.yml`.
 The location of your configuration can be customized using a command line argument.
 The file is automatically watched for changes.
 Some example use cases involve using cron and putting your config under version control and pulling from origin periodically, or downloading from S3/web, or updating using rsync/scp.
@@ -170,10 +170,10 @@ The maintainer has used this to show statistics dashboards in a software enginee
 * Install application Debian package and Java runtime.
 * Create one Grafana playlist per device.
 * Figure out how to use proper Grafana auth (proxy, token, etc).
-* Make your cast config file with each playlist url per device.
-* Place the cast config file under version control (git) or store it someplace accessible (http/s3/gcs).
-* Add a cron job to pull the cast config file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
-* Config is updated periodically as our dashboard needs change. The updates are automatically picked up.
+* Make your devices.yml file with each playlist url per device.
+* Place the devices.yml file under version control (git) or store it someplace accessible (http/s3/gcs).
+* Add a cron job to pull the devices.yml file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
+* devices.yml is updated periodically as our dashboard needs change. The updates are automatically picked up.
 * If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8000 and hitting a few buttons.
 
 ### Using a Custom Receiver

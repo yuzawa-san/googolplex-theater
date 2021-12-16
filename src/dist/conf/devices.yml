@@ -1,0 +1,9 @@
+devices:
+  - name: device1
+    settings:
+      url: https://example.com/
+      refreshSeconds: 1800
+  - name: device2
+    settings:
+      url: https://example.com/
+      refreshSeconds: 1800

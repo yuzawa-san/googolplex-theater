@@ -1,7 +1,7 @@
 package com.jyuzawa.googolplex_theater.config;
 
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
-import com.jyuzawa.googolplex_theater.util.JsonUtil;
+import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,26 +18,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class loads the cast config at start and watches the files for subsequent changes. The
+ * This class loads the device config at start and watches the files for subsequent changes. The
  * controller is notified of such changes.
  *
  * @author jyuzawa
  */
-public final class CastConfigLoader implements Closeable {
-  private static final Logger LOG = LoggerFactory.getLogger(CastConfigLoader.class);
-
-  public static final String DEFAULT_PATH = "conf/cast_config.json";
+public final class DeviceConfigLoader implements Closeable {
+  private static final Logger LOG = LoggerFactory.getLogger(DeviceConfigLoader.class);
 
   private final ExecutorService executor;
   private final Path path;
   private final GoogolplexController controller;
   private final WatchService watchService;
 
-  public CastConfigLoader(GoogolplexController controller, Path castConfigPath) throws IOException {
+  public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath)
+      throws IOException {
     this.controller = controller;
     this.executor = Executors.newSingleThreadExecutor();
-    this.path = castConfigPath;
-    LOG.info("Using cast config: {}", castConfigPath.toAbsolutePath());
+    this.path = deviceConfigPath;
+    LOG.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
     load();
     this.watchService = path.getFileSystem().newWatchService();
     /*
@@ -76,7 +75,7 @@ public final class CastConfigLoader implements Closeable {
           } catch (InterruptedException e) {
             LOG.debug("config watch interrupted");
           } catch (Exception e) {
-            LOG.error("Failed to watch config file", e);
+            LOG.error("Failed to watch device config file", e);
           }
         });
   }
@@ -84,19 +83,19 @@ public final class CastConfigLoader implements Closeable {
   /**
    * Read the file, decode the file content, and inform the controller of the changes.
    *
-   * @throws IOException when JSON deserialization fails
+   * @throws IOException when YAML deserialization fails
    */
   private void load() throws IOException {
-    LOG.info("Reloading cast config");
+    LOG.info("Reloading device config");
     try (InputStream stream = Files.newInputStream(path)) {
-      CastConfig out = JsonUtil.MAPPER.readValue(stream, CastConfig.class);
-      controller.processConfig(out);
+      DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
+      controller.processDeviceConfig(out);
     }
   }
 
   @Override
   public void close() throws IOException {
-    controller.processConfig(new CastConfig(Collections.emptyList()));
+    controller.processDeviceConfig(new DeviceConfig(Collections.emptyList()));
     executor.shutdownNow();
     watchService.close();
   }

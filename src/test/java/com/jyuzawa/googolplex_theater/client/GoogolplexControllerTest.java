@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.jyuzawa.googolplex_theater.config.CastConfig;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceConfig;
+import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
-import com.jyuzawa.googolplex_theater.util.JsonUtil;
+import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.vertx.core.json.JsonObject;
@@ -51,8 +51,8 @@ class GoogolplexControllerTest {
 
   @AfterAll
   static void tearDownAfterClass() throws Exception {
-    CastConfig newConfig = new CastConfig(Collections.emptyList());
-    controller.processConfig(newConfig);
+    DeviceConfig newConfig = new DeviceConfig(Collections.emptyList());
+    controller.processDeviceConfig(newConfig);
     cast1.close();
     cast2.close();
     cast3.close();
@@ -67,10 +67,10 @@ class GoogolplexControllerTest {
     devices.add(cast2.device());
     devices.add(cast3.device());
     devices.add(cast4.device());
-    CastConfig config = new CastConfig(devices);
+    DeviceConfig config = new DeviceConfig(devices);
     controller.register(cast1.event());
     controller.register(cast2.event());
-    controller.processConfig(config);
+    controller.processDeviceConfig(config);
     controller.register(cast3.event());
     controller.register(cast4.event());
     controller.register(FakeCast.event(9005, "UnknownCast"));
@@ -115,8 +115,8 @@ class GoogolplexControllerTest {
     cast1.custom = "new";
     devices.set(0, cast1.device());
     devices.remove(3);
-    CastConfig newConfig = new CastConfig(devices);
-    controller.processConfig(newConfig);
+    DeviceConfig newConfig = new DeviceConfig(devices);
+    controller.processDeviceConfig(newConfig);
     assertTransaction(cast1);
 
     deviceInfos = controller.getDeviceInfo();
@@ -178,7 +178,7 @@ class GoogolplexControllerTest {
 
     CastMessage app = cast.getMessage();
     assertType(app, cast.toString(), GoogolplexClientHandler.NAMESPACE_CUSTOM);
-    JsonNode node = JsonUtil.MAPPER.readTree(app.getPayloadUtf8());
+    JsonNode node = MapperUtil.MAPPER.readTree(app.getPayloadUtf8());
     assertEquals(cast.name, node.get("name").asText());
     assertEquals(cast.custom, node.get("settings").get("foo").asText());
   }

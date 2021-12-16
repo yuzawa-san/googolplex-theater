@@ -1,9 +1,0 @@
-{
-	"devices": [{
-		"name": "NameOfYourDevice",
-		"settings": {
-			"url": "https://example.com/",
-			"refreshSeconds": 3600
-		}
-	}]
-}

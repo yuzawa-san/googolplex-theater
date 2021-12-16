@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This is a POJO for JSON deserialization. This class represents a collection of named devices and
+ * This is a POJO for YAML deserialization. This class represents a collection of named devices and
  * their settings. The settings is a generic JsonNode to allow for flexibility. The settings will be
  * conveyed to the receiver application verbatim.
  *
  * @author jyuzawa
  */
-public final class CastConfig {
+public final class DeviceConfig {
   public final List<DeviceInfo> devices;
 
   @JsonCreator
-  public CastConfig(@JsonProperty("devices") List<DeviceInfo> devices) {
+  public DeviceConfig(@JsonProperty("devices") List<DeviceInfo> devices) {
     if (devices == null) {
       this.devices = Collections.emptyList();
     } else {

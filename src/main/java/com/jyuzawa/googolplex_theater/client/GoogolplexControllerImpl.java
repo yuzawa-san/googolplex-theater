@@ -1,7 +1,7 @@
 package com.jyuzawa.googolplex_theater.client;
 
-import com.jyuzawa.googolplex_theater.config.CastConfig;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceConfig;
+import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -132,7 +132,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
    * @param config the settings loaded from the file
    */
   @Override
-  public void processConfig(CastConfig config) {
+  public void processDeviceConfig(DeviceConfig config) {
     try {
       eventLoop
           .submit(
