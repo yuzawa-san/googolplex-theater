@@ -11,7 +11,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
@@ -95,7 +94,7 @@ public final class DeviceConfigLoader implements Closeable {
 
   @Override
   public void close() throws IOException {
-    controller.processDeviceConfig(new DeviceConfig(Collections.emptyList()));
+    controller.processDeviceConfig(new DeviceConfig());
     executor.shutdownNow();
     watchService.close();
   }

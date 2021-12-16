@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
@@ -82,7 +83,8 @@ public class FakeCast implements Closeable {
   }
 
   public DeviceInfo device() throws JsonMappingException, JsonProcessingException {
-    return new DeviceInfo(name, MapperUtil.MAPPER.readTree("{\"foo\":\"" + custom + "\"}"));
+    return new DeviceInfo(
+        name, (ObjectNode) MapperUtil.MAPPER.readTree("{\"foo\":\"" + custom + "\"}"));
   }
 
   public ServiceEvent event() throws UnknownHostException {

@@ -14,7 +14,6 @@ import io.vertx.core.json.JsonObject;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +50,7 @@ class GoogolplexControllerTest {
 
   @AfterAll
   static void tearDownAfterClass() throws Exception {
-    DeviceConfig newConfig = new DeviceConfig(Collections.emptyList());
+    DeviceConfig newConfig = new DeviceConfig();
     controller.processDeviceConfig(newConfig);
     cast1.close();
     cast2.close();
@@ -67,7 +66,7 @@ class GoogolplexControllerTest {
     devices.add(cast2.device());
     devices.add(cast3.device());
     devices.add(cast4.device());
-    DeviceConfig config = new DeviceConfig(devices);
+    DeviceConfig config = new DeviceConfig(devices, null);
     controller.register(cast1.event());
     controller.register(cast2.event());
     controller.processDeviceConfig(config);
@@ -115,7 +114,7 @@ class GoogolplexControllerTest {
     cast1.custom = "new";
     devices.set(0, cast1.device());
     devices.remove(3);
-    DeviceConfig newConfig = new DeviceConfig(devices);
+    DeviceConfig newConfig = new DeviceConfig(devices, null);
     controller.processDeviceConfig(newConfig);
     assertTransaction(cast1);
 
