@@ -7,7 +7,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
@@ -23,13 +23,13 @@ import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
 import org.junit.jupiter.api.Test;
 
-class CastConfigLoaderTest {
+class DeviceConfigLoaderTest {
 
   private static final String VALUE1 =
-      "{ \"devices\": [{ \"name\": \"NameOfYourDevice2\", \"blah\":true, \"settings\": { \"url\": \"https://example2.com/\", \"refreshSeconds\": 9600 } }] }";
+      "devices:\n  - name: NameOfYourDevice2\n    settings:\n      url: https://example2.com/\n      refreshSeconds: 9600";
 
   private static final String VALUE2 =
-      "{ \"devices\": [{ \"name\": \"NameOfYourDevice2\", \"blah\":true, \"settings\": { \"url\": \"https://example2.com/updated\", \"refreshSeconds\": 600 } }] }";
+      "devices:\n  - name: NameOfYourDevice2\n    settings:\n      url: https://example2.com/updated\n      refreshSeconds: 600";
 
   @Test
   void loaderTest() throws IOException, InterruptedException {
@@ -42,13 +42,13 @@ class CastConfigLoaderTest {
                 .build());
     Path conf = fs.getPath("/conf");
     Files.createDirectory(conf);
-    Path path = conf.resolve("cast_config.json");
+    Path path = conf.resolve("devices.yml");
     try (BufferedWriter bufferedWriter =
         Files.newBufferedWriter(
             path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
       bufferedWriter.write(VALUE1);
     }
-    BlockingQueue<CastConfig> queue = new ArrayBlockingQueue<>(10);
+    BlockingQueue<DeviceConfig> queue = new ArrayBlockingQueue<>(10);
     GoogolplexController controller =
         new GoogolplexController() {
 
@@ -64,13 +64,13 @@ class CastConfigLoaderTest {
           }
 
           @Override
-          public void processConfig(CastConfig config) {
+          public void processDeviceConfig(DeviceConfig config) {
             queue.add(config);
           }
         };
-    CastConfigLoader loader = new CastConfigLoader(controller, path);
+    DeviceConfigLoader loader = new DeviceConfigLoader(controller, path);
     try {
-      CastConfig config = queue.take();
+      DeviceConfig config = queue.take();
       assertEquals(1, config.devices.size());
       DeviceInfo device = config.devices.get(0);
       assertEquals("NameOfYourDevice2", device.name);

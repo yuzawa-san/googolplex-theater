@@ -10,6 +10,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ class GoogolplexServerTest {
     device.put("name", "my device");
     List<JsonObject> devices = Collections.singletonList(device);
     Mockito.when(controller.getDeviceInfo()).thenReturn(devices);
-    GoogolplexServer server = new GoogolplexServer(controller, port);
+    GoogolplexServer server = new GoogolplexServer(controller, new InetSocketAddress(port));
     vertx.deployVerticle(server, testContext.succeedingThenComplete());
   }
 

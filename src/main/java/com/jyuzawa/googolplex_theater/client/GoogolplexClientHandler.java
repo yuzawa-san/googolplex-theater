@@ -1,10 +1,10 @@
 package com.jyuzawa.googolplex_theater.client;
 
-import com.jyuzawa.googolplex_theater.config.CastConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.ProtocolVersion;
-import com.jyuzawa.googolplex_theater.util.JsonUtil;
+import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
@@ -119,7 +119,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
     out.setNamespace(namespace);
     out.setProtocolVersion(ProtocolVersion.CASTV2_1_0);
     out.setPayloadType(PayloadType.STRING);
-    out.setPayloadUtf8(JsonUtil.MAPPER.writeValueAsString(payload));
+    out.setPayloadUtf8(MapperUtil.MAPPER.writeValueAsString(payload));
     return out.build();
   }
 
@@ -235,7 +235,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   private void handleReceiverMessage(ChannelHandlerContext ctx, CastMessage msg, DeviceInfo device)
       throws IOException {
     ReceiverResponse receiverPayload =
-        JsonUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
+        MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
     String name = device.name;
     if (receiverPayload.reason != null) {
       // the presence of the reason indicates the launch likely failed for some reason

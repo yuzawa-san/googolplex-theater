@@ -1,0 +1,16 @@
+# APPLICATION CONFIGURATION
+
+# The IP/Hostname to bind the web UI. Use '*' to bind on all interfaces.
+uiServerHost: '*'
+
+# The port on which the web UI will listen.
+uiServerPort: 8000
+
+# The ID of the reciever application. Defaults to stock project application.
+# recieverAppId: B1A3B99B
+
+# A preferrred network interface (name, hostname, or IP) to discover the cast devices. Defaults to first valid local interface.
+# discoveryNetworkInterface: eth0
+
+# The path to the device config file. Defaults to a file in the same directory as this file.
+# deviceConfigFile: devices.yml

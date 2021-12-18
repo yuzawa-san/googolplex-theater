@@ -104,8 +104,8 @@ dependencies {
 	implementation 'io.netty:netty-handler'
 	implementation 'com.fasterxml.jackson.core:jackson-core'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
 	implementation 'org.jmdns:jmdns:3.5.7'
-	implementation 'info.picocli:picocli:4.6.2'
 	implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
 	testImplementation 'org.mockito:mockito-core:4.1.0'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
@@ -185,7 +185,8 @@ buildDeb {
 		fileMode 0644
 		into 'conf'
 	}
-	configurationFile("/opt/googolplex-theater/conf/cast_config.json")
+	configurationFile("/opt/googolplex-theater/conf/config.yml")
+	configurationFile("/opt/googolplex-theater/conf/devices.yml")
 	from("${projectDir}/deb/googolplex-theater.service") {
 		fileType CONFIG | NOREPLACE
 		addParentDirs = false
