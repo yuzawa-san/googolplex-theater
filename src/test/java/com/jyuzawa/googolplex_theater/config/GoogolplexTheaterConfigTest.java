@@ -11,20 +11,20 @@ class GoogolplexTheaterConfigTest {
   @Test
   void test() throws IOException {
     GoogolplexTheaterConfig config = GoogolplexTheaterConfig.load();
-    assertEquals(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, config.getAppId());
-    assertEquals(8000, config.getServerAddress().getPort());
-    assertEquals("localhost", config.getServerAddress().getHostName());
-    assertNull(config.getPreferredInterface());
-    assertTrue(config.getDevicesPath().toFile().exists());
+    assertEquals(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, config.getRecieverAppId());
+    assertEquals(8000, config.getUiServerAddress().getPort());
+    assertEquals("0.0.0.0", config.getUiServerAddress().getHostName());
+    assertNull(config.getDiscoveryNetworkInterface());
+    assertTrue(config.getDeviceConfigPath().toFile().exists());
   }
 
   @Test
   void appIdTest() {
     GoogolplexTheaterConfig.ConfigYaml config = new GoogolplexTheaterConfig.ConfigYaml();
-    config.setAppId("ABCDEFGH");
+    config.setReceiverAppId("ABCDEFGH");
     new GoogolplexTheaterConfig(config);
     GoogolplexTheaterConfig.ConfigYaml config2 = new GoogolplexTheaterConfig.ConfigYaml();
-    config2.setAppId("not-an-app-id");
+    config2.setReceiverAppId("not-an-app-id");
     assertThrows(
         IllegalArgumentException.class,
         () -> {
@@ -35,7 +35,7 @@ class GoogolplexTheaterConfigTest {
   @Test
   void missingDevicesTest() {
     GoogolplexTheaterConfig.ConfigYaml config = new GoogolplexTheaterConfig.ConfigYaml();
-    config.setDevicesPath("not/a/real/file.yml");
+    config.setDeviceConfigFile("not/a/real/file.yml");
     assertThrows(
         IllegalArgumentException.class,
         () -> {

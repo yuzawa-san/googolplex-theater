@@ -27,10 +27,10 @@ public final class GoogolplexTheater {
       Vertx vertx = Vertx.vertx();
       EventLoopGroup eventLoopGroup = vertx.nettyEventLoopGroup();
       GoogolplexController controller =
-          new GoogolplexControllerImpl(eventLoopGroup, config.getAppId());
+          new GoogolplexControllerImpl(eventLoopGroup, config.getRecieverAppId());
       CompletableFuture<Boolean> serverFuture = new CompletableFuture<>();
       vertx.deployVerticle(
-          new GoogolplexServer(controller, config.getServerAddress()),
+          new GoogolplexServer(controller, config.getUiServerAddress()),
           result -> {
             if (result.succeeded()) {
               serverFuture.complete(Boolean.TRUE);
@@ -39,9 +39,10 @@ public final class GoogolplexTheater {
             }
           });
       serverFuture.get(10, TimeUnit.SECONDS);
-      DeviceConfigLoader configLoader = new DeviceConfigLoader(controller, config.getDevicesPath());
+      DeviceConfigLoader configLoader =
+          new DeviceConfigLoader(controller, config.getDeviceConfigPath());
       ServiceDiscovery serviceDiscovery =
-          new ServiceDiscovery(controller, config.getPreferredInterface());
+          new ServiceDiscovery(controller, config.getDiscoveryNetworkInterface());
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(

@@ -43,29 +43,30 @@ public final class GoogolplexTheaterConfig {
     }
   }
 
+  static final String ALL_HOSTS = "*";
   private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
   private static final String CONFIG_FILE_NAME = "config.yml";
-  static final Path CONF_DIRECTORY = getConfDirectory();
+  private static final Path CONF_DIRECTORY = getConfDirectory();
 
-  private final String appId;
-  private final String preferredInterface;
-  private final InetSocketAddress serverAddress;
-  private final Path devicesPath;
+  private final String recieverAppId;
+  private final String discoveryNetworkInterface;
+  private final InetSocketAddress uiServerAddress;
+  private final Path deviceConfigPath;
 
   GoogolplexTheaterConfig(ConfigYaml config) {
-    this.appId = config.appId;
-    if (!APP_ID_PATTERN.matcher(appId).find()) {
+    this.recieverAppId = config.receiverAppId;
+    if (!APP_ID_PATTERN.matcher(recieverAppId).find()) {
       throw new IllegalArgumentException(
           "Invalid cast app-id, must be " + APP_ID_PATTERN.pattern());
     }
-    this.preferredInterface = config.preferredInterface;
-    if ("*".equals(config.serverHost)) {
-      this.serverAddress = new InetSocketAddress(config.serverPort);
+    this.discoveryNetworkInterface = config.discoveryNetworkInterface;
+    if (ALL_HOSTS.equals(config.uiServerHost)) {
+      this.uiServerAddress = new InetSocketAddress(config.uiServerPort);
     } else {
-      this.serverAddress = new InetSocketAddress(config.serverHost, config.serverPort);
+      this.uiServerAddress = new InetSocketAddress(config.uiServerHost, config.uiServerPort);
     }
-    this.devicesPath = CONF_DIRECTORY.resolve(config.devicesPath).toAbsolutePath();
-    File devicesFile = devicesPath.toFile();
+    this.deviceConfigPath = CONF_DIRECTORY.resolve(config.deviceConfigFile).toAbsolutePath();
+    File devicesFile = deviceConfigPath.toFile();
     if (!devicesFile.exists() || !devicesFile.isFile()) {
       throw new IllegalArgumentException(
           "Devices file does not exist: " + devicesFile.getAbsolutePath());
@@ -104,52 +105,52 @@ public final class GoogolplexTheaterConfig {
     return Paths.get("src/dist/conf").toAbsolutePath();
   }
 
-  public String getAppId() {
-    return appId;
+  public String getRecieverAppId() {
+    return recieverAppId;
   }
 
-  public InetSocketAddress getServerAddress() {
-    return serverAddress;
+  public InetSocketAddress getUiServerAddress() {
+    return uiServerAddress;
   }
 
-  public String getPreferredInterface() {
-    return preferredInterface;
+  public String getDiscoveryNetworkInterface() {
+    return discoveryNetworkInterface;
   }
 
-  public Path getDevicesPath() {
-    return devicesPath;
+  public Path getDeviceConfigPath() {
+    return deviceConfigPath;
   }
 
-  static class ConfigYaml {
-    private String appId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
-    private String serverHost = "localhost";
-    private int serverPort = 8000;
-    private String preferredInterface;
-    private String devicesPath = "devices.yml";
+  static final class ConfigYaml {
+    private String receiverAppId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
+    private String uiServerHost = ALL_HOSTS;
+    private int uiServerPort = 8000;
+    private String discoveryNetworkInterface;
+    private String deviceConfigFile = "devices.yml";
 
     @JsonSetter
-    public void setAppId(String appId) {
-      this.appId = appId;
+    public void setReceiverAppId(String receiverAppId) {
+      this.receiverAppId = receiverAppId;
     }
 
     @JsonSetter
-    public void setServerHost(String serverHost) {
-      this.serverHost = serverHost;
+    public void setUiServerHost(String uiServerHost) {
+      this.uiServerHost = uiServerHost;
     }
 
     @JsonSetter
-    public void setServerPort(int serverPort) {
-      this.serverPort = serverPort;
+    public void setUiServerPort(int uiServerPort) {
+      this.uiServerPort = uiServerPort;
     }
 
     @JsonSetter
-    public void setPreferredInterface(String preferredInterface) {
-      this.preferredInterface = preferredInterface;
+    public void setDiscoveryNetworkInterface(String discoveryNetworkInterface) {
+      this.discoveryNetworkInterface = discoveryNetworkInterface;
     }
 
     @JsonSetter
-    public void setDevicesPath(String devicesPath) {
-      this.devicesPath = devicesPath;
+    public void setDeviceConfigFile(String deviceConfigFile) {
+      this.deviceConfigFile = deviceConfigFile;
     }
   }
 }
