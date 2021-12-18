@@ -6,8 +6,10 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
+import java.net.InetSocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +22,13 @@ public final class GoogolplexServer extends AbstractVerticle {
 
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexServer.class);
 
-  public static final int DEFAULT_PORT = 8000;
-
   private final GoogolplexController controller;
-  private final int port;
+  private final SocketAddress address;
 
-  public GoogolplexServer(GoogolplexController controller, int port) {
+  public GoogolplexServer(GoogolplexController controller, InetSocketAddress address) {
     this.controller = controller;
-    this.port = port;
+    LOG.info("Running web-ui server on " + address);
+    this.address = SocketAddress.inetSocketAddress(address);
   }
 
   @Override
@@ -92,7 +93,7 @@ public final class GoogolplexServer extends AbstractVerticle {
         .createHttpServer()
         .requestHandler(router)
         .listen(
-            port,
+            address,
             res -> {
               if (res.succeeded()) {
                 startPromise.complete();

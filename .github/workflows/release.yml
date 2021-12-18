@@ -22,12 +22,12 @@ jobs:
           ruby-version: 2.7.2
           bundler-cache: true
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
       - name: Cache Gradle packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
@@ -78,6 +78,7 @@ jobs:
         run: |
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/stretch ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/buster ./build/distributions/${{ steps.get_deb.outputs.filename }}
+          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bullseye ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/focal ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/bionic ./build/distributions/${{ steps.get_deb.outputs.filename }}
         env:
