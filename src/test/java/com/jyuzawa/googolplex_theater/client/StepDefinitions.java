@@ -28,18 +28,20 @@ import java.util.Set;
 
 public class StepDefinitions {
 
-  private FakeCast device;
+  private static FakeCast device;
   private GoogolplexController controller;
   private static EventLoopGroup workerGroup;
   private int loadCount;
 
   @BeforeAll
-  public static void start() {
+  public static void start() throws Exception {
     workerGroup = new NioEventLoopGroup(1);
+    device = new FakeCast(workerGroup, 9001);
   }
 
   @AfterAll
-  public static void stop() {
+  public static void stop() throws IOException {
+    device.close();
     workerGroup.shutdownGracefully().syncUninterruptibly();
   }
 
@@ -48,14 +50,12 @@ public class StepDefinitions {
     controller =
         new GoogolplexControllerImpl(
             workerGroup, GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 0, 0, 1, 3);
-    device = new FakeCast(workerGroup, 9001);
   }
 
   @After
   public void tearDown() throws IOException {
     DeviceConfig newConfig = new DeviceConfig();
     controller.processDeviceConfig(newConfig);
-    device.close();
   }
 
   @Given("a registered device with url {string}")
