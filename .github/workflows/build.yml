@@ -47,3 +47,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
         if: ${{ matrix.java == '17' }}
+      - name: Save reports
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: reports-${{ matrix.java }}
+          path: build/reports/
