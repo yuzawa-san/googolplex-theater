@@ -5,6 +5,7 @@ import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
@@ -71,7 +72,7 @@ public final class DeviceConfigLoader implements Closeable {
                 key.reset();
               }
             }
-          } catch (InterruptedException e) {
+          } catch (ClosedWatchServiceException | InterruptedException e) {
             LOG.debug("config watch interrupted");
           } catch (Exception e) {
             LOG.error("Failed to watch device config file", e);

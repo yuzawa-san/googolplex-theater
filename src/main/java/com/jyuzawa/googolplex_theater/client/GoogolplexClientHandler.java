@@ -45,14 +45,14 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    */
   public static final String DEFAULT_APPLICATION_ID = "B1A3B99B";
 
-  static final String DEFAULT_RECEIVER_ID = "receiver-0";
+  public static final String DEFAULT_RECEIVER_ID = "receiver-0";
 
   /** This custom namespace is used to identify messages related to our application. */
-  static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
+  public static final String NAMESPACE_CUSTOM = "urn:x-cast:com.jyuzawa.googolplex-theater.device";
 
-  static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
-  static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
-  static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
+  public static final String NAMESPACE_CONNECTION = "urn:x-cast:com.google.cast.tp.connection";
+  public static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
+  public static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
 
   private static final Map<String, Object> CONNECT_MESSAGE = messagePayload("CONNECT");
   private static final Map<String, Object> PING_MESSAGE = messagePayload("PING");

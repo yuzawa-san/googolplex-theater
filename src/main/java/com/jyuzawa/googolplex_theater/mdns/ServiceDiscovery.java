@@ -56,6 +56,10 @@ public final class ServiceDiscovery implements Closeable {
     return bestIpAddress;
   }
 
+  public JmDNS getJmDns() {
+    return mdns;
+  }
+
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {
     List<InetAddress> ipAddresses = Collections.list(iface.getInetAddresses());
     if (!iface.isUp() || !iface.supportsMulticast() || iface.isLoopback()) {

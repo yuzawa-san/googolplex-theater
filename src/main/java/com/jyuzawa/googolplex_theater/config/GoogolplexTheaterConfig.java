@@ -1,13 +1,14 @@
 package com.jyuzawa.googolplex_theater.config;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jyuzawa.googolplex_theater.GoogolplexTheater;
 import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -46,14 +47,17 @@ public final class GoogolplexTheaterConfig {
   static final String ALL_HOSTS = "*";
   private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
   private static final String CONFIG_FILE_NAME = "config.yml";
-  private static final Path CONF_DIRECTORY = getConfDirectory();
 
   private final String recieverAppId;
   private final String discoveryNetworkInterface;
   private final InetSocketAddress uiServerAddress;
   private final Path deviceConfigPath;
+  private final int baseReconnectSeconds;
+  private final int reconnectNoiseSeconds;
+  private final int heartbeatIntervalSeconds;
+  private final int heartbeatTimeoutSeconds;
 
-  GoogolplexTheaterConfig(ConfigYaml config) {
+  GoogolplexTheaterConfig(Path basePath, ConfigYaml config) {
     this.recieverAppId = config.receiverAppId;
     if (!APP_ID_PATTERN.matcher(recieverAppId).find()) {
       throw new IllegalArgumentException(
@@ -65,24 +69,32 @@ public final class GoogolplexTheaterConfig {
     } else {
       this.uiServerAddress = new InetSocketAddress(config.uiServerHost, config.uiServerPort);
     }
-    this.deviceConfigPath = CONF_DIRECTORY.resolve(config.deviceConfigFile).toAbsolutePath();
-    File devicesFile = deviceConfigPath.toFile();
-    if (!devicesFile.exists() || !devicesFile.isFile()) {
-      throw new IllegalArgumentException(
-          "Devices file does not exist: " + devicesFile.getAbsolutePath());
+    this.deviceConfigPath = basePath.resolve(config.deviceConfigFile).toAbsolutePath();
+    if (!Files.isRegularFile(deviceConfigPath)) {
+      throw new IllegalArgumentException("Devices file does not exist: " + deviceConfigPath);
     }
+    this.baseReconnectSeconds = config.baseReconnectSeconds;
+    this.reconnectNoiseSeconds = config.reconnectNoiseSeconds;
+    this.heartbeatIntervalSeconds = config.heartbeatIntervalSeconds;
+    this.heartbeatTimeoutSeconds = config.heartbeatTimeoutSeconds;
   }
 
   public static GoogolplexTheaterConfig load() throws IOException {
-    File file = CONF_DIRECTORY.resolve(CONFIG_FILE_NAME).toFile();
-    if (!file.exists() || !file.isFile()) {
-      throw new IllegalArgumentException("Config file does not exist: " + file.getAbsolutePath());
-    }
-    ConfigYaml config = MapperUtil.YAML_MAPPER.readValue(file, ConfigYaml.class);
-    return new GoogolplexTheaterConfig(config);
+    return load(getConfDirectory());
   }
 
-  private static Path getConfDirectory() {
+  public static GoogolplexTheaterConfig load(Path basePath) throws IOException {
+    Path path = basePath.resolve(CONFIG_FILE_NAME).toAbsolutePath();
+    if (!Files.isRegularFile(path)) {
+      throw new IllegalArgumentException("Config file does not exist: " + path);
+    }
+    try (InputStream stream = Files.newInputStream(path)) {
+      ConfigYaml config = MapperUtil.YAML_MAPPER.readValue(stream, ConfigYaml.class);
+      return new GoogolplexTheaterConfig(basePath, config);
+    }
+  }
+
+  static Path getConfDirectory() {
     try {
       // NOTE: gradle does not expose APP_HOME, so we need to be creative
       Path installedPath =
@@ -121,36 +133,37 @@ public final class GoogolplexTheaterConfig {
     return deviceConfigPath;
   }
 
-  static final class ConfigYaml {
-    private String receiverAppId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
-    private String uiServerHost = ALL_HOSTS;
-    private int uiServerPort = 8000;
-    private String discoveryNetworkInterface;
-    private String deviceConfigFile = "devices.yml";
+  public static final class ConfigYaml {
+    private static final int DEFAULT_BASE_RECONNECT_SECONDS = 15;
+    private static final int DEFAULT_RECONNECT_NOISE_SECONDS = 5;
+    private static final int DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 5;
+    private static final int DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 30;
 
-    @JsonSetter
-    public void setReceiverAppId(String receiverAppId) {
-      this.receiverAppId = receiverAppId;
-    }
+    @JsonProperty public String receiverAppId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
+    @JsonProperty public String uiServerHost = ALL_HOSTS;
+    @JsonProperty public int uiServerPort = 8000;
+    @JsonProperty public String discoveryNetworkInterface;
+    @JsonProperty public String deviceConfigFile = "devices.yml";
 
-    @JsonSetter
-    public void setUiServerHost(String uiServerHost) {
-      this.uiServerHost = uiServerHost;
-    }
+    @JsonProperty public int baseReconnectSeconds = DEFAULT_BASE_RECONNECT_SECONDS;
+    @JsonProperty public int reconnectNoiseSeconds = DEFAULT_RECONNECT_NOISE_SECONDS;
+    @JsonProperty public int heartbeatIntervalSeconds = DEFAULT_HEARTBEAT_INTERVAL_SECONDS;
+    @JsonProperty public int heartbeatTimeoutSeconds = DEFAULT_HEARTBEAT_TIMEOUT_SECONDS;
+  }
 
-    @JsonSetter
-    public void setUiServerPort(int uiServerPort) {
-      this.uiServerPort = uiServerPort;
-    }
+  public int getBaseReconnectSeconds() {
+    return baseReconnectSeconds;
+  }
 
-    @JsonSetter
-    public void setDiscoveryNetworkInterface(String discoveryNetworkInterface) {
-      this.discoveryNetworkInterface = discoveryNetworkInterface;
-    }
+  public int getReconnectNoiseSeconds() {
+    return reconnectNoiseSeconds;
+  }
 
-    @JsonSetter
-    public void setDeviceConfigFile(String deviceConfigFile) {
-      this.deviceConfigFile = deviceConfigFile;
-    }
+  public int getHeartbeatIntervalSeconds() {
+    return heartbeatIntervalSeconds;
+  }
+
+  public int getHeartbeatTimeoutSeconds() {
+    return heartbeatTimeoutSeconds;
   }
 }

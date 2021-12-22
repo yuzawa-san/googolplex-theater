@@ -2,6 +2,7 @@ package com.jyuzawa.googolplex_theater.client;
 
 import com.jyuzawa.googolplex_theater.config.DeviceConfig;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -54,13 +55,8 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
 
   private static final int CONNECT_TIMEOUT_MILLIS = 5000;
 
-  private static final int DEFAULT_BASE_RECONNECT_SECONDS = 15;
-  private static final int DEFAULT_RECONNECT_NOISE_SECONDS = 5;
   private static final int RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
-  private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
-  private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
 
-  private final EventLoopGroup eventLoopGroup;
   private final EventLoop eventLoop;
   private final Bootstrap bootstrap;
   private final Map<String, DeviceInfo> nameToDeviceInfo;
@@ -70,32 +66,16 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   private final int baseReconnectSeconds;
   private final int reconnectNoiseSeconds;
 
-  public GoogolplexControllerImpl(EventLoopGroup eventLoopGroup, String appId) throws IOException {
-    this(
-        eventLoopGroup,
-        appId,
-        DEFAULT_BASE_RECONNECT_SECONDS,
-        DEFAULT_RECONNECT_NOISE_SECONDS,
-        HEARTBEAT_INTERVAL_SECONDS,
-        HEARTBEAT_TIMEOUT_SECONDS);
-  }
-
-  public GoogolplexControllerImpl(
-      EventLoopGroup eventLoopGroup,
-      String appId,
-      int baseReconnectSeconds,
-      int reconnectNoiseSeconds,
-      int heartbeatIntervalSeconds,
-      int heartbeatTimeoutSeconds)
+  public GoogolplexControllerImpl(EventLoopGroup eventLoopGroup, GoogolplexTheaterConfig config)
       throws IOException {
+    String appId = config.getRecieverAppId();
     // the state is maintained in these maps
     this.nameToDeviceInfo = new ConcurrentHashMap<>();
     this.nameToAddress = new ConcurrentHashMap<>();
     this.nameToChannel = new ConcurrentHashMap<>();
     this.nameToBackoffSeconds = new ConcurrentHashMap<>();
-    this.baseReconnectSeconds = baseReconnectSeconds;
-    this.reconnectNoiseSeconds = reconnectNoiseSeconds;
-    this.eventLoopGroup = eventLoopGroup;
+    this.baseReconnectSeconds = config.getBaseReconnectSeconds();
+    this.reconnectNoiseSeconds = config.getReconnectNoiseSeconds();
     this.eventLoop = eventLoopGroup.next();
     SslContext sslContext =
         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
@@ -121,7 +101,9 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
             p.addLast(
                 "handler",
                 new GoogolplexClientHandler(
-                    appId, heartbeatIntervalSeconds, heartbeatTimeoutSeconds));
+                    appId,
+                    config.getHeartbeatIntervalSeconds(),
+                    config.getHeartbeatTimeoutSeconds()));
           }
         });
   }
