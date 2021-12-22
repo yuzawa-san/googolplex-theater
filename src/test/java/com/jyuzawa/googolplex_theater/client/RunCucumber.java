@@ -1,4 +1,4 @@
-package com.jyuzawa.googolplex_theater;
+package com.jyuzawa.googolplex_theater.client;
 
 import io.cucumber.junit.platform.engine.Constants;
 import org.junit.platform.suite.api.ConfigurationParameter;

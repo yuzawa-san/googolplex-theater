@@ -36,11 +36,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FakeCast implements Closeable {
+  private static final Logger LOG = LoggerFactory.getLogger(FakeCast.class);
+
   private static final InetAddress LOOPBACK = InetAddress.getLoopbackAddress();
 
   private final Channel serverChannel;
@@ -51,6 +56,7 @@ public class FakeCast implements Closeable {
   final String name;
   String custom;
   boolean pongable;
+  AtomicBoolean connected = new AtomicBoolean();
 
   public FakeCast(EventLoopGroup workerGroup, int port) throws Exception {
     this.port = port;
@@ -251,5 +257,10 @@ public class FakeCast implements Closeable {
           break;
       }
     }
+  }
+
+  public boolean isConnected() {
+    channel.closeFuture().awaitUninterruptibly(10, TimeUnit.SECONDS);
+    return channel.isActive();
   }
 }
