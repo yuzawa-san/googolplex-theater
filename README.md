@@ -27,6 +27,7 @@ There is no backing database or database dependencies, rather there is a YAML fi
 The YAML configuration is conveyed to the receiver application, which by default accepts a URL to display in an IFRAME.
 The receiver application can be customized easily to suit your needs.
 The application will try to reconnect if a session is ended for whatever reason.
+See [feature files](src/test/resources/features/) for more details.
 
 ## Requirements
 
