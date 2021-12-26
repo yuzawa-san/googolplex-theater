@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,9 @@ public final class ServiceDiscovery implements Closeable {
     return bestIpAddress;
   }
 
-  public JmDNS getJmDns() {
-    return mdns;
+  // visible for testing
+  public void registerService(ServiceInfo serviceInfo) throws IOException {
+    mdns.registerService(serviceInfo);
   }
 
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {

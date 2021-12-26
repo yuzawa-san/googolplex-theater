@@ -9,7 +9,6 @@ import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.vertx.core.Vertx;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import javax.jmdns.JmDNS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +43,8 @@ public final class GoogolplexTheater {
     this.serviceDiscovery = new ServiceDiscovery(controller, config.getDiscoveryNetworkInterface());
   }
 
-  JmDNS getJmDNS() {
-    return serviceDiscovery.getJmDns();
+  ServiceDiscovery getServiceDiscovery() {
+    return serviceDiscovery;
   }
 
   public void close() {

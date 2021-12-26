@@ -127,7 +127,7 @@ public class StepDefinitions {
     ObjectNode settings = MapperUtil.MAPPER.getNodeFactory().objectNode().put("url", url);
     DeviceInfo deviceInfo = new DeviceInfo(device.name, settings);
     writeDevices(new DeviceConfig(Collections.singletonList(deviceInfo), BASE_SETTINGS));
-    googolplexTheater.getJmDNS().registerService(device.event().getInfo());
+    googolplexTheater.getServiceDiscovery().registerService(device.event().getInfo());
     assertTransaction(device, url);
   }
 
@@ -160,7 +160,7 @@ public class StepDefinitions {
 
   @Given("an unregistered device")
   public void an_unregistered_device() throws IOException {
-    googolplexTheater.getJmDNS().registerService(device.event().getInfo());
+    googolplexTheater.getServiceDiscovery().registerService(device.event().getInfo());
   }
 
   private void refresh(String name) throws InterruptedException {
