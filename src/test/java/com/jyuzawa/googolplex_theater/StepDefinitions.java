@@ -25,7 +25,6 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -60,7 +59,7 @@ public class StepDefinitions {
   @BeforeAll
   public static void start() throws Exception {
     vertx = Vertx.vertx();
-    workerGroup = new NioEventLoopGroup(1);
+    workerGroup = vertx.nettyEventLoopGroup();
     device = new FakeCast(workerGroup, 9001);
     // For a simple file system with Unix-style paths and behavior:
     FileSystem fs =
@@ -83,6 +82,7 @@ public class StepDefinitions {
       config.reconnectNoiseSeconds = 0;
       config.heartbeatIntervalSeconds = 1;
       config.heartbeatTimeoutSeconds = 3;
+      config.discoveryNetworkInterface = "127.0.0.1";
       System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
       MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
     }
@@ -91,8 +91,8 @@ public class StepDefinitions {
   @AfterAll
   public static void stop() throws IOException {
     device.close();
-    workerGroup.shutdownGracefully().syncUninterruptibly();
     vertx.close();
+    workerGroup.shutdownGracefully().syncUninterruptibly();
   }
 
   private static void writeEmptyDevices() throws IOException {
