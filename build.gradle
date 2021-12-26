@@ -113,9 +113,9 @@ dependencies {
 	testImplementation 'io.vertx:vertx-junit5'
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
-	testImplementation 'io.cucumber:cucumber-java:7.0.0'
-	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.0.0'
-	testImplementation 'org.junit.platform:junit-platform-suite'
+	testImplementation 'io.cucumber:cucumber-java:7.1.0'
+	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.1.0'
+	testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
 }
 
 test {
@@ -218,10 +218,4 @@ spotbugsMain {
 
 gitHooks {
 	hooks = ['pre-push': 'spotlessCheck']
-}
-
-configurations {
-	cucumberRuntime {
-		extendsFrom testImplementation
-	}
 }
