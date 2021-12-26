@@ -8,7 +8,7 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @IncludeEngines("cucumber")
-@SelectClasspathResource("com/jyuzawa/googolplex_theater")
+@SelectClasspathResource("features")
 @ConfigurationParameter(
     key = Constants.GLUE_PROPERTY_NAME,
     value = "com.jyuzawa.googolplex_theater")
