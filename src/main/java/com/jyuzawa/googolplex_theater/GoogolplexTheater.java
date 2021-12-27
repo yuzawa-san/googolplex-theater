@@ -6,7 +6,6 @@ import com.jyuzawa.googolplex_theater.config.DeviceConfigLoader;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
-import io.netty.channel.EventLoopGroup;
 import io.vertx.core.Vertx;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -21,41 +20,49 @@ import org.slf4j.LoggerFactory;
 public final class GoogolplexTheater {
   private static final Logger LOG = LoggerFactory.getLogger(GoogolplexTheater.class);
 
+  private final Vertx vertx;
+  private final DeviceConfigLoader configLoader;
+  private final ServiceDiscovery serviceDiscovery;
+
+  public GoogolplexTheater(GoogolplexTheaterConfig config) throws Exception {
+    this.vertx = Vertx.vertx();
+    GoogolplexController controller =
+        new GoogolplexControllerImpl(vertx.nettyEventLoopGroup(), config);
+    CompletableFuture<Boolean> serverFuture = new CompletableFuture<>();
+    vertx.deployVerticle(
+        new GoogolplexServer(controller, config.getUiServerAddress()),
+        result -> {
+          if (result.succeeded()) {
+            serverFuture.complete(Boolean.TRUE);
+          } else {
+            serverFuture.completeExceptionally(result.cause());
+          }
+        });
+    serverFuture.get(10, TimeUnit.SECONDS);
+    this.configLoader = new DeviceConfigLoader(controller, config.getDeviceConfigPath());
+    this.serviceDiscovery = new ServiceDiscovery(controller, config.getDiscoveryNetworkInterface());
+  }
+
+  ServiceDiscovery getServiceDiscovery() {
+    return serviceDiscovery;
+  }
+
+  public void close() {
+    LOG.info("Shutting down Googolplex Theater!");
+    try {
+      configLoader.close();
+      serviceDiscovery.close();
+      vertx.close();
+    } catch (Exception e) {
+      LOG.warn("Failed to shut down", e);
+    }
+  }
+
   public static void main(String[] args) {
     try {
       GoogolplexTheaterConfig config = GoogolplexTheaterConfig.load();
-      Vertx vertx = Vertx.vertx();
-      EventLoopGroup eventLoopGroup = vertx.nettyEventLoopGroup();
-      GoogolplexController controller =
-          new GoogolplexControllerImpl(eventLoopGroup, config.getRecieverAppId());
-      CompletableFuture<Boolean> serverFuture = new CompletableFuture<>();
-      vertx.deployVerticle(
-          new GoogolplexServer(controller, config.getUiServerAddress()),
-          result -> {
-            if (result.succeeded()) {
-              serverFuture.complete(Boolean.TRUE);
-            } else {
-              serverFuture.completeExceptionally(result.cause());
-            }
-          });
-      serverFuture.get(10, TimeUnit.SECONDS);
-      DeviceConfigLoader configLoader =
-          new DeviceConfigLoader(controller, config.getDeviceConfigPath());
-      ServiceDiscovery serviceDiscovery =
-          new ServiceDiscovery(controller, config.getDiscoveryNetworkInterface());
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread(
-                  () -> {
-                    LOG.info("Shutting down Googolplex Theater!");
-                    try {
-                      configLoader.close();
-                      serviceDiscovery.close();
-                      vertx.close();
-                    } catch (Exception e) {
-                      LOG.warn("Failed to shut down", e);
-                    }
-                  }));
+      GoogolplexTheater googolplexTheater = new GoogolplexTheater(config);
+      Runtime.getRuntime().addShutdownHook(new Thread(googolplexTheater::close));
     } catch (Exception e) {
       LOG.error("Failed to start", e);
       System.exit(1);

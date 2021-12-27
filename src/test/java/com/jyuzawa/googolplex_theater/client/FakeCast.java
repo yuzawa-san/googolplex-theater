@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
@@ -38,6 +39,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
+import javax.jmdns.impl.ServiceInfoImpl;
 import org.mockito.Mockito;
 
 public class FakeCast implements Closeable {
@@ -48,9 +50,9 @@ public class FakeCast implements Closeable {
   private final NioEventLoopGroup bossGroup;
   private final BlockingQueue<CastMessage> queue;
   private final int port;
-  final String name;
+  public final String name;
   String custom;
-  boolean pongable;
+  public boolean pongable;
 
   public FakeCast(EventLoopGroup workerGroup, int port) throws Exception {
     this.port = port;
@@ -78,7 +80,7 @@ public class FakeCast implements Closeable {
                 p.addLast("handler", new FakeChromecastHandler());
               }
             });
-    this.serverChannel = serverBootstrap.bind(LOOPBACK, port).syncUninterruptibly().channel();
+    this.serverChannel = serverBootstrap.bind(port).syncUninterruptibly().channel();
     this.custom = String.valueOf(ThreadLocalRandom.current().nextInt());
   }
 
@@ -94,7 +96,14 @@ public class FakeCast implements Closeable {
   public static ServiceEvent event(int port, String name) throws UnknownHostException {
     ServiceEvent event = Mockito.mock(ServiceEvent.class);
     Mockito.when(event.getName()).thenReturn("Chromecast-FAKE-" + port + ".local");
-    ServiceInfo serviceInfo = Mockito.mock(ServiceInfo.class);
+    ServiceInfoImpl serviceInfo =
+        Mockito.spy(
+            (ServiceInfoImpl)
+                ServiceInfo.create(
+                    ServiceDiscovery.MDNS_SERVICE_NAME,
+                    "Chromecast-FAKE-" + port + ".local",
+                    port,
+                    "fn=" + name));
     Mockito.when(event.getInfo()).thenReturn(serviceInfo);
     Mockito.when(serviceInfo.getPropertyString(Mockito.anyString())).thenReturn(name);
     Mockito.when(serviceInfo.getInetAddresses()).thenReturn(new InetAddress[] {LOOPBACK});
@@ -251,5 +260,10 @@ public class FakeCast implements Closeable {
           break;
       }
     }
+  }
+
+  public boolean isConnected() {
+    channel.closeFuture().awaitUninterruptibly(10, TimeUnit.SECONDS);
+    return channel.isActive();
   }
 }

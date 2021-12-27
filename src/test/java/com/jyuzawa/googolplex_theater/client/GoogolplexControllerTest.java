@@ -3,11 +3,9 @@ package com.jyuzawa.googolplex_theater.client;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
+import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.vertx.core.json.JsonObject;
@@ -39,9 +37,7 @@ class GoogolplexControllerTest {
   @BeforeAll
   static void setUpBeforeClass() throws Exception {
     workerGroup = new NioEventLoopGroup(1);
-    controller =
-        new GoogolplexControllerImpl(
-            workerGroup, GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 0, 0, 1, 3);
+    controller = new GoogolplexControllerImpl(workerGroup, GoogolplexTheaterConfig.load());
     cast1 = new FakeCast(workerGroup, 9001);
     cast2 = new FakeCast(workerGroup, 9002);
     cast3 = new FakeCast(workerGroup, 9003);
@@ -96,98 +92,6 @@ class GoogolplexControllerTest {
     Set<String> unconfigureds = getUnconfigureds(deviceInfos);
     assertEquals(1, unconfigureds.size());
     assertTrue(unconfigureds.contains("UnknownCast"));
-
-    assertTransaction(cast1);
-    assertTransaction(cast2);
-    assertTransaction(cast3);
-    assertTransaction(cast4);
-
-    // idle screen on 2
-    cast2.loadIdleScreen();
-    assertTransaction(cast2);
-
-    // force close on 3
-    cast3.closeChannel();
-    assertTransaction(cast3);
-
-    // update 1, delete 4
-    cast1.custom = "new";
-    devices.set(0, cast1.device());
-    devices.remove(3);
-    DeviceConfig newConfig = new DeviceConfig(devices, null);
-    controller.processDeviceConfig(newConfig);
-    assertTransaction(cast1);
-
-    deviceInfos = controller.getDeviceInfo();
-    configureds = getConfigureds(deviceInfos);
-    assertEquals(3, configureds.size());
-    assertTrue(configureds.contains(cast1.name));
-    assertTrue(configureds.contains(cast2.name));
-    assertTrue(configureds.contains(cast3.name));
-    unconfigureds = getUnconfigureds(deviceInfos);
-    assertEquals(2, unconfigureds.size());
-    assertTrue(unconfigureds.contains(cast4.name));
-    assertTrue(unconfigureds.contains("UnknownCast"));
-
-    // refresh 2
-    controller.refresh(cast2.name);
-    assertTransaction(cast2);
-
-    // refresh all
-    controller.refresh(null);
-    assertTransaction(cast1);
-    assertTransaction(cast2);
-    assertTransaction(cast3);
-
-    // test heatbeat (one cast has died)
-    cast2.pongable = false;
-    Thread.sleep(5000L);
-    // that last cast should have reconnected
-    assertTrue(cast2.pongable);
-
-    // send broken messages which should restart 3
-    cast3.sendBrokenMessages();
-    assertTransaction(cast3);
-
-    LOG.info("DONE");
-  }
-
-  private void assertTransaction(FakeCast cast) throws Exception {
-    CastMessage connect = cast.getMessage();
-    assertType(
-        connect,
-        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-        GoogolplexClientHandler.NAMESPACE_CONNECTION);
-    assertEquals("{\"type\":\"CONNECT\"}", connect.getPayloadUtf8());
-
-    CastMessage launch = cast.getMessage();
-    assertType(
-        launch,
-        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-        GoogolplexClientHandler.NAMESPACE_RECEIVER);
-    assertEquals(
-        "{\"requestId\":0,\"appId\":\""
-            + GoogolplexClientHandler.DEFAULT_APPLICATION_ID
-            + "\",\"type\":\"LAUNCH\"}",
-        launch.getPayloadUtf8());
-
-    CastMessage appConnect = cast.getMessage();
-    assertType(appConnect, cast.toString(), GoogolplexClientHandler.NAMESPACE_CONNECTION);
-    assertEquals("{\"type\":\"CONNECT\"}", appConnect.getPayloadUtf8());
-
-    CastMessage app = cast.getMessage();
-    assertType(app, cast.toString(), GoogolplexClientHandler.NAMESPACE_CUSTOM);
-    JsonNode node = MapperUtil.MAPPER.readTree(app.getPayloadUtf8());
-    assertEquals(cast.name, node.get("name").asText());
-    assertEquals(cast.custom, node.get("settings").get("foo").asText());
-  }
-
-  private void assertType(CastMessage msg, String receiverId, String namespace) {
-    assertEquals(CastMessage.ProtocolVersion.CASTV2_1_0, msg.getProtocolVersion());
-    assertTrue(msg.getSourceId().startsWith("sender-"));
-    assertEquals(receiverId, msg.getDestinationId());
-    assertEquals(namespace, msg.getNamespace());
-    assertEquals(CastMessage.PayloadType.STRING, msg.getPayloadType());
   }
 
   private Set<String> getUnconfigureds(List<JsonObject> devices) {
