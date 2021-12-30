@@ -10,7 +10,8 @@ by yuzawa-san
 [![packagecloud](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/yuzawa-san/googolplex-theater)
 
 [![build](https://github.com/yuzawa-san/googolplex-theater/workflows/build/badge.svg)](https://github.com/yuzawa-san/googolplex-theater/actions)
-[![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/master/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
+[![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/develop/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
+[![Known Vulnerabilities](https://snyk.io/test/github/yuzawa-san/googolplex-theater/badge.svg)](https://snyk.io/test/github/yuzawa-san/googolplex-theater)
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
 Ideal for digital signage applications.
