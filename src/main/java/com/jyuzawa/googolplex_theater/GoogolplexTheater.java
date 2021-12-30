@@ -43,10 +43,6 @@ public final class GoogolplexTheater {
     this.serviceDiscovery = new ServiceDiscovery(controller, config.getDiscoveryNetworkInterface());
   }
 
-  ServiceDiscovery getServiceDiscovery() {
-    return serviceDiscovery;
-  }
-
   public void close() {
     LOG.info("Shutting down Googolplex Theater!");
     try {
