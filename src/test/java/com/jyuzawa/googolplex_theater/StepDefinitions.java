@@ -28,7 +28,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxTestContext;
@@ -39,10 +38,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.jmdns.JmDNS;
 
 public class StepDefinitions {
 
@@ -55,9 +52,11 @@ public class StepDefinitions {
   private static Path devicesPath;
   private static final ObjectNode BASE_SETTINGS =
       MapperUtil.MAPPER.getNodeFactory().objectNode().put("foo", "bar");
+  private static JmDNS mdns;
 
   @BeforeAll
   public static void start() throws Exception {
+    mdns = JmDNS.create("127.0.0.1");
     vertx = Vertx.vertx();
     workerGroup = vertx.nettyEventLoopGroup();
     device = new FakeCast(workerGroup, 9001);
@@ -93,6 +92,7 @@ public class StepDefinitions {
     device.close();
     vertx.close();
     workerGroup.shutdownGracefully().syncUninterruptibly();
+    mdns.close();
   }
 
   private static void writeEmptyDevices() throws IOException {
@@ -120,6 +120,7 @@ public class StepDefinitions {
   @After
   public void tearDown() throws IOException {
     googolplexTheater.close();
+    mdns.unregisterAllServices();
   }
 
   @Given("a registered device with url {string}")
@@ -127,7 +128,7 @@ public class StepDefinitions {
     ObjectNode settings = MapperUtil.MAPPER.getNodeFactory().objectNode().put("url", url);
     DeviceInfo deviceInfo = new DeviceInfo(device.name, settings);
     writeDevices(new DeviceConfig(Collections.singletonList(deviceInfo), BASE_SETTINGS));
-    googolplexTheater.getServiceDiscovery().registerService(device.event().getInfo());
+    mdns.registerService(device.event().getInfo());
     assertTransaction(device, url);
   }
 
@@ -160,7 +161,7 @@ public class StepDefinitions {
 
   @Given("an unregistered device")
   public void an_unregistered_device() throws IOException {
-    googolplexTheater.getServiceDiscovery().registerService(device.event().getInfo());
+    mdns.registerService(device.event().getInfo());
   }
 
   private void refresh(String name) throws InterruptedException {
@@ -265,25 +266,5 @@ public class StepDefinitions {
     assertEquals(receiverId, msg.getDestinationId());
     assertEquals(namespace, msg.getNamespace());
     assertEquals(CastMessage.PayloadType.STRING, msg.getPayloadType());
-  }
-
-  private Set<String> getUnconfigureds(List<JsonObject> devices) {
-    Set<String> out = new HashSet<>();
-    for (JsonObject device : devices) {
-      if (null == device.getString("settings")) {
-        out.add(device.getString("name"));
-      }
-    }
-    return out;
-  }
-
-  private Set<String> getConfigureds(List<JsonObject> devices) {
-    Set<String> out = new HashSet<>();
-    for (JsonObject device : devices) {
-      if (null != device.getString("settings")) {
-        out.add(device.getString("name"));
-      }
-    }
-    return out;
   }
 }
