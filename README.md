@@ -1,12 +1,11 @@
 # googolplex-theater
-by yuzawa-san
+by [@yuzawa-san](https://github.com/yuzawa-san/)
 
 ![Icon](src/main/resources/favicon.png)
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
 [![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
-[![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/yuzawa/googolplex-theater?label=docker%20image%20size)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/yuzawa/googolplex-theater)](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://github.com/yuzawa-san/googolplex-theater/pkgs/container/googolplex-theater)
 [![packagecloud](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/yuzawa-san/googolplex-theater)
 
 [![build](https://github.com/yuzawa-san/googolplex-theater/workflows/build/badge.svg)](https://github.com/yuzawa-san/googolplex-theater/actions)
@@ -59,7 +58,7 @@ Raspberry Pi OS (Raspbian). This may be subject to change.
 There are few options for installation:
 
 * Install a Debian package (Respberry Pi compatible) either using [packagecloud](#packagecloud) or [downloading manually](#manual-package-download).
-* Use a Docker image published to Dockerhub.
+* Use a Docker image published to [Github Container Registry](https://github.com/yuzawa-san/googolplex-theater/pkgs/container/googolplex-theater).
 * Download a [release ZIP archive](https://github.com/yuzawa-san/googolplex-theater/releases) or build the application locally.
 
 ### Package Installation
@@ -109,12 +108,12 @@ This is released in a few common processor architectures: amd64, arm64/v8, arm/v
 
 To run a specific `VERSION` of the application, pull:
 ```
-docker pull yuzawa/googolplex-theater:VERSION
+docker pull ghcr.io/yuzawa-san/googolplex-theater:VERSION
 ```
 
 And then to run the application:
 ```
-docker run --net=host -v /path/to/your/conf:/opt/googolplex-theater/conf yuzawa/googolplex-theater:VERSION
+docker run --net=host -v /path/to/your/conf:/opt/googolplex-theater/conf ghcr.io/yuzawa-san/googolplex-theater:VERSION
 ```
 
 For the service discovery to work correctly, you will need the `--net=host` option.
