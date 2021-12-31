@@ -43,7 +43,7 @@ jobs:
               # the spotless jvm args dont work in 8
               rm gradle.properties
           fi;
-          ./gradlew build installDist -s
+          ./gradlew build -s
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
         if: ${{ matrix.java == '17' }}
