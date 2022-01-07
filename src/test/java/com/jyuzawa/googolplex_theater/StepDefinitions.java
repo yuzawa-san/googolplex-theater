@@ -15,7 +15,6 @@ import com.jyuzawa.googolplex_theater.config.DeviceConfig;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig.ConfigYaml;
-import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.cucumber.java.After;
@@ -34,7 +33,6 @@ import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxTestContext;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,8 +59,7 @@ public class StepDefinitions {
 
   @BeforeAll
   public static void start() throws Exception {
-    InetAddress host = ServiceDiscovery.getInterfaceAddress(null);
-    mdns = JmDNS.create(host);
+    mdns = JmDNS.create();
     vertx = Vertx.vertx();
     workerGroup = vertx.nettyEventLoopGroup();
     device = new FakeCast(workerGroup, 9001);
@@ -87,6 +84,7 @@ public class StepDefinitions {
       config.setReconnectNoiseSeconds(0);
       config.setHeartbeatIntervalSeconds(1);
       config.setHeartbeatTimeoutSeconds(3);
+      config.setDiscoveryNetworkInterface(mdns.getInetAddress().getHostAddress());
       System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
       MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
     }

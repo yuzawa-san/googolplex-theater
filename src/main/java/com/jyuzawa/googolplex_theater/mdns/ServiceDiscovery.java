@@ -12,15 +12,17 @@ import java.util.List;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class starts a listener for nearby devices and informs the controller of any changes.
  *
  * @author jyuzawa
  */
-@Slf4j
 public final class ServiceDiscovery implements Closeable {
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceDiscovery.class);
+
   public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
 
   private final GoogolplexController controller;
@@ -31,17 +33,17 @@ public final class ServiceDiscovery implements Closeable {
     this.controller = controller;
     InetAddress inetAddress = getInterfaceAddress(preferredInterface);
     if (inetAddress == null) {
-      log.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
+      LOG.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
     }
     this.mdns = JmDNS.create(inetAddress);
-    log.info("Search for casts using {}", mdns.getInetAddress());
+    LOG.info("Search for casts using {}", mdns.getInetAddress());
     this.mdns.addServiceListener(MDNS_SERVICE_NAME, new ServiceDiscoveryListener());
   }
 
-  public static InetAddress getInterfaceAddress(String preferredInterface)
+  static InetAddress getInterfaceAddress(String preferredInterface)
       throws SocketException, UnknownHostException {
     if (preferredInterface != null) {
-      return getPreferredInterfaceAddress(preferredInterface);
+      return getBestInetAddress(getPreferredInterface(preferredInterface));
     }
     List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
     InetAddress bestIpAddress = null;
@@ -56,13 +58,10 @@ public final class ServiceDiscovery implements Closeable {
 
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {
     List<InetAddress> ipAddresses = Collections.list(iface.getInetAddresses());
-    if (!iface.isUp()
-        || !iface.supportsMulticast()
-        || iface.isLoopback()
-        || iface.isPointToPoint()) {
+    if (!iface.isUp() || !iface.supportsMulticast() || iface.isLoopback()) {
       return null;
     }
-    log.info("Found network interface {} - {}", iface, ipAddresses);
+    LOG.info("Found network interface {} - {}", iface, ipAddresses);
     for (InetAddress ipAddress : ipAddresses) {
       if (!ipAddress.isLoopbackAddress()
           && !ipAddress.isLinkLocalAddress()
@@ -73,15 +72,20 @@ public final class ServiceDiscovery implements Closeable {
     return null;
   }
 
-  private static InetAddress getPreferredInterfaceAddress(String preferredInterface)
+  private static NetworkInterface getPreferredInterface(String preferredInterface)
       throws SocketException, UnknownHostException {
     // try by name
     NetworkInterface iface = NetworkInterface.getByName(preferredInterface);
     if (iface != null) {
-      return getBestInetAddress(iface);
+      return iface;
     }
     // try by ip address / hostname
-    return InetAddress.getByName(preferredInterface);
+    InetAddress address = InetAddress.getByName(preferredInterface);
+    iface = NetworkInterface.getByInetAddress(address);
+    if (iface != null) {
+      return iface;
+    }
+    throw new IllegalArgumentException("Failed to find network interface");
   }
 
   @Override
