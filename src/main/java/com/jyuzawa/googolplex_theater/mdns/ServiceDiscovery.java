@@ -12,19 +12,17 @@ import java.util.List;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class starts a listener for nearby devices and informs the controller of any changes.
  *
  * @author jyuzawa
  */
+@Slf4j
 public final class ServiceDiscovery implements Closeable {
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceDiscovery.class);
-
   public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
-
+ 
   private final GoogolplexController controller;
   private final JmDNS mdns;
 
@@ -33,10 +31,10 @@ public final class ServiceDiscovery implements Closeable {
     this.controller = controller;
     InetAddress inetAddress = getInterfaceAddress(preferredInterface);
     if (inetAddress == null) {
-      LOG.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
+      log.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
     }
     this.mdns = JmDNS.create(inetAddress);
-    LOG.info("Search for casts using {}", mdns.getInetAddress());
+    log.info("Search for casts using {}", mdns.getInetAddress());
     this.mdns.addServiceListener(MDNS_SERVICE_NAME, new ServiceDiscoveryListener());
   }
 
@@ -58,10 +56,13 @@ public final class ServiceDiscovery implements Closeable {
 
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {
     List<InetAddress> ipAddresses = Collections.list(iface.getInetAddresses());
-    if (!iface.isUp() || !iface.supportsMulticast() || iface.isLoopback()) {
+    if (!iface.isUp()
+        || !iface.supportsMulticast()
+        || iface.isLoopback()
+        || iface.isPointToPoint()) {
       return null;
     }
-    LOG.info("Found network interface {} - {}", iface, ipAddresses);
+    log.info("Found network interface {} - {}", iface, ipAddresses);
     for (InetAddress ipAddress : ipAddresses) {
       if (!ipAddress.isLoopbackAddress()
           && !ipAddress.isLinkLocalAddress()
