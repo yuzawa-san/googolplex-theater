@@ -56,7 +56,7 @@ public class StepDefinitions {
 
   @BeforeAll
   public static void start() throws Exception {
-    mdns = JmDNS.create("localhost");
+    mdns = JmDNS.create();
     vertx = Vertx.vertx();
     workerGroup = vertx.nettyEventLoopGroup();
     device = new FakeCast(workerGroup, 9001);
@@ -81,7 +81,7 @@ public class StepDefinitions {
       config.reconnectNoiseSeconds = 0;
       config.heartbeatIntervalSeconds = 1;
       config.heartbeatTimeoutSeconds = 3;
-      config.discoveryNetworkInterface = "localhost";
+      config.discoveryNetworkInterface = mdns.getInetAddress().getHostAddress();
       System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
       MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
     }
