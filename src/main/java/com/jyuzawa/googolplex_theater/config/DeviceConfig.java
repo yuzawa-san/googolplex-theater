@@ -7,7 +7,7 @@ import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import lombok.Data;
 
 /**
  * This is a POJO for YAML deserialization. This class represents a collection of named devices and
@@ -16,8 +16,9 @@ import java.util.Objects;
  *
  * @author jyuzawa
  */
+@Data
 public final class DeviceConfig {
-  public final List<DeviceInfo> devices;
+  private final List<DeviceInfo> devices;
 
   public DeviceConfig() {
     this(null, null);
@@ -38,9 +39,10 @@ public final class DeviceConfig {
     }
   }
 
+  @Data
   public static final class DeviceInfo {
-    public final String name;
-    public ObjectNode settings;
+    private final String name;
+    private final ObjectNode settings;
 
     @JsonCreator
     public DeviceInfo(
@@ -57,30 +59,6 @@ public final class DeviceConfig {
       newSettings.setAll(settings);
       newSettings.setAll(this.settings);
       return new DeviceInfo(name, newSettings);
-    }
-
-    @Override
-    /**
-     * This method is used to determine if the device name and settings have changed, which will
-     * trigger a reload. It leans heavily on JsonNode.equals() implementation.
-     */
-    public boolean equals(Object o) {
-      if (o == null) {
-        return false;
-      }
-      if (o == this) {
-        return true;
-      }
-      if (!(o instanceof DeviceInfo)) {
-        return false;
-      }
-      DeviceInfo other = (DeviceInfo) o;
-      return Objects.equals(name, other.name) && Objects.equals(settings, other.settings);
-    }
-
-    @Override
-    public int hashCode() {
-      return name.hashCode() + settings.hashCode();
     }
   }
 }

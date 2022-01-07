@@ -21,10 +21,10 @@ class GoogolplexTheaterConfigTest {
   @Test
   void appIdTest() {
     GoogolplexTheaterConfig.ConfigYaml config = new GoogolplexTheaterConfig.ConfigYaml();
-    config.receiverAppId = "ABCDEFGH";
+    config.setReceiverAppId("ABCDEFGH");
     new GoogolplexTheaterConfig(GoogolplexTheaterConfig.getConfDirectory(), config);
     GoogolplexTheaterConfig.ConfigYaml config2 = new GoogolplexTheaterConfig.ConfigYaml();
-    config2.receiverAppId = "not-an-app-id";
+    config2.setReceiverAppId("not-an-app-id");
     assertThrows(
         IllegalArgumentException.class,
         () -> {
@@ -35,7 +35,7 @@ class GoogolplexTheaterConfigTest {
   @Test
   void missingDevicesTest() {
     GoogolplexTheaterConfig.ConfigYaml config = new GoogolplexTheaterConfig.ConfigYaml();
-    config.deviceConfigFile = "not/a/real/file.yml";
+    config.setDeviceConfigFile("not/a/real/file.yml");
     assertThrows(
         IllegalArgumentException.class,
         () -> {

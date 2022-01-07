@@ -41,8 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class represents the state of the application. All modifications to state occur in the same
@@ -50,8 +49,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author jyuzawa
  */
+@Slf4j
 public final class GoogolplexControllerImpl implements GoogolplexController {
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexControllerImpl.class);
 
   private static final int CONNECT_TIMEOUT_MILLIS = 5000;
 
@@ -79,7 +78,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
     this.eventLoop = eventLoopGroup.next();
     SslContext sslContext =
         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    LOG.info("Using cast application id: {}", appId);
+    log.info("Using cast application id: {}", appId);
     // configure the socket client
     this.bootstrap =
         new Bootstrap()
@@ -120,28 +119,28 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
           .submit(
               () -> {
                 Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-                for (DeviceInfo deviceInfo : config.devices) {
-                  String name = deviceInfo.name;
+                for (DeviceInfo deviceInfo : config.getDevices()) {
+                  String name = deviceInfo.getName();
                   // mark that we should not remove this device
                   namesToRemove.remove(name);
                   DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
                   // ignore unchanged devices
                   if (!deviceInfo.equals(oldDeviceInfo)) {
-                    LOG.info("CONFIG_UPDATED '{}'", name);
+                    log.info("CONFIG_UPDATED '{}'", name);
                     nameToDeviceInfo.put(name, deviceInfo);
                     apply(name);
                   }
                 }
                 // remove devices that were missing in the new config
                 for (String name : namesToRemove) {
-                  LOG.info("CONFIG_REMOVED '{}'", name);
+                  log.info("CONFIG_REMOVED '{}'", name);
                   nameToDeviceInfo.remove(name);
                   apply(name);
                 }
               })
           .get();
     } catch (Exception e) {
-      LOG.error("Failed to load config", e);
+      log.error("Failed to load config", e);
     }
   }
 
@@ -163,12 +162,12 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                 ServiceInfo info = event.getInfo();
                 String name = info.getPropertyString("fn");
                 if (name == null) {
-                  LOG.debug("Found unnamed cast:\n{}", info);
+                  log.debug("Found unnamed cast:\n{}", info);
                   return;
                 }
                 InetAddress[] addresses = info.getInetAddresses();
                 if (addresses == null || addresses.length == 0) {
-                  LOG.debug("Found unaddressable cast:\n{}", info);
+                  log.debug("Found unaddressable cast:\n{}", info);
                   return;
                 }
                 /*
@@ -181,13 +180,13 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                   /*
                    * this is a newly discovered device, or an existing device whose address was updated.
                    */
-                  LOG.info("REGISTER '{}' {}", name, address);
+                  log.info("REGISTER '{}' {}", name, address);
                   apply(name);
                 }
               })
           .get();
     } catch (Exception e) {
-      LOG.error("Failed to register cast", e);
+      log.error("Failed to register cast", e);
     }
   }
 
@@ -201,7 +200,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
   private void apply(String name) {
     Channel oldChannel = nameToChannel.get(name);
     if (oldChannel != null) {
-      LOG.info("DISCONNECT '{}'", name);
+      log.info("DISCONNECT '{}'", name);
       /*
        * kill the channel, so it will reconnect and this method will be called again, but skip this code path.
        */
@@ -217,7 +216,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
     if (deviceInfo == null) {
       return;
     }
-    LOG.info("CONNECT '{}'", name);
+    log.info("CONNECT '{}'", name);
     Channel channel =
         bootstrap
             .connect(address)
@@ -230,7 +229,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                   Consumer<Integer> reconnection =
                       (retrySeconds) -> {
                         // schedule a reconnection in a certain amount of seconds in the future
-                        LOG.info("RECONNECTING '{}' in {}s", name, retrySeconds);
+                        log.info("RECONNECTING '{}' in {}s", name, retrySeconds);
                         eventLoop.schedule(
                             () -> {
                               nameToChannel.remove(name);
@@ -240,7 +239,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                             TimeUnit.SECONDS);
                       };
                   if (f.isSuccess()) {
-                    LOG.info("CONNECTED '{}'", name);
+                    log.info("CONNECTED '{}'", name);
                     Channel ch = f.channel();
                     // inform the handler what the device settings are
                     ch.attr(GoogolplexClientHandler.DEVICE_INFO_KEY).set(deviceInfo);
@@ -252,7 +251,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                     ch.closeFuture()
                         .addListener(
                             (ChannelFuture closeFuture) -> {
-                              LOG.info("DISCONNECTED '{}'", name);
+                              log.info("DISCONNECTED '{}'", name);
                               Boolean reload =
                                   closeFuture
                                       .channel()
@@ -262,7 +261,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
                             });
                   } else {
                     Throwable cause = f.cause();
-                    LOG.error(
+                    log.error(
                         "CONNECTION_FAILURE '{}' {}: {}",
                         name,
                         cause.getClass().getSimpleName(),
@@ -352,7 +351,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
       device.put("name", name);
       DeviceInfo deviceInfo = nameToDeviceInfo.get(name);
       if (deviceInfo != null) {
-        device.put("settings", deviceInfo.settings.toPrettyString());
+        device.put("settings", deviceInfo.getSettings().toPrettyString());
       }
       InetSocketAddress ipAddress = nameToAddress.get(name);
       if (ipAddress != null) {

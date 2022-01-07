@@ -10,24 +10,22 @@ import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
 import java.net.InetSocketAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class runs the server for the web UI.
  *
  * @author jyuzawa
  */
+@Slf4j
 public final class GoogolplexServer extends AbstractVerticle {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexServer.class);
 
   private final GoogolplexController controller;
   private final SocketAddress address;
 
   public GoogolplexServer(GoogolplexController controller, InetSocketAddress address) {
     this.controller = controller;
-    LOG.info("Running web-ui server on " + address);
+    log.info("Running web-ui server on " + address);
     this.address = SocketAddress.inetSocketAddress(address);
   }
 

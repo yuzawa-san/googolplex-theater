@@ -14,8 +14,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class loads the device config at start and watches the files for subsequent changes. The
@@ -23,8 +22,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author jyuzawa
  */
+@Slf4j
 public final class DeviceConfigLoader implements Closeable {
-  private static final Logger LOG = LoggerFactory.getLogger(DeviceConfigLoader.class);
 
   private final ExecutorService executor;
   private final Path path;
@@ -36,7 +35,7 @@ public final class DeviceConfigLoader implements Closeable {
     this.controller = controller;
     this.executor = Executors.newSingleThreadExecutor();
     this.path = deviceConfigPath;
-    LOG.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
+    log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
     load();
     this.watchService = path.getFileSystem().newWatchService();
     /*
@@ -67,15 +66,15 @@ public final class DeviceConfigLoader implements Closeable {
                   }
                 }
               } catch (Exception e) {
-                LOG.error("Failed to load config", e);
+                log.error("Failed to load config", e);
               } finally {
                 key.reset();
               }
             }
           } catch (ClosedWatchServiceException | InterruptedException e) {
-            LOG.debug("config watch interrupted");
+            log.debug("config watch interrupted");
           } catch (Exception e) {
-            LOG.error("Failed to watch device config file", e);
+            log.error("Failed to watch device config file", e);
           }
         });
   }
@@ -86,7 +85,7 @@ public final class DeviceConfigLoader implements Closeable {
    * @throws IOException when YAML deserialization fails
    */
   private void load() throws IOException {
-    LOG.info("Reloading device config");
+    log.info("Reloading device config");
     try (InputStream stream = Files.newInputStream(path)) {
       DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
       controller.processDeviceConfig(out);

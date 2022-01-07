@@ -15,6 +15,7 @@ import com.jyuzawa.googolplex_theater.config.DeviceConfig;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig.ConfigYaml;
+import com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.cucumber.java.After;
@@ -33,6 +34,7 @@ import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxTestContext;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 import javax.jmdns.JmDNS;
 
 public class StepDefinitions {
+  static {
+    System.setProperty("java.net.preferIPv4Stack", "true");
+  }
 
   private static Vertx vertx;
   private static FakeCast device;
@@ -56,7 +61,8 @@ public class StepDefinitions {
 
   @BeforeAll
   public static void start() throws Exception {
-    mdns = JmDNS.create("localhost");
+    InetAddress host = ServiceDiscovery.getInterfaceAddress(null);
+    mdns = JmDNS.create(host);
     vertx = Vertx.vertx();
     workerGroup = vertx.nettyEventLoopGroup();
     device = new FakeCast(workerGroup, 9001);
@@ -77,11 +83,10 @@ public class StepDefinitions {
             StandardOpenOption.WRITE,
             StandardOpenOption.CREATE)) {
       ConfigYaml config = new ConfigYaml();
-      config.baseReconnectSeconds = 0;
-      config.reconnectNoiseSeconds = 0;
-      config.heartbeatIntervalSeconds = 1;
-      config.heartbeatTimeoutSeconds = 3;
-      config.discoveryNetworkInterface = "localhost";
+      config.setBaseReconnectSeconds(0);
+      config.setReconnectNoiseSeconds(0);
+      config.setHeartbeatIntervalSeconds(1);
+      config.setHeartbeatTimeoutSeconds(3);
       System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
       MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
     }
