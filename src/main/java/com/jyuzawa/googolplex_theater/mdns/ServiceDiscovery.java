@@ -40,7 +40,7 @@ public final class ServiceDiscovery implements Closeable {
     this.mdns.addServiceListener(MDNS_SERVICE_NAME, new ServiceDiscoveryListener());
   }
 
-  static InetAddress getInterfaceAddress(String preferredInterface)
+  public static InetAddress getInterfaceAddress(String preferredInterface)
       throws SocketException, UnknownHostException {
     if (preferredInterface != null) {
       return getBestInetAddress(getPreferredInterface(preferredInterface));
@@ -58,7 +58,10 @@ public final class ServiceDiscovery implements Closeable {
 
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {
     List<InetAddress> ipAddresses = Collections.list(iface.getInetAddresses());
-    if (!iface.isUp() || !iface.supportsMulticast() || iface.isLoopback()) {
+    if (!iface.isUp()
+        || !iface.supportsMulticast()
+        || iface.isLoopback()
+        || iface.isPointToPoint()) {
       return null;
     }
     LOG.info("Found network interface {} - {}", iface, ipAddresses);
