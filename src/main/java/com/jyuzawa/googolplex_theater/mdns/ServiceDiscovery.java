@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ServiceDiscovery implements Closeable {
   public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
- 
+
   private final GoogolplexController controller;
   private final JmDNS mdns;
 
