@@ -66,27 +66,25 @@ public class FakeCast implements Closeable {
     serverBootstrap
         .group(bossGroup, workerGroup)
         .channel(NioServerSocketChannel.class)
-        .childHandler(
-            new ChannelInitializer<SocketChannel>() {
-              @Override
-              public void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline p = ch.pipeline();
-                p.addLast("ssl", sslContext.newHandler(ch.alloc()));
-                p.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
-                p.addLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
-                p.addLast("frameEncoder", new LengthFieldPrepender(4));
-                p.addLast("protobufEncoder", new ProtobufEncoder());
-                p.addLast("logger", new LoggingHandler());
-                p.addLast("handler", new FakeChromecastHandler());
-              }
-            });
+        .childHandler(new ChannelInitializer<SocketChannel>() {
+          @Override
+          public void initChannel(SocketChannel ch) throws Exception {
+            ChannelPipeline p = ch.pipeline();
+            p.addLast("ssl", sslContext.newHandler(ch.alloc()));
+            p.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
+            p.addLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
+            p.addLast("frameEncoder", new LengthFieldPrepender(4));
+            p.addLast("protobufEncoder", new ProtobufEncoder());
+            p.addLast("logger", new LoggingHandler());
+            p.addLast("handler", new FakeChromecastHandler());
+          }
+        });
     this.serverChannel = serverBootstrap.bind(port).syncUninterruptibly().channel();
     this.custom = String.valueOf(ThreadLocalRandom.current().nextInt());
   }
 
   public DeviceInfo device() throws JsonMappingException, JsonProcessingException {
-    return new DeviceInfo(
-        name, (ObjectNode) MapperUtil.MAPPER.readTree("{\"foo\":\"" + custom + "\"}"));
+    return new DeviceInfo(name, (ObjectNode) MapperUtil.MAPPER.readTree("{\"foo\":\"" + custom + "\"}"));
   }
 
   public ServiceEvent event() throws UnknownHostException {
@@ -96,14 +94,8 @@ public class FakeCast implements Closeable {
   public static ServiceEvent event(int port, String name) throws UnknownHostException {
     ServiceEvent event = Mockito.mock(ServiceEvent.class);
     Mockito.when(event.getName()).thenReturn("Chromecast-FAKE-" + port + ".local");
-    ServiceInfoImpl serviceInfo =
-        Mockito.spy(
-            (ServiceInfoImpl)
-                ServiceInfo.create(
-                    ServiceDiscovery.MDNS_SERVICE_NAME,
-                    "Chromecast-FAKE-" + port + ".local",
-                    port,
-                    "fn=" + name));
+    ServiceInfoImpl serviceInfo = Mockito.spy((ServiceInfoImpl) ServiceInfo.create(
+        ServiceDiscovery.MDNS_SERVICE_NAME, "Chromecast-FAKE-" + port + ".local", port, "fn=" + name));
     Mockito.when(event.getInfo()).thenReturn(serviceInfo);
     Mockito.when(serviceInfo.getPropertyString(Mockito.anyString())).thenReturn(name);
     Mockito.when(serviceInfo.getInetAddresses()).thenReturn(new InetAddress[] {LOOPBACK});
@@ -131,44 +123,39 @@ public class FakeCast implements Closeable {
 
   public void sendBrokenMessages() throws Exception {
     // send a dummy heartbeat
-    CastMessage heartbeatMessage =
-        GoogolplexClientHandler.generateMessage(
-            GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
-            GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-            "*",
-            GoogolplexClientHandler.messagePayload("PONG"));
+    CastMessage heartbeatMessage = GoogolplexClientHandler.generateMessage(
+        GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
+        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+        "*",
+        GoogolplexClientHandler.messagePayload("PONG"));
     channel.writeAndFlush(heartbeatMessage);
     // send a bad heartbeat
-    CastMessage badHeartbeatMessage =
-        GoogolplexClientHandler.generateMessage(
-            GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
-            GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-            "BAD!",
-            GoogolplexClientHandler.messagePayload("PONG"));
+    CastMessage badHeartbeatMessage = GoogolplexClientHandler.generateMessage(
+        GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
+        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+        "BAD!",
+        GoogolplexClientHandler.messagePayload("PONG"));
     channel.writeAndFlush(badHeartbeatMessage);
     // send a bad heartbeat
-    CastMessage badHeartbeatMessage2 =
-        GoogolplexClientHandler.generateMessage(
-            GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
-            "BAD!!!",
-            "BAD!",
-            GoogolplexClientHandler.messagePayload("PONG"));
+    CastMessage badHeartbeatMessage2 = GoogolplexClientHandler.generateMessage(
+        GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
+        "BAD!!!",
+        "BAD!",
+        GoogolplexClientHandler.messagePayload("PONG"));
     channel.writeAndFlush(badHeartbeatMessage2);
     // send a random namespace
-    CastMessage random =
-        GoogolplexClientHandler.generateMessage(
-            "random",
-            GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-            "*",
-            GoogolplexClientHandler.messagePayload("PONG"));
+    CastMessage random = GoogolplexClientHandler.generateMessage(
+        "random",
+        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+        "*",
+        GoogolplexClientHandler.messagePayload("PONG"));
     channel.writeAndFlush(random);
     // send a custom namespace
-    CastMessage custom =
-        GoogolplexClientHandler.generateMessage(
-            GoogolplexClientHandler.NAMESPACE_CUSTOM,
-            GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-            "*",
-            GoogolplexClientHandler.messagePayload("custom"));
+    CastMessage custom = GoogolplexClientHandler.generateMessage(
+        GoogolplexClientHandler.NAMESPACE_CUSTOM,
+        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+        "*",
+        GoogolplexClientHandler.messagePayload("custom"));
     channel.writeAndFlush(custom);
     // bad
     channel.writeAndFlush(CastMessage.newBuilder().setPayloadType(PayloadType.BINARY));
@@ -177,25 +164,22 @@ public class FakeCast implements Closeable {
       ReceiverResponse.Status status = new ReceiverResponse.Status(Collections.emptyList());
       ReceiverResponse response =
           new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, "BROKEN");
-      CastMessage launchedMessage =
-          GoogolplexClientHandler.generateMessage(
-              GoogolplexClientHandler.NAMESPACE_RECEIVER,
-              GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-              "*",
-              response);
+      CastMessage launchedMessage = GoogolplexClientHandler.generateMessage(
+          GoogolplexClientHandler.NAMESPACE_RECEIVER,
+          GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+          "*",
+          response);
       channel.writeAndFlush(launchedMessage);
     }
     // empty application update
     {
       ReceiverResponse.Status status = new ReceiverResponse.Status(Collections.emptyList());
-      ReceiverResponse response =
-          new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, null);
-      CastMessage launchedMessage =
-          GoogolplexClientHandler.generateMessage(
-              GoogolplexClientHandler.NAMESPACE_RECEIVER,
-              GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-              "*",
-              response);
+      ReceiverResponse response = new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, null);
+      CastMessage launchedMessage = GoogolplexClientHandler.generateMessage(
+          GoogolplexClientHandler.NAMESPACE_RECEIVER,
+          GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+          "*",
+          response);
       channel.writeAndFlush(launchedMessage);
     }
   }
@@ -203,16 +187,10 @@ public class FakeCast implements Closeable {
   public void loadIdleScreen() throws IOException {
     ReceiverResponse.Application application =
         new ReceiverResponse.Application("HOME", true, FakeCast.class.toString());
-    ReceiverResponse.Status status =
-        new ReceiverResponse.Status(Collections.singletonList(application));
-    ReceiverResponse response =
-        new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, null);
-    CastMessage idleMessage =
-        GoogolplexClientHandler.generateMessage(
-            GoogolplexClientHandler.NAMESPACE_RECEIVER,
-            GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-            "*",
-            response);
+    ReceiverResponse.Status status = new ReceiverResponse.Status(Collections.singletonList(application));
+    ReceiverResponse response = new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, null);
+    CastMessage idleMessage = GoogolplexClientHandler.generateMessage(
+        GoogolplexClientHandler.NAMESPACE_RECEIVER, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, "*", response);
     channel.writeAndFlush(idleMessage);
   }
 
@@ -230,29 +208,26 @@ public class FakeCast implements Closeable {
       switch (msg.getNamespace()) {
         case GoogolplexClientHandler.NAMESPACE_HEARTBEAT:
           if (pongable) {
-            CastMessage heartbeatMessage =
-                GoogolplexClientHandler.generateMessage(
-                    GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
-                    GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-                    msg.getSourceId(),
-                    GoogolplexClientHandler.messagePayload("PONG"));
+            CastMessage heartbeatMessage = GoogolplexClientHandler.generateMessage(
+                GoogolplexClientHandler.NAMESPACE_HEARTBEAT,
+                GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+                msg.getSourceId(),
+                GoogolplexClientHandler.messagePayload("PONG"));
             channel.writeAndFlush(heartbeatMessage);
           }
           break;
         case GoogolplexClientHandler.NAMESPACE_RECEIVER:
-          ReceiverResponse.Application application =
-              new ReceiverResponse.Application(
-                  GoogolplexClientHandler.DEFAULT_APPLICATION_ID, false, FakeCast.this.toString());
+          ReceiverResponse.Application application = new ReceiverResponse.Application(
+              GoogolplexClientHandler.DEFAULT_APPLICATION_ID, false, FakeCast.this.toString());
           ReceiverResponse.Status status =
               new ReceiverResponse.Status(Collections.singletonList(application));
           ReceiverResponse response =
               new ReceiverResponse(1, ReceiverResponse.TYPE_RECEIVER_STATUS, status, null);
-          CastMessage launchedMessage =
-              GoogolplexClientHandler.generateMessage(
-                  GoogolplexClientHandler.NAMESPACE_RECEIVER,
-                  GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-                  msg.getSourceId(),
-                  response);
+          CastMessage launchedMessage = GoogolplexClientHandler.generateMessage(
+              GoogolplexClientHandler.NAMESPACE_RECEIVER,
+              GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
+              msg.getSourceId(),
+              response);
           channel.writeAndFlush(launchedMessage);
         case GoogolplexClientHandler.NAMESPACE_CUSTOM:
         default:

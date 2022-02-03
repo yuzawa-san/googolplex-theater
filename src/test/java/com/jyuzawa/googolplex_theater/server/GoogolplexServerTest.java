@@ -36,19 +36,14 @@ class GoogolplexServerTest {
   @Test
   void indexTest(Vertx vertx, VertxTestContext testContext) {
     WebClient client = WebClient.create(vertx);
-    client
-        .get(port, "localhost", "/")
+    client.get(port, "localhost", "/")
         .as(BodyCodec.string())
-        .send(
-            testContext.succeeding(
-                response ->
-                    testContext.verify(
-                        () -> {
-                          Mockito.verify(controller).getDeviceInfo();
-                          assertEquals(200, response.statusCode());
-                          assertTrue(response.body().contains("my device"));
-                          testContext.completeNow();
-                        })));
+        .send(testContext.succeeding(response -> testContext.verify(() -> {
+          Mockito.verify(controller).getDeviceInfo();
+          assertEquals(200, response.statusCode());
+          assertTrue(response.body().contains("my device"));
+          testContext.completeNow();
+        })));
   }
 
   @Test
@@ -56,56 +51,43 @@ class GoogolplexServerTest {
     WebClient client = WebClient.create(vertx);
     MultiMap form = MultiMap.caseInsensitiveMultiMap();
     form.add("name", "my device");
-    client
-        .post(port, "localhost", "/refresh")
+    client.post(port, "localhost", "/refresh")
         .as(BodyCodec.string())
         .sendForm(
             form,
-            testContext.succeeding(
-                response ->
-                    testContext.verify(
-                        () -> {
-                          Mockito.verify(controller).refresh("my device");
-                          assertEquals(200, response.statusCode());
-                          assertTrue(response.body().contains("my device refreshing..."));
-                          testContext.completeNow();
-                        })));
+            testContext.succeeding(response -> testContext.verify(() -> {
+              Mockito.verify(controller).refresh("my device");
+              assertEquals(200, response.statusCode());
+              assertTrue(response.body().contains("my device refreshing..."));
+              testContext.completeNow();
+            })));
   }
 
   @Test
   void refreshAllTest(Vertx vertx, VertxTestContext testContext) {
     WebClient client = WebClient.create(vertx);
     MultiMap form = MultiMap.caseInsensitiveMultiMap();
-    client
-        .post(port, "localhost", "/refresh")
+    client.post(port, "localhost", "/refresh")
         .as(BodyCodec.string())
         .sendForm(
             form,
-            testContext.succeeding(
-                response ->
-                    testContext.verify(
-                        () -> {
-                          Mockito.verify(controller).refresh(null);
-                          assertEquals(200, response.statusCode());
-                          assertTrue(response.body().contains("All Devices refreshing..."));
-                          testContext.completeNow();
-                        })));
+            testContext.succeeding(response -> testContext.verify(() -> {
+              Mockito.verify(controller).refresh(null);
+              assertEquals(200, response.statusCode());
+              assertTrue(response.body().contains("All Devices refreshing..."));
+              testContext.completeNow();
+            })));
   }
 
   @Test
   void faviconTest(Vertx vertx, VertxTestContext testContext) {
     WebClient client = WebClient.create(vertx);
-    client
-        .get(port, "localhost", "/favicon.png")
+    client.get(port, "localhost", "/favicon.png")
         .as(BodyCodec.buffer())
-        .send(
-            testContext.succeeding(
-                response ->
-                    testContext.verify(
-                        () -> {
-                          assertEquals(200, response.statusCode());
-                          assertTrue(response.body().length() > 0);
-                          testContext.completeNow();
-                        })));
+        .send(testContext.succeeding(response -> testContext.verify(() -> {
+          assertEquals(200, response.statusCode());
+          assertTrue(response.body().length() > 0);
+          testContext.completeNow();
+        })));
   }
 }

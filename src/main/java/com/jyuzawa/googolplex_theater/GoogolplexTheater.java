@@ -26,18 +26,15 @@ public final class GoogolplexTheater {
 
   public GoogolplexTheater(GoogolplexTheaterConfig config) throws Exception {
     this.vertx = Vertx.vertx();
-    GoogolplexController controller =
-        new GoogolplexControllerImpl(vertx.nettyEventLoopGroup(), config);
+    GoogolplexController controller = new GoogolplexControllerImpl(vertx.nettyEventLoopGroup(), config);
     CompletableFuture<Boolean> serverFuture = new CompletableFuture<>();
-    vertx.deployVerticle(
-        new GoogolplexServer(controller, config.getUiServerAddress()),
-        result -> {
-          if (result.succeeded()) {
-            serverFuture.complete(Boolean.TRUE);
-          } else {
-            serverFuture.completeExceptionally(result.cause());
-          }
-        });
+    vertx.deployVerticle(new GoogolplexServer(controller, config.getUiServerAddress()), result -> {
+      if (result.succeeded()) {
+        serverFuture.complete(Boolean.TRUE);
+      } else {
+        serverFuture.completeExceptionally(result.cause());
+      }
+    });
     serverFuture.get(10, TimeUnit.SECONDS);
     this.configLoader = new DeviceConfigLoader(controller, config.getDeviceConfigPath());
     this.serviceDiscovery = new ServiceDiscovery(controller, config.getDiscoveryNetworkInterface());

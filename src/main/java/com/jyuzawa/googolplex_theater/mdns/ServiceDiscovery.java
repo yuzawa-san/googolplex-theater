@@ -28,8 +28,7 @@ public final class ServiceDiscovery implements Closeable {
   private final GoogolplexController controller;
   private final JmDNS mdns;
 
-  public ServiceDiscovery(GoogolplexController controller, String preferredInterface)
-      throws IOException {
+  public ServiceDiscovery(GoogolplexController controller, String preferredInterface) throws IOException {
     this.controller = controller;
     InetAddress inetAddress = getInterfaceAddress(preferredInterface);
     if (inetAddress == null) {
@@ -58,17 +57,12 @@ public final class ServiceDiscovery implements Closeable {
 
   private static InetAddress getBestInetAddress(NetworkInterface iface) throws SocketException {
     List<InetAddress> ipAddresses = Collections.list(iface.getInetAddresses());
-    if (!iface.isUp()
-        || !iface.supportsMulticast()
-        || iface.isLoopback()
-        || iface.isPointToPoint()) {
+    if (!iface.isUp() || !iface.supportsMulticast() || iface.isLoopback() || iface.isPointToPoint()) {
       return null;
     }
     LOG.info("Found network interface {} - {}", iface, ipAddresses);
     for (InetAddress ipAddress : ipAddresses) {
-      if (!ipAddress.isLoopbackAddress()
-          && !ipAddress.isLinkLocalAddress()
-          && ipAddress.isSiteLocalAddress()) {
+      if (!ipAddress.isLoopbackAddress() && !ipAddress.isLinkLocalAddress() && ipAddress.isSiteLocalAddress()) {
         return ipAddress;
       }
     }

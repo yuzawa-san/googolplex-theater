@@ -70,7 +70,9 @@ if (JavaVersion.current().isJava11Compatible()) {
 		java {
 			targetExclude("**/Wire.java")
 			removeUnusedImports()
-			googleJavaFormat()
+			palantirJavaFormat()
+			indentWithTabs(4)
+			indentWithSpaces(2)
 		}
 		format 'gradle', {
 			target '**/*.gradle'

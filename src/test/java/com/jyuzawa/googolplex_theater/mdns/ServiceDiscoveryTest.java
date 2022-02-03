@@ -24,15 +24,12 @@ class ServiceDiscoveryTest {
     assertEquals(auto, ServiceDiscovery.getInterfaceAddress(name));
     String ipAddress = auto.getHostAddress();
     assertEquals(auto, ServiceDiscovery.getInterfaceAddress(ipAddress));
-    NetworkInterface loopbackInterface =
-        NetworkInterface.getByInetAddress(InetAddress.getByName("127.0.0.1"));
+    NetworkInterface loopbackInterface = NetworkInterface.getByInetAddress(InetAddress.getByName("127.0.0.1"));
     assertNull(ServiceDiscovery.getInterfaceAddress(loopbackInterface.getName()));
     assertNull(ServiceDiscovery.getInterfaceAddress("localhost"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          ServiceDiscovery.getInterfaceAddress("jyuzawa.com");
-        });
+    assertThrows(IllegalArgumentException.class, () -> {
+      ServiceDiscovery.getInterfaceAddress("jyuzawa.com");
+    });
   }
 
   @Test

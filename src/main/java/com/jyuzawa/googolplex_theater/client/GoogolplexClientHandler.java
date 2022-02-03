@@ -68,8 +68,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   private final Duration heartbeatTimeout;
   private final CastMessage heartbeatMessage;
 
-  public GoogolplexClientHandler(
-      String appId, int heartbeatIntervalSeconds, int heartbeatTimeoutSeconds) throws IOException {
+  public GoogolplexClientHandler(String appId, int heartbeatIntervalSeconds, int heartbeatTimeoutSeconds)
+      throws IOException {
     this.appId = appId;
     this.senderId = "sender-" + System.identityHashCode(this);
     this.heartbeatMessage = generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);
@@ -96,8 +96,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    * @return a fully constructed message
    * @throws IOException when JSON serialization fails
    */
-  private CastMessage generateMessage(
-      String namespace, String destinationId, Map<String, Object> payload) throws IOException {
+  private CastMessage generateMessage(String namespace, String destinationId, Map<String, Object> payload)
+      throws IOException {
     return generateMessage(namespace, senderId, destinationId, payload);
   }
 
@@ -111,8 +111,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    * @return a fully constructed message
    * @throws IOException when JSON serialization fails
    */
-  static CastMessage generateMessage(
-      String namespace, String senderId, String destinationId, Object payload) throws IOException {
+  static CastMessage generateMessage(String namespace, String senderId, String destinationId, Object payload)
+      throws IOException {
     CastMessage.Builder out = CastMessage.newBuilder();
     out.setDestinationId(destinationId);
     out.setSourceId(senderId);
@@ -132,8 +132,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    */
   public void channelActive(ChannelHandlerContext ctx) throws Exception {
     // initial connect
-    CastMessage initialConnectMessage =
-        generateMessage(NAMESPACE_CONNECTION, DEFAULT_RECEIVER_ID, CONNECT_MESSAGE);
+    CastMessage initialConnectMessage = generateMessage(NAMESPACE_CONNECTION, DEFAULT_RECEIVER_ID, CONNECT_MESSAGE);
     ctx.writeAndFlush(initialConnectMessage);
 
     // launch
@@ -145,23 +144,22 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
     ctx.writeAndFlush(launchMessage);
 
     // keepalive
-    heartbeatFuture =
-        ctx.executor()
-            .scheduleWithFixedDelay(
-                () -> {
-                  if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
-                    /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
-                    String name = getDeviceInfo(ctx).name;
-                    LOG.warn("EXPIRE '{}'", name);
-                    ctx.close();
-                  } else {
-                    // send another heartbeat
-                    ctx.writeAndFlush(heartbeatMessage);
-                  }
-                },
-                heartbeatIntervalSeconds,
-                heartbeatIntervalSeconds,
-                TimeUnit.SECONDS);
+    heartbeatFuture = ctx.executor()
+        .scheduleWithFixedDelay(
+            () -> {
+              if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
+                /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
+                String name = getDeviceInfo(ctx).name;
+                LOG.warn("EXPIRE '{}'", name);
+                ctx.close();
+              } else {
+                // send another heartbeat
+                ctx.writeAndFlush(heartbeatMessage);
+              }
+            },
+            heartbeatIntervalSeconds,
+            heartbeatIntervalSeconds,
+            TimeUnit.SECONDS);
     /*
      * there was no heartbeat now, but we initialize with the start time, so we don't timeout immediately.
      */
@@ -189,8 +187,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, CastMessage msg) throws Exception {
     // do some rudimentary validation
-    if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0
-        || msg.getPayloadType() != PayloadType.STRING) {
+    if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0 || msg.getPayloadType() != PayloadType.STRING) {
       LOG.debug("Invalid message");
       return;
     }
@@ -234,8 +231,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
    */
   private void handleReceiverMessage(ChannelHandlerContext ctx, CastMessage msg, DeviceInfo device)
       throws IOException {
-    ReceiverResponse receiverPayload =
-        MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
+    ReceiverResponse receiverPayload = MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
     String name = device.name;
     if (receiverPayload.reason != null) {
       // the presence of the reason indicates the launch likely failed for some reason
@@ -264,8 +260,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
       sessionReceiverId = transportId;
       LOG.info("UP '{}'", name);
       // session connect
-      CastMessage sessionConnectMessage =
-          generateMessage(NAMESPACE_CONNECTION, transportId, CONNECT_MESSAGE);
+      CastMessage sessionConnectMessage = generateMessage(NAMESPACE_CONNECTION, transportId, CONNECT_MESSAGE);
       ctx.writeAndFlush(sessionConnectMessage);
       // display data custom message
       Map<String, Object> custom = new HashMap<>();

@@ -61,21 +61,17 @@ public class StepDefinitions {
     workerGroup = vertx.nettyEventLoopGroup();
     device = new FakeCast(workerGroup, 9001);
     // For a simple file system with Unix-style paths and behavior:
-    FileSystem fs =
-        Jimfs.newFileSystem(
-            Configuration.unix().toBuilder()
-                .setWatchServiceConfiguration(
-                    WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
-                .build());
+    FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
+        .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
+        .build());
     confPath = fs.getPath("/conf");
     Files.createDirectory(confPath);
     devicesPath = confPath.resolve("devices.yml");
-    try (BufferedWriter bufferedWriter =
-        Files.newBufferedWriter(
-            confPath.resolve("config.yml"),
-            CharsetUtil.UTF_8,
-            StandardOpenOption.WRITE,
-            StandardOpenOption.CREATE)) {
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+        confPath.resolve("config.yml"),
+        CharsetUtil.UTF_8,
+        StandardOpenOption.WRITE,
+        StandardOpenOption.CREATE)) {
       ConfigYaml config = new ConfigYaml();
       config.baseReconnectSeconds = 0;
       config.reconnectNoiseSeconds = 0;
@@ -96,17 +92,15 @@ public class StepDefinitions {
   }
 
   private static void writeEmptyDevices() throws IOException {
-    try (BufferedWriter bufferedWriter =
-        Files.newBufferedWriter(
-            devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+        devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
       bufferedWriter.write("settings:\n  foo: bar");
     }
   }
 
   private static void writeDevices(DeviceConfig deviceConfig) throws IOException {
-    try (BufferedWriter bufferedWriter =
-        Files.newBufferedWriter(
-            devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+        devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
       MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, deviceConfig);
     }
   }
@@ -175,19 +169,15 @@ public class StepDefinitions {
       displayName = name;
       form.add("name", name);
     }
-    client
-        .post(8000, "localhost", "/refresh")
+    client.post(8000, "localhost", "/refresh")
         .as(BodyCodec.string())
         .sendForm(
             form,
-            testContext.succeeding(
-                response ->
-                    testContext.verify(
-                        () -> {
-                          assertEquals(200, response.statusCode());
-                          assertTrue(response.body().contains(displayName + " refreshing..."));
-                          testContext.completeNow();
-                        })));
+            testContext.succeeding(response -> testContext.verify(() -> {
+              assertEquals(200, response.statusCode());
+              assertTrue(response.body().contains(displayName + " refreshing..."));
+              testContext.completeNow();
+            })));
     testContext.awaitCompletion(10, TimeUnit.SECONDS);
   }
 
@@ -231,17 +221,11 @@ public class StepDefinitions {
 
   private void assertTransaction(FakeCast cast, String url) throws Exception {
     CastMessage connect = cast.getMessage();
-    assertType(
-        connect,
-        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-        GoogolplexClientHandler.NAMESPACE_CONNECTION);
+    assertType(connect, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, GoogolplexClientHandler.NAMESPACE_CONNECTION);
     assertEquals("{\"type\":\"CONNECT\"}", connect.getPayloadUtf8());
 
     CastMessage launch = cast.getMessage();
-    assertType(
-        launch,
-        GoogolplexClientHandler.DEFAULT_RECEIVER_ID,
-        GoogolplexClientHandler.NAMESPACE_RECEIVER);
+    assertType(launch, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, GoogolplexClientHandler.NAMESPACE_RECEIVER);
     assertEquals(
         "{\"requestId\":0,\"appId\":\""
             + GoogolplexClientHandler.DEFAULT_APPLICATION_ID

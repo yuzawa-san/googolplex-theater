@@ -9,10 +9,6 @@ import org.junit.platform.suite.api.Suite;
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
-@ConfigurationParameter(
-    key = Constants.GLUE_PROPERTY_NAME,
-    value = "com.jyuzawa.googolplex_theater")
-@ConfigurationParameter(
-    key = Constants.PLUGIN_PROPERTY_NAME,
-    value = "pretty,html:build/reports/cucumber.html")
+@ConfigurationParameter(key = Constants.GLUE_PROPERTY_NAME, value = "com.jyuzawa.googolplex_theater")
+@ConfigurationParameter(key = Constants.PLUGIN_PROPERTY_NAME, value = "pretty,html:build/reports/cucumber.html")
 public class RunCucumber {}

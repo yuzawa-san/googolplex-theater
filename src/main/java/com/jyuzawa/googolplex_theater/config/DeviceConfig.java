@@ -25,8 +25,7 @@ public final class DeviceConfig {
 
   @JsonCreator
   public DeviceConfig(
-      @JsonProperty("devices") List<DeviceInfo> devices,
-      @JsonProperty("settings") ObjectNode settings) {
+      @JsonProperty("devices") List<DeviceInfo> devices, @JsonProperty("settings") ObjectNode settings) {
     if (devices == null) {
       this.devices = Collections.emptyList();
     } else {
@@ -43,8 +42,7 @@ public final class DeviceConfig {
     public ObjectNode settings;
 
     @JsonCreator
-    public DeviceInfo(
-        @JsonProperty("name") String name, @JsonProperty("settings") ObjectNode settings) {
+    public DeviceInfo(@JsonProperty("name") String name, @JsonProperty("settings") ObjectNode settings) {
       this.name = name;
       this.settings = settings;
     }

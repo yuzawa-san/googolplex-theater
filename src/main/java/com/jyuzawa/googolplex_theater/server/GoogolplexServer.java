@@ -36,70 +36,47 @@ public final class GoogolplexServer extends AbstractVerticle {
     Router router = Router.router(vertx);
     HandlebarsTemplateEngine engine = HandlebarsTemplateEngine.create(vertx);
     Package thePackage = GoogolplexTheater.class.getPackage();
-    router
-        .get("/")
-        .handler(
-            ctx -> {
-              JsonObject data = new JsonObject();
-              data.put("devices", controller.getDeviceInfo());
-              data.put("tag", thePackage.getSpecificationVersion());
-              engine.render(
-                  data,
-                  "templates/overview.hbs",
-                  res -> {
-                    if (res.succeeded()) {
-                      ctx.response().end(res.result());
-                    } else {
-                      ctx.fail(res.cause());
-                    }
-                  });
-            });
-    router
-        .post("/refresh")
-        .handler(
-            ctx -> {
-              HttpServerRequest request = ctx.request();
-              request
-                  .setExpectMultipart(true)
-                  .endHandler(
-                      req -> {
-                        String name = request.formAttributes().get("name");
-                        controller.refresh(name);
-                        JsonObject data = new JsonObject();
-                        if (name == null) {
-                          name = "All Devices";
-                        }
-                        data.put("name", name);
-                        data.put("tag", thePackage.getSpecificationVersion());
-                        engine.render(
-                            data,
-                            "templates/refresh.hbs",
-                            res -> {
-                              if (res.succeeded()) {
-                                ctx.response().end(res.result());
-                              } else {
-                                ctx.fail(res.cause());
-                              }
-                            });
-                      });
-            });
-    router
-        .get("/favicon.png")
-        .handler(
-            ctx -> {
-              ctx.response().putHeader("content-type", "image/png").sendFile("favicon.png");
-            });
-    vertx
-        .createHttpServer()
-        .requestHandler(router)
-        .listen(
-            address,
-            res -> {
-              if (res.succeeded()) {
-                startPromise.complete();
-              } else {
-                startPromise.fail(res.cause());
-              }
-            });
+    router.get("/").handler(ctx -> {
+      JsonObject data = new JsonObject();
+      data.put("devices", controller.getDeviceInfo());
+      data.put("tag", thePackage.getSpecificationVersion());
+      engine.render(data, "templates/overview.hbs", res -> {
+        if (res.succeeded()) {
+          ctx.response().end(res.result());
+        } else {
+          ctx.fail(res.cause());
+        }
+      });
+    });
+    router.post("/refresh").handler(ctx -> {
+      HttpServerRequest request = ctx.request();
+      request.setExpectMultipart(true).endHandler(req -> {
+        String name = request.formAttributes().get("name");
+        controller.refresh(name);
+        JsonObject data = new JsonObject();
+        if (name == null) {
+          name = "All Devices";
+        }
+        data.put("name", name);
+        data.put("tag", thePackage.getSpecificationVersion());
+        engine.render(data, "templates/refresh.hbs", res -> {
+          if (res.succeeded()) {
+            ctx.response().end(res.result());
+          } else {
+            ctx.fail(res.cause());
+          }
+        });
+      });
+    });
+    router.get("/favicon.png").handler(ctx -> {
+      ctx.response().putHeader("content-type", "image/png").sendFile("favicon.png");
+    });
+    vertx.createHttpServer().requestHandler(router).listen(address, res -> {
+      if (res.succeeded()) {
+        startPromise.complete();
+      } else {
+        startPromise.fail(res.cause());
+      }
+    });
   }
 }

@@ -31,8 +31,7 @@ public final class DeviceConfigLoader implements Closeable {
   private final GoogolplexController controller;
   private final WatchService watchService;
 
-  public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath)
-      throws IOException {
+  public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath) throws IOException {
     this.controller = controller;
     this.executor = Executors.newSingleThreadExecutor();
     this.path = deviceConfigPath;
@@ -47,37 +46,36 @@ public final class DeviceConfigLoader implements Closeable {
       throw new IllegalArgumentException("Path has missing parent");
     }
     directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-    executor.submit(
-        () -> {
+    executor.submit(() -> {
+      try {
+        WatchKey key;
+        // this blocks until the system notifies us of any changes.
+        while ((key = watchService.take()) != null) {
           try {
-            WatchKey key;
-            // this blocks until the system notifies us of any changes.
-            while ((key = watchService.take()) != null) {
-              try {
-                // go thru all changes. sadly this API is not super type safe.
-                for (WatchEvent<?> event : key.pollEvents()) {
-                  @SuppressWarnings("unchecked")
-                  WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                  /*
-                   * we could have found out about any file in the same directory, so make sure that it is
-                   * indeed our config file.
-                   */
-                  if (path.endsWith(ev.context())) {
-                    load();
-                  }
-                }
-              } catch (Exception e) {
-                LOG.error("Failed to load config", e);
-              } finally {
-                key.reset();
+            // go thru all changes. sadly this API is not super type safe.
+            for (WatchEvent<?> event : key.pollEvents()) {
+              @SuppressWarnings("unchecked")
+              WatchEvent<Path> ev = (WatchEvent<Path>) event;
+              /*
+               * we could have found out about any file in the same directory, so make sure that it is
+               * indeed our config file.
+               */
+              if (path.endsWith(ev.context())) {
+                load();
               }
             }
-          } catch (ClosedWatchServiceException | InterruptedException e) {
-            LOG.debug("config watch interrupted");
           } catch (Exception e) {
-            LOG.error("Failed to watch device config file", e);
+            LOG.error("Failed to load config", e);
+          } finally {
+            key.reset();
           }
-        });
+        }
+      } catch (ClosedWatchServiceException | InterruptedException e) {
+        LOG.debug("config watch interrupted");
+      } catch (Exception e) {
+        LOG.error("Failed to watch device config file", e);
+      }
+    });
   }
 
   /**

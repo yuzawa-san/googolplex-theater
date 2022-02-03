@@ -34,40 +34,35 @@ class DeviceConfigLoaderTest {
   @Test
   void loaderTest() throws IOException, InterruptedException {
     // For a simple file system with Unix-style paths and behavior:
-    FileSystem fs =
-        Jimfs.newFileSystem(
-            Configuration.unix().toBuilder()
-                .setWatchServiceConfiguration(
-                    WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
-                .build());
+    FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
+        .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
+        .build());
     Path conf = fs.getPath("/conf");
     Files.createDirectory(conf);
     Path path = conf.resolve("devices.yml");
     try (BufferedWriter bufferedWriter =
-        Files.newBufferedWriter(
-            path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+        Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
       bufferedWriter.write(VALUE1);
     }
     BlockingQueue<DeviceConfig> queue = new ArrayBlockingQueue<>(10);
-    GoogolplexController controller =
-        new GoogolplexController() {
+    GoogolplexController controller = new GoogolplexController() {
 
-          @Override
-          public void register(ServiceEvent event) {}
+      @Override
+      public void register(ServiceEvent event) {}
 
-          @Override
-          public void refresh(String name) {}
+      @Override
+      public void refresh(String name) {}
 
-          @Override
-          public List<JsonObject> getDeviceInfo() {
-            return null;
-          }
+      @Override
+      public List<JsonObject> getDeviceInfo() {
+        return null;
+      }
 
-          @Override
-          public void processDeviceConfig(DeviceConfig config) {
-            queue.add(config);
-          }
-        };
+      @Override
+      public void processDeviceConfig(DeviceConfig config) {
+        queue.add(config);
+      }
+    };
     DeviceConfigLoader loader = new DeviceConfigLoader(controller, path);
     try {
       DeviceConfig config = queue.take();
@@ -87,7 +82,8 @@ class DeviceConfigLoaderTest {
       assertEquals(1, config.devices.size());
       device = config.devices.get(0);
       assertEquals("NameOfYourDevice2", device.name);
-      assertEquals("https://example2.com/updated", device.settings.get("url").asText());
+      assertEquals(
+          "https://example2.com/updated", device.settings.get("url").asText());
       assertEquals(600, device.settings.get("refreshSeconds").asInt());
     } finally {
       loader.close();
