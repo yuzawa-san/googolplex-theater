@@ -50,7 +50,7 @@ Development requirements:
 
 * JDK 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
 
-NOTE: The Java 8 is the minimum target version to support some older versions of 
+NOTE: The Java 8 is the minimum target version to support some older versions of
 Raspberry Pi OS (Raspbian). This may be subject to change.
 
 ## Installation
@@ -225,7 +225,7 @@ This application overlaps in functionality with some of these fine projects:
 Foundational work has been done to research how the Chromecast protocol works and these protocol libraries have been developed in a variety of languages. A lot of the headless senders are built off of these.
 
 ### Browser Senders
-* [dashcast](https://github.com/stestagg/dashcast) - simple dashboard display application 
+* [dashcast](https://github.com/stestagg/dashcast) - simple dashboard display application
 * [chromecast-dashboard](https://github.com/boombatower/chromecast-dashboard) - similar to dashcast
 
 These applications cast directly from your browser. You may need to have your browser up and running all of the time.

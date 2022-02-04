@@ -1,7 +1,7 @@
 plugins {
 	id "net.researchgate.release" version "2.8.1"
 	id "com.google.protobuf" version "0.8.18"
-	id "com.diffplug.spotless" version "6.2.0"
+	id "com.diffplug.spotless" version "6.2.1"
 	id "com.github.spotbugs" version "5.0.5"
 	id "com.github.ben-manes.versions" version "0.41.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
@@ -41,7 +41,7 @@ jacocoTestReport {
 	}
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
-			fileTree(dir: it, exclude: '**/*Wire**')
+			fileTree(dir: it, exclude: "${protobuf.generatedFilesBaseDir}/**/*.java")
 		}))
 	}
 }
@@ -73,19 +73,24 @@ protobuf {
 if (JavaVersion.current().isJava11Compatible()) {
 	spotless {
 		java {
-			targetExclude("**/Wire.java")
+			target '**/*.java'
+			targetExclude "${protobuf.generatedFilesBaseDir}/**/*.java"
+			licenseHeader '/*\n * Copyright (c) $YEAR James Yuzawa (https://www.jyuzawa.com/)\n * All rights reserved. Licensed under the MIT License.\n */'
 			removeUnusedImports()
-			googleJavaFormat()
+			importOrder()
+			palantirJavaFormat()
+			endWithNewline()
 		}
-		format 'gradle', {
-			target '**/*.gradle'
+		format 'misc', {
+			target '**/*.gradle', '**/*.proto'
 			trimTrailingWhitespace()
 			indentWithTabs()
+			endWithNewline()
 		}
-		format 'proto', {
-			target '**/*.proto'
+		format 'md', {
+			target '**/*.md'
 			trimTrailingWhitespace()
-			indentWithTabs()
+			endWithNewline()
 		}
 	}
 }
