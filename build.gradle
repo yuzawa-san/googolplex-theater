@@ -82,7 +82,7 @@ if (JavaVersion.current().isJava11Compatible()) {
 			endWithNewline()
 		}
 		format 'misc', {
-			target '**/*.gradle', '**/*.proto'
+			target '**/*.gradle', '**/*.proto', '**/*.feature'
 			trimTrailingWhitespace()
 			indentWithTabs()
 			endWithNewline()
