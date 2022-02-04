@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
+ * All rights reserved. Licensed under the MIT License.
+ */
 package com.jyuzawa.googolplex_theater.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -18,47 +22,45 @@ import lombok.Data;
  */
 @Data
 public final class DeviceConfig {
-  private final List<DeviceInfo> devices;
+    private final List<DeviceInfo> devices;
 
-  public DeviceConfig() {
-    this(null, null);
-  }
-
-  @JsonCreator
-  public DeviceConfig(
-      @JsonProperty("devices") List<DeviceInfo> devices,
-      @JsonProperty("settings") ObjectNode settings) {
-    if (devices == null) {
-      this.devices = Collections.emptyList();
-    } else {
-      List<DeviceInfo> newDevices = new ArrayList<>(devices.size());
-      for (DeviceInfo device : devices) {
-        newDevices.add(device.merge(settings));
-      }
-      this.devices = Collections.unmodifiableList(newDevices);
+    public DeviceConfig() {
+        this(null, null);
     }
-  }
-
-  @Data
-  public static final class DeviceInfo {
-    private final String name;
-    private final ObjectNode settings;
 
     @JsonCreator
-    public DeviceInfo(
-        @JsonProperty("name") String name, @JsonProperty("settings") ObjectNode settings) {
-      this.name = name;
-      this.settings = settings;
+    public DeviceConfig(
+            @JsonProperty("devices") List<DeviceInfo> devices, @JsonProperty("settings") ObjectNode settings) {
+        if (devices == null) {
+            this.devices = Collections.emptyList();
+        } else {
+            List<DeviceInfo> newDevices = new ArrayList<>(devices.size());
+            for (DeviceInfo device : devices) {
+                newDevices.add(device.merge(settings));
+            }
+            this.devices = Collections.unmodifiableList(newDevices);
+        }
     }
 
-    public DeviceInfo merge(ObjectNode settings) {
-      if (settings == null) {
-        return this;
-      }
-      ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
-      newSettings.setAll(settings);
-      newSettings.setAll(this.settings);
-      return new DeviceInfo(name, newSettings);
+    @Data
+    public static final class DeviceInfo {
+        private final String name;
+        private final ObjectNode settings;
+
+        @JsonCreator
+        public DeviceInfo(@JsonProperty("name") String name, @JsonProperty("settings") ObjectNode settings) {
+            this.name = name;
+            this.settings = settings;
+        }
+
+        public DeviceInfo merge(ObjectNode settings) {
+            if (settings == null) {
+                return this;
+            }
+            ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
+            newSettings.setAll(settings);
+            newSettings.setAll(this.settings);
+            return new DeviceInfo(name, newSettings);
+        }
     }
-  }
 }

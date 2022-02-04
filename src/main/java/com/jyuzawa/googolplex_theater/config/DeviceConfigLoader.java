@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
+ * All rights reserved. Licensed under the MIT License.
+ */
 package com.jyuzawa.googolplex_theater.config;
 
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
@@ -25,77 +29,75 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class DeviceConfigLoader implements Closeable {
 
-  private final ExecutorService executor;
-  private final Path path;
-  private final GoogolplexController controller;
-  private final WatchService watchService;
+    private final ExecutorService executor;
+    private final Path path;
+    private final GoogolplexController controller;
+    private final WatchService watchService;
 
-  public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath)
-      throws IOException {
-    this.controller = controller;
-    this.executor = Executors.newSingleThreadExecutor();
-    this.path = deviceConfigPath;
-    log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
-    load();
-    this.watchService = path.getFileSystem().newWatchService();
-    /*
-     * the watch operation only works with directories, so we have to get the parent directory of the file.
-     */
-    Path directoryPath = path.getParent();
-    if (directoryPath == null) {
-      throw new IllegalArgumentException("Path has missing parent");
-    }
-    directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-    executor.submit(
-        () -> {
-          try {
-            WatchKey key;
-            // this blocks until the system notifies us of any changes.
-            while ((key = watchService.take()) != null) {
-              try {
-                // go thru all changes. sadly this API is not super type safe.
-                for (WatchEvent<?> event : key.pollEvents()) {
-                  @SuppressWarnings("unchecked")
-                  WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                  /*
-                   * we could have found out about any file in the same directory, so make sure that it is
-                   * indeed our config file.
-                   */
-                  if (path.endsWith(ev.context())) {
-                    load();
-                  }
+    public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath) throws IOException {
+        this.controller = controller;
+        this.executor = Executors.newSingleThreadExecutor();
+        this.path = deviceConfigPath;
+        log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
+        load();
+        this.watchService = path.getFileSystem().newWatchService();
+        /*
+         * the watch operation only works with directories, so we have to get the parent directory of the file.
+         */
+        Path directoryPath = path.getParent();
+        if (directoryPath == null) {
+            throw new IllegalArgumentException("Path has missing parent");
+        }
+        directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+        executor.submit(() -> {
+            try {
+                WatchKey key;
+                // this blocks until the system notifies us of any changes.
+                while ((key = watchService.take()) != null) {
+                    try {
+                        // go thru all changes. sadly this API is not super type safe.
+                        for (WatchEvent<?> event : key.pollEvents()) {
+                            @SuppressWarnings("unchecked")
+                            WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                            /*
+                             * we could have found out about any file in the same directory, so make sure that it is
+                             * indeed our config file.
+                             */
+                            if (path.endsWith(ev.context())) {
+                                load();
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to load config", e);
+                    } finally {
+                        key.reset();
+                    }
                 }
-              } catch (Exception e) {
-                log.error("Failed to load config", e);
-              } finally {
-                key.reset();
-              }
+            } catch (ClosedWatchServiceException | InterruptedException e) {
+                log.debug("config watch interrupted");
+            } catch (Exception e) {
+                log.error("Failed to watch device config file", e);
             }
-          } catch (ClosedWatchServiceException | InterruptedException e) {
-            log.debug("config watch interrupted");
-          } catch (Exception e) {
-            log.error("Failed to watch device config file", e);
-          }
         });
-  }
-
-  /**
-   * Read the file, decode the file content, and inform the controller of the changes.
-   *
-   * @throws IOException when YAML deserialization fails
-   */
-  private void load() throws IOException {
-    log.info("Reloading device config");
-    try (InputStream stream = Files.newInputStream(path)) {
-      DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
-      controller.processDeviceConfig(out);
     }
-  }
 
-  @Override
-  public void close() throws IOException {
-    controller.processDeviceConfig(new DeviceConfig());
-    executor.shutdownNow();
-    watchService.close();
-  }
+    /**
+     * Read the file, decode the file content, and inform the controller of the changes.
+     *
+     * @throws IOException when YAML deserialization fails
+     */
+    private void load() throws IOException {
+        log.info("Reloading device config");
+        try (InputStream stream = Files.newInputStream(path)) {
+            DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
+            controller.processDeviceConfig(out);
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        controller.processDeviceConfig(new DeviceConfig());
+        executor.shutdownNow();
+        watchService.close();
+    }
 }

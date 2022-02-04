@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
+ * All rights reserved. Licensed under the MIT License.
+ */
 package com.jyuzawa.googolplex_theater.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,101 +29,101 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class GoogolplexControllerTest {
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexControllerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GoogolplexControllerTest.class);
 
-  static GoogolplexController controller;
-  static FakeCast cast1;
-  static FakeCast cast2;
-  static FakeCast cast3;
-  static FakeCast cast4;
-  static EventLoopGroup workerGroup;
+    static GoogolplexController controller;
+    static FakeCast cast1;
+    static FakeCast cast2;
+    static FakeCast cast3;
+    static FakeCast cast4;
+    static EventLoopGroup workerGroup;
 
-  @BeforeAll
-  static void setUpBeforeClass() throws Exception {
-    workerGroup = new NioEventLoopGroup(1);
-    controller = new GoogolplexControllerImpl(workerGroup, GoogolplexTheaterConfig.load());
-    cast1 = new FakeCast(workerGroup, 9001);
-    cast2 = new FakeCast(workerGroup, 9002);
-    cast3 = new FakeCast(workerGroup, 9003);
-    cast4 = new FakeCast(workerGroup, 9004);
-  }
-
-  @AfterAll
-  static void tearDownAfterClass() throws Exception {
-    DeviceConfig newConfig = new DeviceConfig();
-    controller.processDeviceConfig(newConfig);
-    cast1.close();
-    cast2.close();
-    cast3.close();
-    cast4.close();
-    workerGroup.shutdownGracefully().syncUninterruptibly();
-  }
-
-  @Test
-  void test() throws Exception {
-    List<DeviceInfo> devices = new ArrayList<>();
-    devices.add(cast1.device());
-    devices.add(cast2.device());
-    devices.add(cast3.device());
-    devices.add(cast4.device());
-    DeviceConfig config = new DeviceConfig(devices, null);
-    controller.register(cast1.event());
-    controller.register(cast2.event());
-    controller.processDeviceConfig(config);
-    controller.register(cast3.event());
-    controller.register(cast4.event());
-    controller.register(FakeCast.event(9005, "UnknownCast"));
-    ServiceEvent noName = Mockito.mock(ServiceEvent.class);
-    ServiceInfo noNameInfo = Mockito.mock(ServiceInfo.class);
-    Mockito.when(noName.getInfo()).thenReturn(noNameInfo);
-    Mockito.when(noNameInfo.getPropertyString(Mockito.anyString())).thenReturn(null);
-    controller.register(noName);
-    ServiceEvent noAddr = Mockito.mock(ServiceEvent.class);
-    Mockito.when(noAddr.getName()).thenReturn("Chromecast-NOIP.local");
-    ServiceInfo noAddrInfo = Mockito.mock(ServiceInfo.class);
-    Mockito.when(noAddr.getInfo()).thenReturn(noAddrInfo);
-    Mockito.when(noAddrInfo.getPropertyString(Mockito.anyString())).thenReturn("NOIP");
-    Mockito.when(noAddrInfo.getInetAddresses()).thenReturn(new InetAddress[] {});
-    controller.register(noAddr);
-
-    List<JsonObject> deviceInfos = controller.getDeviceInfo();
-    Set<String> configureds = getConfigureds(deviceInfos);
-    assertEquals(4, configureds.size());
-    assertTrue(configureds.contains(cast1.name));
-    assertTrue(configureds.contains(cast2.name));
-    assertTrue(configureds.contains(cast3.name));
-    assertTrue(configureds.contains(cast4.name));
-    Set<String> unconfigureds = getUnconfigureds(deviceInfos);
-    assertEquals(1, unconfigureds.size());
-    assertTrue(unconfigureds.contains("UnknownCast"));
-  }
-
-  private Set<String> getUnconfigureds(List<JsonObject> devices) {
-    Set<String> out = new HashSet<>();
-    for (JsonObject device : devices) {
-      if (null == device.getString("settings")) {
-        out.add(device.getString("name"));
-      }
+    @BeforeAll
+    static void setUpBeforeClass() throws Exception {
+        workerGroup = new NioEventLoopGroup(1);
+        controller = new GoogolplexControllerImpl(workerGroup, GoogolplexTheaterConfig.load());
+        cast1 = new FakeCast(workerGroup, 9001);
+        cast2 = new FakeCast(workerGroup, 9002);
+        cast3 = new FakeCast(workerGroup, 9003);
+        cast4 = new FakeCast(workerGroup, 9004);
     }
-    return out;
-  }
 
-  private Set<String> getConfigureds(List<JsonObject> devices) {
-    Set<String> out = new HashSet<>();
-    for (JsonObject device : devices) {
-      if (null != device.getString("settings")) {
-        out.add(device.getString("name"));
-      }
+    @AfterAll
+    static void tearDownAfterClass() throws Exception {
+        DeviceConfig newConfig = new DeviceConfig();
+        controller.processDeviceConfig(newConfig);
+        cast1.close();
+        cast2.close();
+        cast3.close();
+        cast4.close();
+        workerGroup.shutdownGracefully().syncUninterruptibly();
     }
-    return out;
-  }
 
-  @Test
-  public void durationTest() {
-    assertEquals("1s", GoogolplexControllerImpl.calculateDuration(Duration.ofSeconds(1)));
-    assertEquals("1m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofMinutes(1)));
-    assertEquals("1h0m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofHours(1)));
-    assertEquals("1d0h0m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofDays(1)));
-    assertEquals("1d1h1m1s", GoogolplexControllerImpl.calculateDuration(Duration.ofSeconds(90061)));
-  }
+    @Test
+    void test() throws Exception {
+        List<DeviceInfo> devices = new ArrayList<>();
+        devices.add(cast1.device());
+        devices.add(cast2.device());
+        devices.add(cast3.device());
+        devices.add(cast4.device());
+        DeviceConfig config = new DeviceConfig(devices, null);
+        controller.register(cast1.event());
+        controller.register(cast2.event());
+        controller.processDeviceConfig(config);
+        controller.register(cast3.event());
+        controller.register(cast4.event());
+        controller.register(FakeCast.event(9005, "UnknownCast"));
+        ServiceEvent noName = Mockito.mock(ServiceEvent.class);
+        ServiceInfo noNameInfo = Mockito.mock(ServiceInfo.class);
+        Mockito.when(noName.getInfo()).thenReturn(noNameInfo);
+        Mockito.when(noNameInfo.getPropertyString(Mockito.anyString())).thenReturn(null);
+        controller.register(noName);
+        ServiceEvent noAddr = Mockito.mock(ServiceEvent.class);
+        Mockito.when(noAddr.getName()).thenReturn("Chromecast-NOIP.local");
+        ServiceInfo noAddrInfo = Mockito.mock(ServiceInfo.class);
+        Mockito.when(noAddr.getInfo()).thenReturn(noAddrInfo);
+        Mockito.when(noAddrInfo.getPropertyString(Mockito.anyString())).thenReturn("NOIP");
+        Mockito.when(noAddrInfo.getInetAddresses()).thenReturn(new InetAddress[] {});
+        controller.register(noAddr);
+
+        List<JsonObject> deviceInfos = controller.getDeviceInfo();
+        Set<String> configureds = getConfigureds(deviceInfos);
+        assertEquals(4, configureds.size());
+        assertTrue(configureds.contains(cast1.name));
+        assertTrue(configureds.contains(cast2.name));
+        assertTrue(configureds.contains(cast3.name));
+        assertTrue(configureds.contains(cast4.name));
+        Set<String> unconfigureds = getUnconfigureds(deviceInfos);
+        assertEquals(1, unconfigureds.size());
+        assertTrue(unconfigureds.contains("UnknownCast"));
+    }
+
+    private Set<String> getUnconfigureds(List<JsonObject> devices) {
+        Set<String> out = new HashSet<>();
+        for (JsonObject device : devices) {
+            if (null == device.getString("settings")) {
+                out.add(device.getString("name"));
+            }
+        }
+        return out;
+    }
+
+    private Set<String> getConfigureds(List<JsonObject> devices) {
+        Set<String> out = new HashSet<>();
+        for (JsonObject device : devices) {
+            if (null != device.getString("settings")) {
+                out.add(device.getString("name"));
+            }
+        }
+        return out;
+    }
+
+    @Test
+    public void durationTest() {
+        assertEquals("1s", GoogolplexControllerImpl.calculateDuration(Duration.ofSeconds(1)));
+        assertEquals("1m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofMinutes(1)));
+        assertEquals("1h0m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofHours(1)));
+        assertEquals("1d0h0m0s", GoogolplexControllerImpl.calculateDuration(Duration.ofDays(1)));
+        assertEquals("1d1h1m1s", GoogolplexControllerImpl.calculateDuration(Duration.ofSeconds(90061)));
+    }
 }
