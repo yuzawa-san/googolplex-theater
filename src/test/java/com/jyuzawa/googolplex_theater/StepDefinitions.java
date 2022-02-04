@@ -42,6 +42,9 @@ import java.util.concurrent.TimeUnit;
 import javax.jmdns.JmDNS;
 
 public class StepDefinitions {
+  static {
+    System.setProperty("java.net.preferIPv4Stack", "true");
+  }
 
   private static Vertx vertx;
   private static FakeCast device;
@@ -77,11 +80,11 @@ public class StepDefinitions {
             StandardOpenOption.WRITE,
             StandardOpenOption.CREATE)) {
       ConfigYaml config = new ConfigYaml();
-      config.baseReconnectSeconds = 0;
-      config.reconnectNoiseSeconds = 0;
-      config.heartbeatIntervalSeconds = 1;
-      config.heartbeatTimeoutSeconds = 3;
-      config.discoveryNetworkInterface = mdns.getInetAddress().getHostAddress();
+      config.setBaseReconnectSeconds(0);
+      config.setReconnectNoiseSeconds(0);
+      config.setHeartbeatIntervalSeconds(1);
+      config.setHeartbeatTimeoutSeconds(3);
+      config.setDiscoveryNetworkInterface(mdns.getInetAddress().getHostAddress());
       System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
       MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
     }

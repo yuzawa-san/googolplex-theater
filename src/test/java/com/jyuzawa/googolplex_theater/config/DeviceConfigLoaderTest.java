@@ -71,11 +71,11 @@ class DeviceConfigLoaderTest {
     DeviceConfigLoader loader = new DeviceConfigLoader(controller, path);
     try {
       DeviceConfig config = queue.take();
-      assertEquals(1, config.devices.size());
-      DeviceInfo device = config.devices.get(0);
-      assertEquals("NameOfYourDevice2", device.name);
-      assertEquals("https://example2.com/", device.settings.get("url").asText());
-      assertEquals(9600, device.settings.get("refreshSeconds").asInt());
+      assertEquals(1, config.getDevices().size());
+      DeviceInfo device = config.getDevices().get(0);
+      assertEquals("NameOfYourDevice2", device.getName());
+      assertEquals("https://example2.com/", device.getSettings().get("url").asText());
+      assertEquals(9600, device.getSettings().get("refreshSeconds").asInt());
 
       // see if an update is detected
       try (BufferedWriter bufferedWriter =
@@ -84,11 +84,11 @@ class DeviceConfigLoaderTest {
       }
       config = queue.poll(1, TimeUnit.MINUTES);
       assertNotNull(config);
-      assertEquals(1, config.devices.size());
-      device = config.devices.get(0);
-      assertEquals("NameOfYourDevice2", device.name);
-      assertEquals("https://example2.com/updated", device.settings.get("url").asText());
-      assertEquals(600, device.settings.get("refreshSeconds").asInt());
+      assertEquals(1, config.getDevices().size());
+      device = config.getDevices().get(0);
+      assertEquals("NameOfYourDevice2", device.getName());
+      assertEquals("https://example2.com/updated", device.getSettings().get("url").asText());
+      assertEquals(600, device.getSettings().get("refreshSeconds").asInt());
     } finally {
       loader.close();
     }

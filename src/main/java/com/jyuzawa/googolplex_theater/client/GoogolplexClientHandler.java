@@ -16,8 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class handles messages from the device and prepares proper responses. The lifecycle is very
@@ -28,10 +27,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author jyuzawa
  */
+@Slf4j
 public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<CastMessage> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexClientHandler.class);
-
   public static final AttributeKey<DeviceInfo> DEVICE_INFO_KEY =
       AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_device");
   public static final AttributeKey<Instant> CONNECTION_BIRTH_KEY =
@@ -151,8 +148,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
                 () -> {
                   if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
                     /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
-                    String name = getDeviceInfo(ctx).name;
-                    LOG.warn("EXPIRE '{}'", name);
+                    String name = getDeviceInfo(ctx).getName();
+                    log.warn("EXPIRE '{}'", name);
                     ctx.close();
                   } else {
                     // send another heartbeat
@@ -191,23 +188,23 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
     // do some rudimentary validation
     if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0
         || msg.getPayloadType() != PayloadType.STRING) {
-      LOG.debug("Invalid message");
+      log.debug("Invalid message");
       return;
     }
     String sourceId = msg.getSourceId();
     if (!(sourceId.equals(DEFAULT_RECEIVER_ID) || sourceId.equals(sessionReceiverId))) {
-      LOG.debug("Invalid message source");
+      log.debug("Invalid message source");
       return;
     }
     String destinationId = msg.getDestinationId();
     if (!(destinationId.equals(senderId) || destinationId.equals("*"))) {
-      LOG.debug("Invalid message destination");
+      log.debug("Invalid message destination");
       return;
     }
     // handle different namespaces differently
     String namespace = msg.getNamespace();
     DeviceInfo device = getDeviceInfo(ctx);
-    String name = device.name;
+    String name = device.getName();
     switch (namespace) {
       case NAMESPACE_HEARTBEAT:
         lastHeartbeat = Instant.now();
@@ -216,10 +213,10 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
         handleReceiverMessage(ctx, msg, device);
         break;
       case NAMESPACE_CUSTOM:
-        LOG.info("MESSAGE '{}' {}", name, msg.getPayloadUtf8());
+        log.info("MESSAGE '{}' {}", name, msg.getPayloadUtf8());
         break;
       default:
-        LOG.debug("other message");
+        log.debug("other message");
         break;
     }
   }
@@ -236,10 +233,10 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
       throws IOException {
     ReceiverResponse receiverPayload =
         MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
-    String name = device.name;
-    if (receiverPayload.reason != null) {
+    String name = device.getName();
+    if (receiverPayload.getReason() != null) {
       // the presence of the reason indicates the launch likely failed for some reason
-      LOG.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
+      log.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
       // close to reload connection
       ctx.close();
       return;
@@ -252,7 +249,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
        * if the idle screen is back, the receiver app has crashed for some reason, so close which will trigger a
        * refresh.
        */
-      LOG.info("DOWN '{}'", name);
+      log.info("DOWN '{}'", name);
       ctx.close();
       return;
     }
@@ -262,15 +259,15 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
      */
     if (sessionReceiverId == null && transportId != null) {
       sessionReceiverId = transportId;
-      LOG.info("UP '{}'", name);
+      log.info("UP '{}'", name);
       // session connect
       CastMessage sessionConnectMessage =
           generateMessage(NAMESPACE_CONNECTION, transportId, CONNECT_MESSAGE);
       ctx.writeAndFlush(sessionConnectMessage);
       // display data custom message
       Map<String, Object> custom = new HashMap<>();
-      custom.put("name", device.name);
-      custom.put("settings", device.settings);
+      custom.put("name", device.getName());
+      custom.put("settings", device.getSettings());
       custom.put("requestId", requestId++);
       CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, transportId, custom);
       ctx.writeAndFlush(customMessage);
@@ -282,8 +279,8 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     // empirically, these are connection resets.
     DeviceInfo device = getDeviceInfo(ctx);
-    String name = (device == null) ? "unknown" : device.name;
-    LOG.error("EXCEPTION '{}' {}: {}", name, cause.getClass().getSimpleName(), cause.getMessage());
+    String name = (device == null) ? "unknown" : device.getName();
+    log.error("EXCEPTION '{}' {}: {}", name, cause.getClass().getSimpleName(), cause.getMessage());
     // this close will trigger the controller to reconnect
     ctx.close();
   }

@@ -9,17 +9,15 @@ import com.jyuzawa.googolplex_theater.server.GoogolplexServer;
 import io.vertx.core.Vertx;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is the main class for application.
  *
  * @author jyuzawa
  */
+@Slf4j
 public final class GoogolplexTheater {
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexTheater.class);
-
   private final Vertx vertx;
   private final DeviceConfigLoader configLoader;
   private final ServiceDiscovery serviceDiscovery;
@@ -44,13 +42,13 @@ public final class GoogolplexTheater {
   }
 
   public void close() {
-    LOG.info("Shutting down Googolplex Theater!");
+    log.info("Shutting down Googolplex Theater!");
     try {
       configLoader.close();
       serviceDiscovery.close();
       vertx.close();
     } catch (Exception e) {
-      LOG.warn("Failed to shut down", e);
+      log.warn("Failed to shut down", e);
     }
   }
 
@@ -60,7 +58,7 @@ public final class GoogolplexTheater {
       GoogolplexTheater googolplexTheater = new GoogolplexTheater(config);
       Runtime.getRuntime().addShutdownHook(new Thread(googolplexTheater::close));
     } catch (Exception e) {
-      LOG.error("Failed to start", e);
+      log.error("Failed to start", e);
       System.exit(1);
     }
   }

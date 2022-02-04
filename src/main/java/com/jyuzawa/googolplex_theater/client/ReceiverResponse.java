@@ -4,19 +4,21 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.List;
+import lombok.Data;
 
 /**
  * This class is a POJO for JSON deserialization.
  *
  * @author jyuzawa
  */
+@Data
 public final class ReceiverResponse {
   static final String TYPE_RECEIVER_STATUS = "RECEIVER_STATUS";
 
-  public final int requestId;
-  public final String type;
-  public final ReceiverResponse.Status status;
-  public final String reason;
+  private final int requestId;
+  private final String type;
+  private final ReceiverResponse.Status status;
+  private final String reason;
 
   @JsonCreator
   public ReceiverResponse(
@@ -30,8 +32,9 @@ public final class ReceiverResponse {
     this.reason = reason;
   }
 
+  @Data
   static final class Status {
-    public final List<ReceiverResponse.Application> applications;
+    private final List<ReceiverResponse.Application> applications;
 
     @JsonCreator
     public Status(@JsonProperty("applications") List<ReceiverResponse.Application> applications) {
@@ -43,18 +46,22 @@ public final class ReceiverResponse {
     }
   }
 
+  @Data
   static final class Application {
-    public final String appId;
-    public final boolean isIdleScreen;
-    public final String transportId;
+    private final String appId;
+
+    @JsonProperty(value = "isIdleScreen")
+    private final boolean idleScreen;
+
+    private final String transportId;
 
     @JsonCreator
     public Application(
         @JsonProperty("appId") String appId,
-        @JsonProperty("isIdleScreen") boolean isIdleScreen,
+        @JsonProperty("isIdleScreen") boolean idleScreen,
         @JsonProperty("transportId") String transportId) {
       this.appId = appId;
-      this.isIdleScreen = isIdleScreen;
+      this.idleScreen = idleScreen;
       this.transportId = transportId;
     }
   }
@@ -76,7 +83,7 @@ public final class ReceiverResponse {
    */
   public boolean isIdleScreen() {
     for (ReceiverResponse.Application application : status.applications) {
-      if (application.isIdleScreen) {
+      if (application.idleScreen) {
         return true;
       }
     }

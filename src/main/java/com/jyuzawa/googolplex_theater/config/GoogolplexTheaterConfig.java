@@ -1,6 +1,5 @@
 package com.jyuzawa.googolplex_theater.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jyuzawa.googolplex_theater.GoogolplexTheater;
 import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
@@ -15,32 +14,32 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A representation of the application config.
  *
  * @author jtyuzawa
  */
+@Slf4j
+@Data
 public final class GoogolplexTheaterConfig {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GoogolplexTheaterConfig.class);
   private static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
   private static final List<String> DIAGNOSTIC_PROPERTIES =
       Collections.unmodifiableList(
           Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
 
   static {
-    LOG.info("Starting up Googolplex Theater!");
-    LOG.info("Website: " + PROJECT_WEBSITE);
+    log.info("Starting up Googolplex Theater!");
+    log.info("Website: " + PROJECT_WEBSITE);
     Package thePackage = GoogolplexTheater.class.getPackage();
-    LOG.info(
+    log.info(
         "Version: {} ({})",
         thePackage.getSpecificationVersion(),
         thePackage.getImplementationVersion());
     for (String property : DIAGNOSTIC_PROPERTIES) {
-      LOG.info("Runtime[{}]: {}", property, System.getProperty(property));
+      log.info("Runtime[{}]: {}", property, System.getProperty(property));
     }
   }
 
@@ -111,59 +110,27 @@ public final class GoogolplexTheaterConfig {
         return installedPath;
       }
     } catch (URISyntaxException e) {
-      LOG.error("Failed to find default config", e);
+      log.error("Failed to find default config", e);
     }
     // IDE case
     return Paths.get("src/dist/conf").toAbsolutePath();
   }
 
-  public String getRecieverAppId() {
-    return recieverAppId;
-  }
-
-  public InetSocketAddress getUiServerAddress() {
-    return uiServerAddress;
-  }
-
-  public String getDiscoveryNetworkInterface() {
-    return discoveryNetworkInterface;
-  }
-
-  public Path getDeviceConfigPath() {
-    return deviceConfigPath;
-  }
-
+  @Data
   public static final class ConfigYaml {
     private static final int DEFAULT_BASE_RECONNECT_SECONDS = 15;
     private static final int DEFAULT_RECONNECT_NOISE_SECONDS = 5;
     private static final int DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 5;
     private static final int DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 30;
 
-    @JsonProperty public String receiverAppId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
-    @JsonProperty public String uiServerHost = ALL_HOSTS;
-    @JsonProperty public int uiServerPort = 8000;
-    @JsonProperty public String discoveryNetworkInterface;
-    @JsonProperty public String deviceConfigFile = "devices.yml";
-
-    @JsonProperty public int baseReconnectSeconds = DEFAULT_BASE_RECONNECT_SECONDS;
-    @JsonProperty public int reconnectNoiseSeconds = DEFAULT_RECONNECT_NOISE_SECONDS;
-    @JsonProperty public int heartbeatIntervalSeconds = DEFAULT_HEARTBEAT_INTERVAL_SECONDS;
-    @JsonProperty public int heartbeatTimeoutSeconds = DEFAULT_HEARTBEAT_TIMEOUT_SECONDS;
-  }
-
-  public int getBaseReconnectSeconds() {
-    return baseReconnectSeconds;
-  }
-
-  public int getReconnectNoiseSeconds() {
-    return reconnectNoiseSeconds;
-  }
-
-  public int getHeartbeatIntervalSeconds() {
-    return heartbeatIntervalSeconds;
-  }
-
-  public int getHeartbeatTimeoutSeconds() {
-    return heartbeatTimeoutSeconds;
+    private String receiverAppId = GoogolplexClientHandler.DEFAULT_APPLICATION_ID;
+    private String uiServerHost = ALL_HOSTS;
+    private int uiServerPort = 8000;
+    private String discoveryNetworkInterface;
+    private String deviceConfigFile = "devices.yml";
+    private int baseReconnectSeconds = DEFAULT_BASE_RECONNECT_SECONDS;
+    private int reconnectNoiseSeconds = DEFAULT_RECONNECT_NOISE_SECONDS;
+    private int heartbeatIntervalSeconds = DEFAULT_HEARTBEAT_INTERVAL_SECONDS;
+    private int heartbeatTimeoutSeconds = DEFAULT_HEARTBEAT_TIMEOUT_SECONDS;
   }
 }
