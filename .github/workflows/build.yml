@@ -13,6 +13,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     strategy:
       matrix:
         # LTS versions
@@ -37,6 +41,11 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle-caches-
+      - name: Initialize CodeQL
+        if: ${{ matrix.java == '17' }}
+        uses: github/codeql-action/init@v1
+        with:
+          languages: java
       - name: Build with Gradle
         run: |
           if [ "${{ matrix.java == '8' }}" = "true" ]; then
@@ -47,6 +56,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
         if: ${{ matrix.java == '17' }}
+      - name: Perform CodeQL Analysis
+        if: ${{ matrix.java == '17' }}
+        uses: github/codeql-action/analyze@v1
       - name: Save reports
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}
