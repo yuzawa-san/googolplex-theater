@@ -9,6 +9,8 @@ on:
     branches:
       - develop
       - master
+  schedule:
+    - cron: '41 21 * * 5'
 
 jobs:
   build:
