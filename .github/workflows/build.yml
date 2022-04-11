@@ -62,7 +62,7 @@ jobs:
         if: ${{ matrix.java == '17' }}
         uses: github/codeql-action/analyze@v1
       - name: Save reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
           name: reports-${{ matrix.java }}
