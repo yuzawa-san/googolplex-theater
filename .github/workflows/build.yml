@@ -45,7 +45,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-caches-
       - name: Initialize CodeQL
         if: ${{ matrix.java == '17' }}
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@v2
         with:
           languages: java
       - name: Build with Gradle
@@ -60,7 +60,7 @@ jobs:
         if: ${{ matrix.java == '17' }}
       - name: Perform CodeQL Analysis
         if: ${{ matrix.java == '17' }}
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@v2
       - name: Save reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() }}
