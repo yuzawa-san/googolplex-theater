@@ -122,7 +122,7 @@ dependencies {
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 	testImplementation 'io.cucumber:cucumber-java:7.3.3'
-	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.3.3'
+	testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.3.4'
 	testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
 }
 
