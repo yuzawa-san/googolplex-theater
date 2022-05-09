@@ -47,7 +47,7 @@ jobs:
          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ghcr.io/yuzawa-san/googolplex-theater
       - name: Build and push
