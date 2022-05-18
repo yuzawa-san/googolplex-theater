@@ -17,8 +17,8 @@ apply plugin: "application"
 apply plugin: "jacoco"
 apply plugin: "nebula.ospackage"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 description="Persistently maintain multiple Chromecasts as digital signage without a browser."
 
@@ -31,7 +31,7 @@ release {
 }
 
 lombok {
-	version = "1.18.22"
+	version = "1.18.24"
 }
 
 jacocoTestReport {
@@ -69,29 +69,26 @@ protobuf {
 	}
 }
 
-// spotless requires java 11 or later
-if (JavaVersion.current().isJava11Compatible()) {
-	spotless {
-		java {
-			target '**/*.java'
-			targetExclude "${protobuf.generatedFilesBaseDir}/**/*.java"
-			licenseHeader '/*\n * Copyright (c) $YEAR James Yuzawa (https://www.jyuzawa.com/)\n * All rights reserved. Licensed under the MIT License.\n */'
-			removeUnusedImports()
-			importOrder()
-			palantirJavaFormat()
-			endWithNewline()
-		}
-		format 'misc', {
-			target '**/*.gradle', '**/*.proto', '**/*.feature'
-			trimTrailingWhitespace()
-			indentWithTabs()
-			endWithNewline()
-		}
-		format 'md', {
-			target '**/*.md'
-			trimTrailingWhitespace()
-			endWithNewline()
-		}
+spotless {
+	java {
+		target '**/*.java'
+		targetExclude "${protobuf.generatedFilesBaseDir}/**/*.java"
+		licenseHeader '/*\n * Copyright (c) $YEAR James Yuzawa (https://www.jyuzawa.com/)\n * All rights reserved. Licensed under the MIT License.\n */'
+		removeUnusedImports()
+		importOrder()
+		palantirJavaFormat()
+		endWithNewline()
+	}
+	format 'misc', {
+		target '**/*.gradle', '**/*.proto', '**/*.feature'
+		trimTrailingWhitespace()
+		indentWithTabs()
+		endWithNewline()
+	}
+	format 'md', {
+		target '**/*.md'
+		trimTrailingWhitespace()
+		endWithNewline()
 	}
 }
 

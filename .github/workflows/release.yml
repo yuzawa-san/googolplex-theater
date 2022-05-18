@@ -89,11 +89,11 @@ jobs:
         run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*.deb"))
       - name: Upload to Packagecloud
         run: |
-          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/stretch ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/buster ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bullseye ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/focal ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/bionic ./build/distributions/${{ steps.get_deb.outputs.filename }}
+          bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/jammy ./build/distributions/${{ steps.get_deb.outputs.filename }}
         env:
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       - name: Upload Release DEB

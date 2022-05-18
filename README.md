@@ -33,7 +33,7 @@ See [feature files](src/test/resources/features/) for more details.
 
 This application has very minimal runtime requirements:
 
-* Java runtime version 8 or later.
+* Java runtime version 11 or later.
 * Linux or MacOS is preferred. Windows appears to work, but the maintainer lacks access to the hardware to test, so your mileage may vary.
 
 There are certain requirements for networking which are beyond the realm of this project, but should be noted:
@@ -48,10 +48,7 @@ There are certain requirements for networking which are beyond the realm of this
 
 Development requirements:
 
-* JDK 8 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
-
-NOTE: The Java 8 is the minimum target version to support some older versions of
-Raspberry Pi OS (Raspbian). This may be subject to change.
+* JDK 11 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
 
 ## Installation
 
@@ -78,7 +75,7 @@ The `systemctl` and `journalctl` commands are useful for starting, stopping, che
 
 [Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
 This is one of the easiest ways to install the application and keep it up to date.
-The following distros are currently supported: `raspbian/stretch`, `raspbian/buster`, `ubuntu/focal`, `ubuntu/bionic`.
+The following distros are currently supported: `raspbian/buster`, `raspbian/bullseye`, `ubuntu/focal`, `ubuntu/bionic`, `ubuntu/jammy`.
 
 Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
 ```
