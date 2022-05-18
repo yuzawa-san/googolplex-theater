@@ -16,17 +16,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Cache Gradle wrapper
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle-caches-
+          cache: 'gradle'
       - uses: snyk/actions/setup@master
       - name: Snyk monitor 
         run: snyk monitor --all-projects -d --org=yuzawa-san --configuration-matching='^runtimeClasspath' --remote-repo-url='https://github.com/yuzawa-san/googolplex-theater/'
