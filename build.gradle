@@ -118,7 +118,7 @@ dependencies {
 	testImplementation 'io.vertx:vertx-junit5'
 	testImplementation 'io.vertx:vertx-web-client'
 	testImplementation 'com.google.jimfs:jimfs:1.2'
-	testImplementation(platform('io.cucumber:cucumber-bom:7.3.4'))
+	testImplementation(platform('io.cucumber:cucumber-bom:7.4.1'))
 	testImplementation 'io.cucumber:cucumber-java'
 	testImplementation 'io.cucumber:cucumber-junit-platform-engine'
 	testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
