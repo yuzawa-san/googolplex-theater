@@ -1,5 +1,5 @@
 plugins {
-	id "net.researchgate.release" version "3.0.1"
+	id "net.researchgate.release" version "3.0.2"
 	id "com.google.protobuf" version "0.8.19"
 	id "com.diffplug.spotless" version "6.10.0"
 	id "com.github.spotbugs" version "5.0.12"
