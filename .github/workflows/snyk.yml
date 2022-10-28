@@ -16,7 +16,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: 'gradle'
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - uses: snyk/actions/setup@master
       - name: Snyk monitor 
         run: snyk monitor --all-projects -d --org=yuzawa-san --configuration-matching='^runtimeClasspath' --remote-repo-url='https://github.com/yuzawa-san/googolplex-theater/'

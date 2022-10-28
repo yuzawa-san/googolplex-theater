@@ -16,7 +16,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: 'gradle'
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Install Ruby and Gems
         uses: ruby/setup-ruby@v1
         with:
