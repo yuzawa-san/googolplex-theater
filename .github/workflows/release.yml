@@ -25,7 +25,7 @@ jobs:
           bundler-cache: true
       - name: Build with Gradle
         run: |
-          ./gradlew build buildDeb installDist -s
+          ./gradlew --no-daemon -s build buildDeb installDist
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
