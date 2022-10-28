@@ -41,7 +41,7 @@ jobs:
           languages: java
       - name: Build with Gradle
         run: |
-          ./gradlew --no-daemon -s build
+          ./gradlew --no-daemon -s clean build
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         if: ${{ matrix.java == '17' }}
