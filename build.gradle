@@ -3,7 +3,7 @@ plugins {
 	id "com.google.protobuf" version "0.9.1"
 	id "com.diffplug.spotless" version "6.11.0"
 	id "com.github.spotbugs" version "5.0.12"
-	id "com.github.ben-manes.versions" version "0.42.0"
+	id "com.github.ben-manes.versions" version "0.43.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '2.1'
 	id "nebula.deb" version "9.1.1"
@@ -61,7 +61,7 @@ sourceSets {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:3.21.7"
+		artifact = "com.google.protobuf:protoc:3.21.8"
 	}
 	generateProtoTasks {
 		all().each { task -> }
@@ -94,9 +94,9 @@ spotless {
 
 dependencies {
 	implementation(platform('org.apache.logging.log4j:log4j-bom:2.19.0'))
-	implementation(platform('io.netty:netty-bom:4.1.82.Final'))
+	implementation(platform('io.netty:netty-bom:4.1.84.Final'))
 	implementation(platform('io.vertx:vertx-stack-depchain:4.3.4'))
-	implementation(platform('com.fasterxml.jackson:jackson-bom:2.13.4'))
+	implementation(platform('com.fasterxml.jackson:jackson-bom:2.13.4.20221013'))
 	runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
 	implementation 'org.slf4j:slf4j-api:2.0.3'
 	implementation 'com.google.protobuf:protobuf-java:3.21.7'
@@ -112,7 +112,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
 	implementation 'org.jmdns:jmdns:3.5.8'
 	implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
-	testImplementation 'org.mockito:mockito-core:4.8.0'
+	testImplementation 'org.mockito:mockito-core:4.8.1'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.1'
 	testImplementation 'io.vertx:vertx-junit5'
