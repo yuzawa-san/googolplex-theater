@@ -7,3 +7,5 @@ NOTE: It may be necessary to compile protobuf manually prior to IDE development:
 ```
 ./gradlew generateProto
 ```
+
+More information: https://github.com/yuzawa-san/.github/blob/master/CONTRIBUTING.md
