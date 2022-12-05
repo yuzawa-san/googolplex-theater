@@ -7,7 +7,7 @@ plugins {
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '2.1'
 	id "nebula.deb" version "9.1.1"
-	id "io.freefair.lombok" version "6.5.1"
+	id "io.freefair.lombok" version "6.6"
 }
 
 apply plugin: "java"
