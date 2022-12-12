@@ -61,7 +61,7 @@ sourceSets {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:3.21.9"
+		artifact = "com.google.protobuf:protoc:3.21.11"
 	}
 	generateProtoTasks {
 		all().each { task -> }
