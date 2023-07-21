@@ -5,8 +5,8 @@
 package com.jyuzawa.googolplex_theater.client;
 
 import com.jyuzawa.googolplex_theater.config.DeviceConfig;
-import io.vertx.core.json.JsonObject;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.jmdns.ServiceEvent;
 
@@ -36,7 +36,7 @@ public interface GoogolplexController {
     void register(ServiceEvent event);
 
     /** @return a list of device information, address, connection age */
-    List<JsonObject> getDeviceInfo();
+    List<Map<String, Object>> getDeviceInfo();
 
     /**
      * Trigger a refresh by closing channels which will cause a reconnect.

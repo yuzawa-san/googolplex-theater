@@ -19,6 +19,7 @@ import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * This class loads the device config at start and watches the files for subsequent changes. The
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author jyuzawa
  */
 @Slf4j
+@Component
 public final class DeviceConfigLoader implements Closeable {
 
     private final ExecutorService executor;
@@ -34,7 +36,8 @@ public final class DeviceConfigLoader implements Closeable {
     private final GoogolplexController controller;
     private final WatchService watchService;
 
-    public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath) throws IOException {
+    public DeviceConfigLoader(GoogolplexController controller, GoogolplexTheaterConfig config) throws IOException {
+        Path deviceConfigPath = config.getDeviceConfigPath();
         this.controller = controller;
         this.executor = Executors.newSingleThreadExecutor();
         this.path = deviceConfigPath;

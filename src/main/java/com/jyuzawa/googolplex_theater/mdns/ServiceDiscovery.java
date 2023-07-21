@@ -5,6 +5,7 @@
 package com.jyuzawa.googolplex_theater.mdns;
 
 import com.jyuzawa.googolplex_theater.client.GoogolplexController;
+import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,6 +18,7 @@ import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * This class starts a listener for nearby devices and informs the controller of any changes.
@@ -24,13 +26,15 @@ import lombok.extern.slf4j.Slf4j;
  * @author jyuzawa
  */
 @Slf4j
+@Component
 public final class ServiceDiscovery implements Closeable {
     public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
 
     private final GoogolplexController controller;
     private final JmDNS mdns;
 
-    public ServiceDiscovery(GoogolplexController controller, String preferredInterface) throws IOException {
+    public ServiceDiscovery(GoogolplexController controller, GoogolplexTheaterConfig config) throws IOException {
+        String preferredInterface = config.getDiscoveryNetworkInterface();
         this.controller = controller;
         InetAddress inetAddress = getInterfaceAddress(preferredInterface);
         if (inetAddress == null) {

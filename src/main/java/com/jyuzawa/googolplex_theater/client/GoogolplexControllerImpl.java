@@ -7,26 +7,10 @@ package com.jyuzawa.googolplex_theater.client;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
-import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.protobuf.ProtobufDecoder;
-import io.netty.handler.codec.protobuf.ProtobufEncoder;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -34,18 +18,20 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import reactor.core.Disposable;
+import reactor.netty.tcp.TcpClient;
+import reactor.util.retry.RetrySpec;
 
 /**
  * This class represents the state of the application. All modifications to state occur in the same
@@ -54,58 +40,31 @@ import lombok.extern.slf4j.Slf4j;
  * @author jyuzawa
  */
 @Slf4j
+@Component
 public final class GoogolplexControllerImpl implements GoogolplexController {
-
-    private static final int CONNECT_TIMEOUT_MILLIS = 5000;
-
-    private static final int RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
-
-    private final EventLoop eventLoop;
-    private final Bootstrap bootstrap;
+    private final TcpClient bootstrap;
     private final Map<String, DeviceInfo> nameToDeviceInfo;
     private final Map<String, InetSocketAddress> nameToAddress;
-    private final Map<String, Channel> nameToChannel;
-    private final Map<String, Integer> nameToBackoffSeconds;
-    private final int baseReconnectSeconds;
-    private final int reconnectNoiseSeconds;
+    private final Map<String, Conn> nameToChannel;
 
-    public GoogolplexControllerImpl(EventLoopGroup eventLoopGroup, GoogolplexTheaterConfig config) throws IOException {
+    public GoogolplexControllerImpl(GoogolplexTheaterConfig config) throws IOException {
         String appId = config.getRecieverAppId();
         // the state is maintained in these maps
         this.nameToDeviceInfo = new ConcurrentHashMap<>();
         this.nameToAddress = new ConcurrentHashMap<>();
         this.nameToChannel = new ConcurrentHashMap<>();
-        this.nameToBackoffSeconds = new ConcurrentHashMap<>();
-        this.baseReconnectSeconds = config.getBaseReconnectSeconds();
-        this.reconnectNoiseSeconds = config.getReconnectNoiseSeconds();
-        this.eventLoop = eventLoopGroup.next();
         SslContext sslContext = SslContextBuilder.forClient()
                 .trustManager(InsecureTrustManagerFactory.INSTANCE)
                 .build();
         log.info("Using cast application id: {}", appId);
         // configure the socket client
-        this.bootstrap = new Bootstrap()
-                .channel(NioSocketChannel.class)
-                .group(eventLoopGroup)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS);
-        // the pipeline to use for the socket client
-        this.bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            public void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline p = ch.pipeline();
-                p.addLast("ssl", sslContext.newHandler(ch.alloc()));
-                p.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
-                p.addLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
-                p.addLast("frameEncoder", new LengthFieldPrepender(4));
-                p.addLast("protobufEncoder", new ProtobufEncoder());
-                p.addLast("logger", new LoggingHandler());
-                p.addLast(
-                        "handler",
-                        new GoogolplexClientHandler(
-                                appId, config.getHeartbeatIntervalSeconds(), config.getHeartbeatTimeoutSeconds()));
-            }
-        });
+        // TODO: shared resources
+        this.bootstrap = TcpClient.create()
+                .secure(spec -> spec.sslContext(sslContext))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
     }
+
+    private record Conn(Instant birth, Disposable disposable) {}
 
     /**
      * Load the config and propagate the changes to the any currently connected devices.
@@ -114,32 +73,24 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
      */
     @Override
     public void processDeviceConfig(DeviceConfig config) {
-        try {
-            eventLoop
-                    .submit(() -> {
-                        Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-                        for (DeviceInfo deviceInfo : config.getDevices()) {
-                            String name = deviceInfo.getName();
-                            // mark that we should not remove this device
-                            namesToRemove.remove(name);
-                            DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
-                            // ignore unchanged devices
-                            if (!deviceInfo.equals(oldDeviceInfo)) {
-                                log.info("CONFIG_UPDATED '{}'", name);
-                                nameToDeviceInfo.put(name, deviceInfo);
-                                apply(name);
-                            }
-                        }
-                        // remove devices that were missing in the new config
-                        for (String name : namesToRemove) {
-                            log.info("CONFIG_REMOVED '{}'", name);
-                            nameToDeviceInfo.remove(name);
-                            apply(name);
-                        }
-                    })
-                    .get();
-        } catch (Exception e) {
-            log.error("Failed to load config", e);
+        Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
+        for (DeviceInfo deviceInfo : config.getDevices()) {
+            String name = deviceInfo.getName();
+            // mark that we should not remove this device
+            namesToRemove.remove(name);
+            DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
+            // ignore unchanged devices
+            if (!deviceInfo.equals(oldDeviceInfo)) {
+                log.info("CONFIG_UPDATED '{}'", name);
+                nameToDeviceInfo.put(name, deviceInfo);
+                apply(name);
+            }
+        }
+        // remove devices that were missing in the new config
+        for (String name : namesToRemove) {
+            log.info("CONFIG_REMOVED '{}'", name);
+            nameToDeviceInfo.remove(name);
+            apply(name);
         }
     }
 
@@ -153,38 +104,31 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
      */
     @Override
     public void register(ServiceEvent event) {
-        try {
-            eventLoop
-                    .submit(() -> {
-                        // the device information may not be full
-                        ServiceInfo info = event.getInfo();
-                        String name = info.getPropertyString("fn");
-                        if (name == null) {
-                            log.debug("Found unnamed cast:\n{}", info);
-                            return;
-                        }
-                        InetAddress[] addresses = info.getInetAddresses();
-                        if (addresses == null || addresses.length == 0) {
-                            log.debug("Found unaddressable cast:\n{}", info);
-                            return;
-                        }
-                        /*
-                         * we choose the first address. there should usually be just one. the mdns library returns ipv4
-                         * addresses before ipv6.
-                         */
-                        InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
-                        InetSocketAddress oldAddress = nameToAddress.put(name, address);
-                        if (!address.equals(oldAddress)) {
-                            /*
-                             * this is a newly discovered device, or an existing device whose address was updated.
-                             */
-                            log.info("REGISTER '{}' {}", name, address);
-                            apply(name);
-                        }
-                    })
-                    .get();
-        } catch (Exception e) {
-            log.error("Failed to register cast", e);
+
+        // the device information may not be full
+        ServiceInfo info = event.getInfo();
+        String name = info.getPropertyString("fn");
+        if (name == null) {
+            log.debug("Found unnamed cast:\n{}", info);
+            return;
+        }
+        InetAddress[] addresses = info.getInetAddresses();
+        if (addresses == null || addresses.length == 0) {
+            log.debug("Found unaddressable cast:\n{}", info);
+            return;
+        }
+        /*
+         * we choose the first address. there should usually be just one. the mdns library returns ipv4
+         * addresses before ipv6.
+         */
+        InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
+        InetSocketAddress oldAddress = nameToAddress.put(name, address);
+        if (!address.equals(oldAddress)) {
+            /*
+             * this is a newly discovered device, or an existing device whose address was updated.
+             */
+            log.info("REGISTER '{}' {}", name, address);
+            apply(name);
         }
     }
 
@@ -196,14 +140,13 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
      * @param name device's name
      */
     private void apply(String name) {
-        Channel oldChannel = nameToChannel.get(name);
+        Conn oldChannel = nameToChannel.get(name);
         if (oldChannel != null) {
             log.info("DISCONNECT '{}'", name);
             /*
              * kill the channel, so it will reconnect and this method will be called again, but skip this code path.
              */
             safeClose(oldChannel);
-            return;
         }
         // ensure that there is enough information to connect
         InetSocketAddress address = nameToAddress.get(name);
@@ -215,54 +158,16 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
             return;
         }
         log.info("CONNECT '{}'", name);
-        Channel channel = bootstrap
-                .connect(address)
-                .addListener((ChannelFuture f) -> {
-                    /*
-                     * NOTE: this callback is not executed from the controller's eventLoop, so we must use eventLoop.execute and
-                     * eventLoop.schedule to ensure concurrency.
-                     */
-                    Consumer<Integer> reconnection = (retrySeconds) -> {
-                        // schedule a reconnection in a certain amount of seconds in the future
-                        log.info("RECONNECTING '{}' in {}s", name, retrySeconds);
-                        eventLoop.schedule(
-                                () -> {
-                                    nameToChannel.remove(name);
-                                    apply(name);
-                                },
-                                retrySeconds,
-                                TimeUnit.SECONDS);
-                    };
-                    if (f.isSuccess()) {
-                        log.info("CONNECTED '{}'", name);
-                        Channel ch = f.channel();
-                        // inform the handler what the device settings are
-                        ch.attr(GoogolplexClientHandler.DEVICE_INFO_KEY).set(deviceInfo);
-                        ch.attr(GoogolplexClientHandler.CONNECTION_BIRTH_KEY).set(Instant.now());
-                        /*
-                         * this is what causes the persistence when the handler detects failure. additionally, it allows for the
-                         * first part of this method to work properly. in that case, we are closing the connection on purpose.
-                         */
-                        ch.closeFuture().addListener((ChannelFuture closeFuture) -> {
-                            log.info("DISCONNECTED '{}'", name);
-                            Boolean reload = closeFuture
-                                    .channel()
-                                    .attr(GoogolplexClientHandler.RELOAD_KEY)
-                                    .get();
-                            reconnection.accept(getRetrySeconds(reload, name));
-                        });
-                    } else {
-                        Throwable cause = f.cause();
-                        log.error(
-                                "CONNECTION_FAILURE '{}' {}: {}",
-                                name,
-                                cause.getClass().getSimpleName(),
-                                cause.getMessage());
-                        reconnection.accept(getRetrySeconds(null, name));
-                    }
-                })
-                .channel();
-        nameToChannel.put(name, channel);
+
+        Disposable sub = bootstrap
+                .remoteAddress(() -> address)
+                .connect()
+                .flatMap(new GoogolplexClientHandler(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 5, 10, deviceInfo))
+                .retryWhen(RetrySpec.fixedDelay(1024, Duration.ofSeconds(10)).doBeforeRetry(err -> {
+                    log.warn("ERROR " + name, err.failure());
+                }))
+                .subscribe();
+        nameToChannel.put(name, new Conn(Instant.now(), sub));
     }
 
     /**
@@ -271,41 +176,10 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
      * @param channel
      * @return
      */
-    private void safeClose(Channel channel) {
+    private void safeClose(Conn channel) {
         if (channel != null) {
-            // mark the reload key, so the connection will roll over immediately
-            channel.attr(GoogolplexClientHandler.RELOAD_KEY).set(Boolean.TRUE);
-            channel.close();
+            channel.disposable().dispose();
         }
-    }
-
-    /**
-     * Calculate a retry time, based on an exponential backoff
-     *
-     * @param reload whether an immediate reload should occur
-     * @param name device name
-     * @return seconds
-     */
-    private Integer getRetrySeconds(Boolean reload, String name) {
-        if (reload != null) {
-            if (reload) {
-                // the channel should reload immediately
-                return 0;
-            }
-            // the channel was up and running, so reset the backoff
-            nameToBackoffSeconds.remove(name);
-        }
-        // retry based on an exponential backoff
-        int backoffSeconds = nameToBackoffSeconds.compute(name, (k, v) -> {
-            if (v == null) {
-                return baseReconnectSeconds;
-            }
-            return v * RECONNECT_EXPONENTIAL_BACKOFF_MULTIPLIER;
-        });
-        if (reconnectNoiseSeconds > 0) {
-            backoffSeconds += ThreadLocalRandom.current().nextInt(reconnectNoiseSeconds);
-        }
-        return backoffSeconds;
     }
 
     /**
@@ -318,25 +192,25 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
         // closing channels will cause them to reconnect
         if (name == null) {
             // close all channels
-            for (Channel channel : nameToChannel.values()) {
+            for (Conn channel : nameToChannel.values()) {
                 safeClose(channel);
             }
         } else {
             // close specific channel
-            Channel channel = nameToChannel.get(name);
+            Conn channel = nameToChannel.get(name);
             safeClose(channel);
         }
     }
 
     @Override
-    public List<JsonObject> getDeviceInfo() {
-        List<JsonObject> out = new ArrayList<>();
+    public List<Map<String, Object>> getDeviceInfo() {
+        List<Map<String, Object>> out = new ArrayList<>();
         Set<String> allNames = new TreeSet<>();
         allNames.addAll(nameToDeviceInfo.keySet());
         allNames.addAll(nameToAddress.keySet());
         Instant now = Instant.now();
         for (String name : allNames) {
-            JsonObject device = new JsonObject();
+            Map<String, Object> device = new LinkedHashMap<>();
             device.put("name", name);
             DeviceInfo deviceInfo = nameToDeviceInfo.get(name);
             if (deviceInfo != null) {
@@ -346,10 +220,9 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
             if (ipAddress != null) {
                 device.put("ipAddress", ipAddress.getAddress().getHostAddress());
             }
-            Channel channel = nameToChannel.get(name);
+            Conn channel = nameToChannel.get(name);
             if (channel != null) {
-                Instant birth = channel.attr(GoogolplexClientHandler.CONNECTION_BIRTH_KEY)
-                        .get();
+                Instant birth = channel.birth();
                 if (birth != null) {
                     String duration = calculateDuration(Duration.between(birth, now));
                     device.put("duration", duration);

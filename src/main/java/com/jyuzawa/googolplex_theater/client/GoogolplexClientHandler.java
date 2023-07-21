@@ -9,18 +9,24 @@ import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.ProtocolVersion;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.protobuf.ProtobufDecoder;
+import io.netty.handler.codec.protobuf.ProtobufEncoder;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.ScheduledFuture;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
 
 /**
  * This class handles messages from the device and prepares proper responses. The lifecycle is very
@@ -32,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author jyuzawa
  */
 @Slf4j
-public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<CastMessage> {
+public final class GoogolplexClientHandler implements Function<Connection, Mono<Void>> {
     public static final AttributeKey<DeviceInfo> DEVICE_INFO_KEY =
             AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_device");
     public static final AttributeKey<Instant> CONNECTION_BIRTH_KEY =
@@ -59,21 +65,20 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
     private static final Map<String, Object> PING_MESSAGE = messagePayload("PING");
 
     private final String appId;
-    private final String senderId;
+    private String senderId;
     private String sessionReceiverId;
     private int requestId;
 
-    private ScheduledFuture<?> heartbeatFuture;
     private Instant lastHeartbeat;
     private final int heartbeatIntervalSeconds;
     private final Duration heartbeatTimeout;
-    private final CastMessage heartbeatMessage;
+    private final DeviceInfo deviceInfo;
 
-    public GoogolplexClientHandler(String appId, int heartbeatIntervalSeconds, int heartbeatTimeoutSeconds)
-            throws IOException {
+    public GoogolplexClientHandler(
+            String appId, int heartbeatIntervalSeconds, int heartbeatTimeoutSeconds, DeviceInfo deviceInfo) {
+        this.deviceInfo = deviceInfo;
         this.appId = appId;
         this.senderId = "sender-" + System.identityHashCode(this);
-        this.heartbeatMessage = generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);
         this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
         this.heartbeatTimeout = Duration.ofSeconds(heartbeatTimeoutSeconds);
     }
@@ -97,8 +102,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
      * @return a fully constructed message
      * @throws IOException when JSON serialization fails
      */
-    private CastMessage generateMessage(String namespace, String destinationId, Map<String, Object> payload)
-            throws IOException {
+    private CastMessage generateMessage(String namespace, String destinationId, Map<String, Object> payload) {
         return generateMessage(namespace, senderId, destinationId, payload);
     }
 
@@ -112,29 +116,30 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
      * @return a fully constructed message
      * @throws IOException when JSON serialization fails
      */
-    static CastMessage generateMessage(String namespace, String senderId, String destinationId, Object payload)
-            throws IOException {
+    static CastMessage generateMessage(String namespace, String senderId, String destinationId, Object payload) {
         CastMessage.Builder out = CastMessage.newBuilder();
         out.setDestinationId(destinationId);
         out.setSourceId(senderId);
         out.setNamespace(namespace);
         out.setProtocolVersion(ProtocolVersion.CASTV2_1_0);
         out.setPayloadType(PayloadType.STRING);
-        out.setPayloadUtf8(MapperUtil.MAPPER.writeValueAsString(payload));
+        try {
+            out.setPayloadUtf8(MapperUtil.MAPPER.writeValueAsString(payload));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return out.build();
     }
 
-    @Override
     /**
      * The connection is up. Configures keep alive messages and timeout. Sends an initial connect
      * message and launch message. The device will respond back with a receiver status message (or
      * error if the receiver could not be started). That response and the keep alive responses from
      * the device are all handled in the channelRead0().
      */
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public Mono<Void> channelActive(Connection ctx) {
         // initial connect
         CastMessage initialConnectMessage = generateMessage(NAMESPACE_CONNECTION, DEFAULT_RECEIVER_ID, CONNECT_MESSAGE);
-        ctx.writeAndFlush(initialConnectMessage);
 
         // launch
         Map<String, Object> launch = new HashMap<>();
@@ -142,77 +147,43 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
         launch.put("appId", appId);
         launch.put("requestId", requestId++);
         CastMessage launchMessage = generateMessage(NAMESPACE_RECEIVER, DEFAULT_RECEIVER_ID, launch);
-        ctx.writeAndFlush(launchMessage);
 
-        // keepalive
-        heartbeatFuture = ctx.executor()
-                .scheduleWithFixedDelay(
-                        () -> {
-                            if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
-                                /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
-                                String name = getDeviceInfo(ctx).getName();
-                                log.warn("EXPIRE '{}'", name);
-                                ctx.close();
-                            } else {
-                                // send another heartbeat
-                                ctx.writeAndFlush(heartbeatMessage);
-                            }
-                        },
-                        heartbeatIntervalSeconds,
-                        heartbeatIntervalSeconds,
-                        TimeUnit.SECONDS);
         /*
          * there was no heartbeat now, but we initialize with the start time, so we don't timeout immediately.
          */
         this.lastHeartbeat = Instant.now();
+
+        return ctx.outbound()
+                .sendObject(initialConnectMessage)
+                .then(ctx.outbound().sendObject(launchMessage))
+                .then();
     }
 
-    /**
-     * The device info has been stashed in the attribute map.
-     *
-     * @param ctx
-     * @return the device info
-     */
-    private DeviceInfo getDeviceInfo(ChannelHandlerContext ctx) {
-        return ctx.channel().attr(DEVICE_INFO_KEY).get();
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        // shutdown heartbeat
-        if (heartbeatFuture != null) {
-            heartbeatFuture.cancel(false);
-        }
-    }
-
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, CastMessage msg) throws Exception {
+    protected Mono<Void> channelRead0(Connection ctx, CastMessage msg) throws IOException {
         // do some rudimentary validation
         if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0 || msg.getPayloadType() != PayloadType.STRING) {
             log.debug("Invalid message");
-            return;
+            return Mono.empty();
         }
         String sourceId = msg.getSourceId();
         if (!(sourceId.equals(DEFAULT_RECEIVER_ID) || sourceId.equals(sessionReceiverId))) {
             log.debug("Invalid message source");
-            return;
+            return Mono.empty();
         }
         String destinationId = msg.getDestinationId();
         if (!(destinationId.equals(senderId) || destinationId.equals("*"))) {
             log.debug("Invalid message destination");
-            return;
+            return Mono.empty();
         }
         // handle different namespaces differently
         String namespace = msg.getNamespace();
-        DeviceInfo device = getDeviceInfo(ctx);
-        String name = device.getName();
+        String name = deviceInfo.getName();
         switch (namespace) {
             case NAMESPACE_HEARTBEAT:
                 lastHeartbeat = Instant.now();
                 break;
             case NAMESPACE_RECEIVER:
-                handleReceiverMessage(ctx, msg, device);
-                break;
+                return handleReceiverMessage(ctx, msg);
             case NAMESPACE_CUSTOM:
                 log.info("MESSAGE '{}' {}", name, msg.getPayloadUtf8());
                 break;
@@ -220,6 +191,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
                 log.debug("other message");
                 break;
         }
+        return Mono.empty();
     }
 
     /**
@@ -230,19 +202,17 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
      * @param device the device name and settings
      * @throws IOException when the JSON serialization fails
      */
-    private void handleReceiverMessage(ChannelHandlerContext ctx, CastMessage msg, DeviceInfo device)
-            throws IOException {
+    private Mono<Void> handleReceiverMessage(Connection ctx, CastMessage msg) throws IOException {
         ReceiverResponse receiverPayload = MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
-        String name = device.getName();
+        String name = deviceInfo.getName();
         if (receiverPayload.getReason() != null) {
             // the presence of the reason indicates the launch likely failed for some reason
             log.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
             // close to reload connection
-            ctx.close();
-            return;
+            return Mono.error(new RuntimeException("badPayload"));
         }
         if (!receiverPayload.isApplicationStatus()) {
-            return;
+            return Mono.empty();
         }
         if (receiverPayload.isIdleScreen()) {
             /*
@@ -250,8 +220,7 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
              * refresh.
              */
             log.info("DOWN '{}'", name);
-            ctx.close();
-            return;
+            return Mono.error(new RuntimeException("IdleScreen"));
         }
         String transportId = receiverPayload.getApplicationTransportId(appId);
         /*
@@ -262,25 +231,57 @@ public final class GoogolplexClientHandler extends SimpleChannelInboundHandler<C
             log.info("UP '{}'", name);
             // session connect
             CastMessage sessionConnectMessage = generateMessage(NAMESPACE_CONNECTION, transportId, CONNECT_MESSAGE);
-            ctx.writeAndFlush(sessionConnectMessage);
             // display data custom message
             Map<String, Object> custom = new HashMap<>();
-            custom.put("name", device.getName());
-            custom.put("settings", device.getSettings());
+            custom.put("name", deviceInfo.getName());
+            custom.put("settings", deviceInfo.getSettings());
             custom.put("requestId", requestId++);
             CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, transportId, custom);
-            ctx.writeAndFlush(customMessage);
-            ctx.channel().attr(RELOAD_KEY).set(Boolean.FALSE);
+            return ctx.outbound()
+                    .sendObject(sessionConnectMessage)
+                    .then(ctx.outbound().sendObject(customMessage))
+                    .then()
+                    .then(Flux.interval(Duration.ofSeconds(heartbeatIntervalSeconds))
+                            .flatMap(i -> {
+                                if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
+                                    /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
+                                    log.warn("EXPIRE '{}'", deviceInfo.getName());
+                                    return Mono.error(new RuntimeException("Expires"));
+                                } else {
+                                    // send another heartbeat
+                                    CastMessage heartbeatMessage =
+                                            generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);
+                                    return ctx.outbound().sendObject(heartbeatMessage);
+                                }
+                            })
+                            .then());
         }
+        return Mono.empty();
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        // empirically, these are connection resets.
-        DeviceInfo device = getDeviceInfo(ctx);
-        String name = (device == null) ? "unknown" : device.getName();
-        log.error("EXCEPTION '{}' {}: {}", name, cause.getClass().getSimpleName(), cause.getMessage());
-        // this close will trigger the controller to reconnect
-        ctx.close();
+    public Mono<Void> apply(Connection conn) {
+        conn.addHandlerLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
+        conn.addHandlerLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
+        conn.addHandlerLast("frameEncoder", new LengthFieldPrepender(4));
+        conn.addHandlerLast("protobufEncoder", new ProtobufEncoder());
+        conn.addHandlerLast("logger", new LoggingHandler());
+        senderId = "sender-" + ThreadLocalRandom.current().nextInt();
+        sessionReceiverId = null;
+        requestId = 0;
+        return channelActive(conn)
+                .then(conn.inbound()
+                        .receiveObject()
+                        .cast(CastMessage.class)
+                        .flatMap(msg -> {
+                            try {
+                                return channelRead0(conn, msg);
+                            } catch (IOException e) {
+                                return Mono.error(e);
+                            }
+                        })
+                        .then())
+                .doFinally(sig -> conn.dispose())
+                .flatMap(v -> Mono.error(new RuntimeException("connection closed by peer")));
     }
 }
