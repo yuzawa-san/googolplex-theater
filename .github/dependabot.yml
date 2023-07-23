@@ -3,14 +3,12 @@ updates:
 - package-ecosystem: gradle
   directory: "/"
   schedule:
-    interval: "weekly"
-    day: "monday"
+    interval: "monthly"
     time: "18:00"
     timezone: "America/New_York"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
-    interval: "weekly"
-    day: "monday"
+    interval: "monthly"
     time: "18:00"
     timezone: "America/New_York"
