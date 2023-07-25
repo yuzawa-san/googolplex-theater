@@ -4,7 +4,7 @@
  */
 package com.jyuzawa.googolplex_theater.mdns;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
+import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import java.io.Closeable;
 import java.io.IOException;
@@ -30,10 +30,10 @@ import org.springframework.stereotype.Component;
 public final class ServiceDiscovery implements Closeable {
     public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
 
-    private final GoogolplexController controller;
+    private final GoogolplexControllerImpl controller;
     private final JmDNS mdns;
 
-    public ServiceDiscovery(GoogolplexController controller, GoogolplexTheaterConfig config) throws IOException {
+    public ServiceDiscovery(GoogolplexControllerImpl controller, GoogolplexTheaterConfig config) throws IOException {
         String preferredInterface = config.getDiscoveryNetworkInterface();
         this.controller = controller;
         InetAddress inetAddress = getInterfaceAddress(preferredInterface);

@@ -4,7 +4,7 @@
  */
 package com.jyuzawa.googolplex_theater.config;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
+import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,10 +33,10 @@ public final class DeviceConfigLoader implements Closeable {
 
     private final ExecutorService executor;
     private final Path path;
-    private final GoogolplexController controller;
+    private final GoogolplexControllerImpl controller;
     private final WatchService watchService;
 
-    public DeviceConfigLoader(GoogolplexController controller, GoogolplexTheaterConfig config) throws IOException {
+    public DeviceConfigLoader(GoogolplexControllerImpl controller, GoogolplexTheaterConfig config) throws IOException {
         Path deviceConfigPath = config.getDeviceConfigPath();
         this.controller = controller;
         this.executor = Executors.newSingleThreadExecutor();
@@ -99,7 +99,6 @@ public final class DeviceConfigLoader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        controller.processDeviceConfig(new DeviceConfig());
         executor.shutdownNow();
         watchService.close();
     }

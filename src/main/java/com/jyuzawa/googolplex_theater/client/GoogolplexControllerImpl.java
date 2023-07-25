@@ -11,6 +11,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -24,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ import reactor.util.retry.RetrySpec;
  */
 @Slf4j
 @Component
-public final class GoogolplexControllerImpl implements GoogolplexController {
+public final class GoogolplexControllerImpl implements Closeable {
     private final TcpClient bootstrap;
     private final Map<String, DeviceInfo> nameToDeviceInfo;
     private final Map<String, InetSocketAddress> nameToAddress;
@@ -71,7 +71,6 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
      *
      * @param config the settings loaded from the file
      */
-    @Override
     public void processDeviceConfig(DeviceConfig config) {
         Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
         for (DeviceInfo deviceInfo : config.getDevices()) {
@@ -99,12 +98,8 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
      * already.
      *
      * @param event mdns info
-     * @throws ExecutionException
-     * @throws InterruptedException
      */
-    @Override
     public void register(ServiceEvent event) {
-
         // the device information may not be full
         ServiceInfo info = event.getInfo();
         String name = info.getPropertyString("fn");
@@ -134,8 +129,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
 
     /**
      * Apply changes to a device. This closes any existing connections. If there were no existing
-     * connections, then a new connection is made. The new connection will call this function again
-     * when it is closed. This logic allows for new connections to take on the proper settings.
+     * connections, then a new connection is made. The connection will be reliable.
      *
      * @param name device's name
      */
@@ -144,9 +138,9 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
         if (oldChannel != null) {
             log.info("DISCONNECT '{}'", name);
             /*
-             * kill the channel, so it will reconnect and this method will be called again, but skip this code path.
+             * kill the channel. it may reconnect below.
              */
-            safeClose(oldChannel);
+            oldChannel.disposable.dispose();
         }
         // ensure that there is enough information to connect
         InetSocketAddress address = nameToAddress.get(name);
@@ -171,50 +165,34 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
     }
 
     /**
-     * This closes a connection to a device and causes it to reconnect immediately.
-     *
-     * @param channel
-     * @return
-     */
-    private void safeClose(Conn channel) {
-        if (channel != null) {
-            channel.disposable().dispose();
-        }
-    }
-
-    /**
      * Trigger a refresh by closing channels which will cause a reconnect.
      *
      * @param name the device to refresh
      */
-    @Override
     public void refresh(String name) {
         // closing channels will cause them to reconnect
         if (name == null) {
             // close all channels
-            for (Conn channel : nameToChannel.values()) {
-                safeClose(channel);
+            for (String theName : nameToChannel.keySet()) {
+                apply(theName);
             }
         } else {
             // close specific channel
-            Conn channel = nameToChannel.get(name);
-            safeClose(channel);
+            apply(name);
         }
     }
 
-    @Override
     public List<Map<String, Object>> getDeviceInfo() {
         List<Map<String, Object>> out = new ArrayList<>();
         Set<String> allNames = new TreeSet<>();
         allNames.addAll(nameToDeviceInfo.keySet());
         allNames.addAll(nameToAddress.keySet());
-        Instant now = Instant.now();
         for (String name : allNames) {
             Map<String, Object> device = new LinkedHashMap<>();
             device.put("name", name);
             DeviceInfo deviceInfo = nameToDeviceInfo.get(name);
             if (deviceInfo != null) {
-                device.put("settings", deviceInfo.getSettings().toPrettyString());
+                device.put("settings", deviceInfo.getSettings());
             }
             InetSocketAddress ipAddress = nameToAddress.get(name);
             if (ipAddress != null) {
@@ -224,8 +202,7 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
             if (channel != null) {
                 Instant birth = channel.birth();
                 if (birth != null) {
-                    String duration = calculateDuration(Duration.between(birth, now));
-                    device.put("duration", duration);
+                    device.put("birthMs", birth.toEpochMilli());
                 }
             }
             out.add(device);
@@ -233,35 +210,9 @@ public final class GoogolplexControllerImpl implements GoogolplexController {
         return out;
     }
 
-    /**
-     * Generate a human readable connection age string.
-     *
-     * @param duration
-     * @return
-     */
-    static String calculateDuration(Duration duration) {
-        StringBuilder out = new StringBuilder();
-        long deltaSeconds = duration.getSeconds();
-        long seconds = deltaSeconds;
-        long days = seconds / 86400L;
-        if (deltaSeconds >= 86400L) {
-            out.append(days).append("d");
-        }
-        seconds %= 86400L;
-
-        long hours = seconds / 3600L;
-        if (deltaSeconds >= 3600L) {
-            out.append(hours).append("h");
-        }
-        seconds %= 3600L;
-
-        long minutes = seconds / 60L;
-        if (deltaSeconds >= 60L) {
-            out.append(minutes).append("m");
-        }
-        seconds %= 60L;
-
-        out.append(seconds).append("s");
-        return out.toString();
+    @Override
+    public void close() {
+        nameToDeviceInfo.clear();
+        refresh(null);
     }
 }
