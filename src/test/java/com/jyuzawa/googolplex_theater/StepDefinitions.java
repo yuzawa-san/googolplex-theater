@@ -14,7 +14,6 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.client.FakeCast;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig.ConfigYaml;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;

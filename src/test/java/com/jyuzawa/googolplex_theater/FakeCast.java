@@ -2,7 +2,7 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.client;
+package com.jyuzawa.googolplex_theater;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
@@ -133,29 +134,29 @@ public class FakeCast implements Closeable {
                 GoogolplexClient.NAMESPACE_HEARTBEAT,
                 GoogolplexClient.DEFAULT_RECEIVER_ID,
                 "*",
-                GoogolplexClient.messagePayload("PONG"));
+                Map.of("type","PONG"));
         channel.writeAndFlush(heartbeatMessage);
         // send a bad heartbeat
         CastMessage badHeartbeatMessage = GoogolplexClient.generateMessage(
                 GoogolplexClient.NAMESPACE_HEARTBEAT,
                 GoogolplexClient.DEFAULT_RECEIVER_ID,
                 "BAD!",
-                GoogolplexClient.messagePayload("PONG"));
+                Map.of("type","PONG"));
         channel.writeAndFlush(badHeartbeatMessage);
         // send a bad heartbeat
         CastMessage badHeartbeatMessage2 = GoogolplexClient.generateMessage(
-                GoogolplexClient.NAMESPACE_HEARTBEAT, "BAD!!!", "BAD!", GoogolplexClient.messagePayload("PONG"));
+                GoogolplexClient.NAMESPACE_HEARTBEAT, "BAD!!!", "BAD!", Map.of("type","PONG"));
         channel.writeAndFlush(badHeartbeatMessage2);
         // send a random namespace
         CastMessage random = GoogolplexClient.generateMessage(
-                "random", GoogolplexClient.DEFAULT_RECEIVER_ID, "*", GoogolplexClient.messagePayload("PONG"));
+                "random", GoogolplexClient.DEFAULT_RECEIVER_ID, "*", Map.of("type","PONG"));
         channel.writeAndFlush(random);
         // send a custom namespace
         CastMessage custom = GoogolplexClient.generateMessage(
                 GoogolplexClient.NAMESPACE_CUSTOM,
                 GoogolplexClient.DEFAULT_RECEIVER_ID,
                 "*",
-                GoogolplexClient.messagePayload("custom"));
+                Map.of("type","custom"));
         channel.writeAndFlush(custom);
         // bad
         channel.writeAndFlush(CastMessage.newBuilder().setPayloadType(PayloadType.BINARY));
@@ -206,7 +207,7 @@ public class FakeCast implements Closeable {
                                 GoogolplexClient.NAMESPACE_HEARTBEAT,
                                 GoogolplexClient.DEFAULT_RECEIVER_ID,
                                 msg.getSourceId(),
-                                GoogolplexClient.messagePayload("PONG"));
+                                Map.of("type","PONG"));
                         channel.writeAndFlush(heartbeatMessage);
                     }
                     break;

@@ -169,7 +169,7 @@ public final class GoogolplexClient {
                         log.info("DISCONNECT '{}'", name);
                         conn.dispose();
                     })
-                    .switchIfEmpty(Mono.error(new GoogolplexClientException("connection closed by peer")));
+                    .switchIfEmpty(Mono.error(new GoogolplexClientException("ConnectionClosed")));
         }
 
         private Mono<Void> start() {
