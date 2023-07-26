@@ -9,24 +9,34 @@ import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.ProtocolVersion;
 import com.jyuzawa.googolplex_theater.util.MapperUtil;
+import io.netty.channel.ChannelOption;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
-import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.AttributeKey;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
+import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
+import reactor.netty.tcp.TcpClient;
+import reactor.util.retry.RetrySpec;
 
 /**
  * This class handles messages from the device and prepares proper responses. The lifecycle is very
@@ -38,13 +48,9 @@ import reactor.netty.Connection;
  * @author jyuzawa
  */
 @Slf4j
-public final class GoogolplexClientHandler implements Function<Connection, Mono<Void>> {
-    public static final AttributeKey<DeviceInfo> DEVICE_INFO_KEY =
-            AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_device");
-    public static final AttributeKey<Instant> CONNECTION_BIRTH_KEY =
-            AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_birth");
-    public static final AttributeKey<Boolean> RELOAD_KEY =
-            AttributeKey.valueOf(GoogolplexClientHandler.class.getCanonicalName() + "_reload");
+@Component
+public final class GoogolplexClientHandler {
+    private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
 
     /**
      * This is a published application for public use. The URL is
@@ -61,49 +67,39 @@ public final class GoogolplexClientHandler implements Function<Connection, Mono<
     public static final String NAMESPACE_HEARTBEAT = "urn:x-cast:com.google.cast.tp.heartbeat";
     public static final String NAMESPACE_RECEIVER = "urn:x-cast:com.google.cast.receiver";
 
-    private static final Map<String, Object> CONNECT_MESSAGE = messagePayload("CONNECT");
-    private static final Map<String, Object> PING_MESSAGE = messagePayload("PING");
+    private static final Map<String, Object> CONNECT_MESSAGE = Map.of("type", "CONNECT");
+    private static final Map<String, Object> PING_MESSAGE = Map.of("type", "PING");
 
     private final String appId;
-    private String senderId;
-    private String sessionReceiverId;
-    private int requestId;
-
-    private Instant lastHeartbeat;
-    private final int heartbeatIntervalSeconds;
+    private final Duration heartbeatInterval;
     private final Duration heartbeatTimeout;
-    private final DeviceInfo deviceInfo;
+    private final Duration retryInterval;
+    private final TcpClient bootstrap;
 
+    @Autowired
     public GoogolplexClientHandler(
-            String appId, int heartbeatIntervalSeconds, int heartbeatTimeoutSeconds, DeviceInfo deviceInfo) {
-        this.deviceInfo = deviceInfo;
+            @Value("${googolplexTheater.appId}") String appId,
+            @Value("${googolplexTheater.heartbeatInterval}") Duration heartbeatInterval,
+            @Value("${googolplexTheater.heartbeatTimeout}") Duration heartbeatTimeout,
+            @Value("${googolplexTheater.retryInterval}") Duration retryInterval)
+            throws SSLException {
         this.appId = appId;
-        this.senderId = "sender-" + System.identityHashCode(this);
-        this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
-        this.heartbeatTimeout = Duration.ofSeconds(heartbeatTimeoutSeconds);
-    }
+        if (!APP_ID_PATTERN.matcher(appId).find()) {
+            throw new IllegalArgumentException("Invalid cast app-id, must be " + APP_ID_PATTERN.pattern());
+        }
+        this.heartbeatInterval = heartbeatInterval;
+        this.heartbeatTimeout = heartbeatTimeout;
+        this.retryInterval = retryInterval;
 
-    /**
-     * @param type
-     * @return a simple message with no fields
-     */
-    static final Map<String, Object> messagePayload(String type) {
-        Map<String, Object> out = new HashMap<>();
-        out.put("type", type);
-        return Collections.unmodifiableMap(out);
-    }
-
-    /**
-     * Generates a protobuf message with the given payload.
-     *
-     * @param namespace the label to determine which message stream this belongs to
-     * @param destinationId either the default value or the value established for the session
-     * @param payload a series of key values to turn into a JSON string
-     * @return a fully constructed message
-     * @throws IOException when JSON serialization fails
-     */
-    private CastMessage generateMessage(String namespace, String destinationId, Map<String, Object> payload) {
-        return generateMessage(namespace, senderId, destinationId, payload);
+        SslContext sslContext = SslContextBuilder.forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+        log.info("Using cast application id: {}", appId);
+        // configure the socket client
+        // TODO: shared resources
+        this.bootstrap = TcpClient.create()
+                .secure(spec -> spec.sslContext(sslContext))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
     }
 
     /**
@@ -126,162 +122,163 @@ public final class GoogolplexClientHandler implements Function<Connection, Mono<
         try {
             out.setPayloadUtf8(MapperUtil.MAPPER.writeValueAsString(payload));
         } catch (IOException e) {
+            // TODO: fix
             e.printStackTrace();
         }
         return out.build();
     }
 
-    /**
-     * The connection is up. Configures keep alive messages and timeout. Sends an initial connect
-     * message and launch message. The device will respond back with a receiver status message (or
-     * error if the receiver could not be started). That response and the keep alive responses from
-     * the device are all handled in the channelRead0().
-     */
-    public Mono<Void> channelActive(Connection ctx) {
-        // initial connect
-        CastMessage initialConnectMessage = generateMessage(NAMESPACE_CONNECTION, DEFAULT_RECEIVER_ID, CONNECT_MESSAGE);
-
-        // launch
-        Map<String, Object> launch = new HashMap<>();
-        launch.put("type", "LAUNCH");
-        launch.put("appId", appId);
-        launch.put("requestId", requestId++);
-        CastMessage launchMessage = generateMessage(NAMESPACE_RECEIVER, DEFAULT_RECEIVER_ID, launch);
-
-        /*
-         * there was no heartbeat now, but we initialize with the start time, so we don't timeout immediately.
-         */
-        this.lastHeartbeat = Instant.now();
-
-        return ctx.outbound()
-                .sendObject(initialConnectMessage)
-                .then(ctx.outbound().sendObject(launchMessage))
-                .then();
+    public Mono<Void> connect(InetSocketAddress address, DeviceInfo deviceInfo) {
+        return bootstrap
+                .remoteAddress(() -> address)
+                .connect()
+                .flatMap(conn -> new MyConnection(conn, deviceInfo).handle())
+                .retryWhen(RetrySpec.backoff(Long.MAX_VALUE, retryInterval).doBeforeRetry(err -> {
+                    log.warn("ERROR " + deviceInfo.getName(), err.failure());
+                }));
     }
 
-    protected Mono<Void> channelRead0(Connection ctx, CastMessage msg) throws IOException {
-        // do some rudimentary validation
-        if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0 || msg.getPayloadType() != PayloadType.STRING) {
-            log.debug("Invalid message");
-            return Mono.empty();
+    private final class MyConnection {
+        private final Connection conn;
+        private final DeviceInfo deviceInfo;
+        private final String senderId;
+        private final AtomicInteger requestId;
+        private final AtomicReference<Instant> lastHeartbeat;
+        private final AtomicReference<String> sessionReceiverId;
+
+        private MyConnection(Connection conn, DeviceInfo deviceInfo) {
+            this.conn = conn;
+            this.deviceInfo = deviceInfo;
+            this.senderId = "sender-" + ThreadLocalRandom.current().nextInt();
+            this.requestId = new AtomicInteger();
+            this.lastHeartbeat = new AtomicReference<>(Instant.now());
+            this.sessionReceiverId = new AtomicReference<>();
         }
-        String sourceId = msg.getSourceId();
-        if (!(sourceId.equals(DEFAULT_RECEIVER_ID) || sourceId.equals(sessionReceiverId))) {
-            log.debug("Invalid message source");
-            return Mono.empty();
+
+        private Mono<Void> handle() {
+            conn.addHandlerLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
+            conn.addHandlerLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
+            conn.addHandlerLast("frameEncoder", new LengthFieldPrepender(4));
+            conn.addHandlerLast("protobufEncoder", new ProtobufEncoder());
+            return start().then(conn.inbound()
+                            .receiveObject()
+                            .cast(CastMessage.class)
+                            .flatMap(this::handle)
+                            .then())
+                    .doFinally(sig -> conn.dispose())
+                    .switchIfEmpty(Mono.error(new RuntimeException("connection closed by peer")));
         }
-        String destinationId = msg.getDestinationId();
-        if (!(destinationId.equals(senderId) || destinationId.equals("*"))) {
-            log.debug("Invalid message destination");
-            return Mono.empty();
+
+        private Mono<Void> start() {
+            // initial connect
+            CastMessage initialConnectMessage =
+                    generateMessage(NAMESPACE_CONNECTION, senderId, DEFAULT_RECEIVER_ID, CONNECT_MESSAGE);
+
+            // launch
+            Map<String, Object> launch = new HashMap<>();
+            launch.put("type", "LAUNCH");
+            launch.put("appId", appId);
+            launch.put("requestId", requestId.getAndIncrement());
+            CastMessage launchMessage = generateMessage(NAMESPACE_RECEIVER, senderId, DEFAULT_RECEIVER_ID, launch);
+
+            return conn.outbound()
+                    .sendObject(initialConnectMessage)
+                    .then(conn.outbound().sendObject(launchMessage))
+                    .then();
         }
-        // handle different namespaces differently
-        String namespace = msg.getNamespace();
-        String name = deviceInfo.getName();
-        switch (namespace) {
-            case NAMESPACE_HEARTBEAT:
-                lastHeartbeat = Instant.now();
-                break;
-            case NAMESPACE_RECEIVER:
-                return handleReceiverMessage(ctx, msg);
-            case NAMESPACE_CUSTOM:
+
+        protected Mono<Void> handle(CastMessage msg) {
+            // do some rudimentary validation
+            if (msg.getProtocolVersion() != ProtocolVersion.CASTV2_1_0 || msg.getPayloadType() != PayloadType.STRING) {
+                log.debug("Invalid message");
+                return Mono.empty();
+            }
+            String sourceId = msg.getSourceId();
+            if (!(sourceId.equals(DEFAULT_RECEIVER_ID) || sourceId.equals(sessionReceiverId))) {
+                log.debug("Invalid message source");
+                return Mono.empty();
+            }
+            String destinationId = msg.getDestinationId();
+            if (!(destinationId.equals(senderId) || destinationId.equals("*"))) {
+                log.debug("Invalid message destination");
+                return Mono.empty();
+            }
+            // handle different namespaces differently
+            String namespace = msg.getNamespace();
+            String name = deviceInfo.getName();
+            if (NAMESPACE_HEARTBEAT.equals(namespace)) {
+                lastHeartbeat.set(Instant.now());
+                return Mono.empty();
+            }
+            if (NAMESPACE_CUSTOM.equals(namespace)) {
                 log.info("MESSAGE '{}' {}", name, msg.getPayloadUtf8());
-                break;
-            default:
+                return Mono.empty();
+            }
+            if (!NAMESPACE_RECEIVER.equals(namespace)) {
                 log.debug("other message");
-                break;
-        }
-        return Mono.empty();
-    }
-
-    /**
-     * Determine how to respond or act upon receiving a response from the receiver.
-     *
-     * @param ctx channel context
-     * @param msg a receiver message
-     * @param device the device name and settings
-     * @throws IOException when the JSON serialization fails
-     */
-    private Mono<Void> handleReceiverMessage(Connection ctx, CastMessage msg) throws IOException {
-        ReceiverResponse receiverPayload = MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
-        String name = deviceInfo.getName();
-        if (receiverPayload.getReason() != null) {
-            // the presence of the reason indicates the launch likely failed for some reason
-            log.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
-            // close to reload connection
-            return Mono.error(new RuntimeException("badPayload"));
-        }
-        if (!receiverPayload.isApplicationStatus()) {
-            return Mono.empty();
-        }
-        if (receiverPayload.isIdleScreen()) {
+                return Mono.empty();
+            }
+            ReceiverResponse receiverPayload;
+            try {
+                receiverPayload = MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
+            } catch (IOException e) {
+                return Mono.error(e);
+            }
+            if (receiverPayload.getReason() != null) {
+                // the presence of the reason indicates the launch likely failed for some reason
+                log.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
+                // close to reload connection
+                return Mono.error(new RuntimeException("badPayload"));
+            }
+            if (!receiverPayload.isApplicationStatus()) {
+                return Mono.empty();
+            }
+            if (receiverPayload.isIdleScreen()) {
+                /*
+                 * if the idle screen is back, the receiver app has crashed for some reason, so close which will trigger a
+                 * refresh.
+                 */
+                log.info("DOWN '{}'", name);
+                return Mono.error(new RuntimeException("IdleScreen"));
+            }
+            String transportId = receiverPayload.getApplicationTransportId(appId);
+            if (transportId == null) {
+                return Mono.empty();
+            }
             /*
-             * if the idle screen is back, the receiver app has crashed for some reason, so close which will trigger a
-             * refresh.
+             * if transportId is present for our appId, then we can send the settings thru our custom namespace
              */
-            log.info("DOWN '{}'", name);
-            return Mono.error(new RuntimeException("IdleScreen"));
-        }
-        String transportId = receiverPayload.getApplicationTransportId(appId);
-        /*
-         * if transportId is present for our appId, then we can send the settings thru our custom namespace
-         */
-        if (sessionReceiverId == null && transportId != null) {
-            sessionReceiverId = transportId;
+            if (sessionReceiverId.getAndSet(transportId) != null) {
+                return Mono.empty();
+            }
             log.info("UP '{}'", name);
             // session connect
-            CastMessage sessionConnectMessage = generateMessage(NAMESPACE_CONNECTION, transportId, CONNECT_MESSAGE);
+            CastMessage sessionConnectMessage =
+                    generateMessage(NAMESPACE_CONNECTION, senderId, transportId, CONNECT_MESSAGE);
             // display data custom message
             Map<String, Object> custom = new HashMap<>();
             custom.put("name", deviceInfo.getName());
             custom.put("settings", deviceInfo.getSettings());
-            custom.put("requestId", requestId++);
-            CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, transportId, custom);
-            return ctx.outbound()
+            custom.put("requestId", requestId.getAndIncrement());
+            CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, senderId, transportId, custom);
+            CastMessage heartbeatMessage =
+                    generateMessage(NAMESPACE_HEARTBEAT, senderId, DEFAULT_RECEIVER_ID, PING_MESSAGE);
+            return conn.outbound()
                     .sendObject(sessionConnectMessage)
-                    .then(ctx.outbound().sendObject(customMessage))
+                    .then(conn.outbound().sendObject(customMessage))
                     .then()
-                    .then(Flux.interval(Duration.ofSeconds(heartbeatIntervalSeconds))
+                    .then(Flux.interval(heartbeatInterval)
                             .flatMap(i -> {
-                                if (lastHeartbeat.plus(heartbeatTimeout).isBefore(Instant.now())) {
+                                if (lastHeartbeat.get().plus(heartbeatTimeout).isBefore(Instant.now())) {
                                     /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
                                     log.warn("EXPIRE '{}'", deviceInfo.getName());
                                     return Mono.error(new RuntimeException("Expires"));
                                 } else {
                                     // send another heartbeat
-                                    CastMessage heartbeatMessage =
-                                            generateMessage(NAMESPACE_HEARTBEAT, DEFAULT_RECEIVER_ID, PING_MESSAGE);
-                                    return ctx.outbound().sendObject(heartbeatMessage);
+                                    return conn.outbound().sendObject(heartbeatMessage);
                                 }
                             })
                             .then());
         }
-        return Mono.empty();
-    }
-
-    @Override
-    public Mono<Void> apply(Connection conn) {
-        conn.addHandlerLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
-        conn.addHandlerLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
-        conn.addHandlerLast("frameEncoder", new LengthFieldPrepender(4));
-        conn.addHandlerLast("protobufEncoder", new ProtobufEncoder());
-        conn.addHandlerLast("logger", new LoggingHandler());
-        senderId = "sender-" + ThreadLocalRandom.current().nextInt();
-        sessionReceiverId = null;
-        requestId = 0;
-        return channelActive(conn)
-                .then(conn.inbound()
-                        .receiveObject()
-                        .cast(CastMessage.class)
-                        .flatMap(msg -> {
-                            try {
-                                return channelRead0(conn, msg);
-                            } catch (IOException e) {
-                                return Mono.error(e);
-                            }
-                        })
-                        .then())
-                .doFinally(sig -> conn.dispose())
-                .flatMap(v -> Mono.error(new RuntimeException("connection closed by peer")));
     }
 }

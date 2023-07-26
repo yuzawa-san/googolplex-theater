@@ -18,7 +18,10 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,24 +36,31 @@ public final class DeviceConfigLoader implements Closeable {
 
     private final ExecutorService executor;
     private final Path path;
+    private final Path directoryPath;
+    private WatchService watchService;
     private final GoogolplexControllerImpl controller;
-    private final WatchService watchService;
 
-    public DeviceConfigLoader(GoogolplexControllerImpl controller, GoogolplexTheaterConfig config) throws IOException {
-        Path deviceConfigPath = config.getDeviceConfigPath();
+    @Autowired
+    public DeviceConfigLoader(
+            GoogolplexControllerImpl controller, @Value("${googolplexTheater.devicesPath}") Path deviceConfigPath)
+            throws IOException {
         this.controller = controller;
         this.executor = Executors.newSingleThreadExecutor();
         this.path = deviceConfigPath;
         log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
-        load();
-        this.watchService = path.getFileSystem().newWatchService();
-        /*
-         * the watch operation only works with directories, so we have to get the parent directory of the file.
-         */
-        Path directoryPath = path.getParent();
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalArgumentException("Config file does not exist: " + path);
+        }
+        this.directoryPath = path.getParent();
         if (directoryPath == null) {
             throw new IllegalArgumentException("Path has missing parent");
         }
+    }
+
+    @PostConstruct
+    public void start() throws IOException {
+        load();
+        this.watchService = path.getFileSystem().newWatchService();
         directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
         executor.submit(() -> {
             try {
@@ -100,6 +110,8 @@ public final class DeviceConfigLoader implements Closeable {
     @Override
     public void close() throws IOException {
         executor.shutdownNow();
-        watchService.close();
+        if (watchService != null) {
+            watchService.close();
+        }
     }
 }

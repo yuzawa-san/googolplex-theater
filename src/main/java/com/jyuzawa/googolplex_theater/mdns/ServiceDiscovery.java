@@ -5,7 +5,6 @@
 package com.jyuzawa.googolplex_theater.mdns;
 
 import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
-import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,10 +13,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,8 +35,11 @@ public final class ServiceDiscovery implements Closeable {
     private final GoogolplexControllerImpl controller;
     private final JmDNS mdns;
 
-    public ServiceDiscovery(GoogolplexControllerImpl controller, GoogolplexTheaterConfig config) throws IOException {
-        String preferredInterface = config.getDiscoveryNetworkInterface();
+    @Autowired
+    public ServiceDiscovery(
+            GoogolplexControllerImpl controller,
+            @Value("${googolplexTheater.preferredInterface:#{null}}") String preferredInterface)
+            throws IOException {
         this.controller = controller;
         InetAddress inetAddress = getInterfaceAddress(preferredInterface);
         if (inetAddress == null) {
@@ -42,6 +47,10 @@ public final class ServiceDiscovery implements Closeable {
         }
         this.mdns = JmDNS.create(inetAddress);
         log.info("Search for casts using {}", mdns.getInetAddress());
+    }
+
+    @PostConstruct
+    public void start() {
         this.mdns.addServiceListener(MDNS_SERVICE_NAME, new ServiceDiscoveryListener());
     }
 

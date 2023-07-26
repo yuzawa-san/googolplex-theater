@@ -4,20 +4,16 @@
  */
 package com.jyuzawa.googolplex_theater.client;
 
+import com.jyuzawa.googolplex_theater.GoogolplexTheater;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig;
 import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
-import io.netty.channel.ChannelOption;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.io.Closeable;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,10 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
-import reactor.netty.tcp.TcpClient;
-import reactor.util.retry.RetrySpec;
 
 /**
  * This class represents the state of the application. All modifications to state occur in the same
@@ -42,26 +37,32 @@ import reactor.util.retry.RetrySpec;
 @Slf4j
 @Component
 public final class GoogolplexControllerImpl implements Closeable {
-    private final TcpClient bootstrap;
+    private static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
+    private static final List<String> DIAGNOSTIC_PROPERTIES = Collections.unmodifiableList(
+            Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
+
+    static {
+        log.info("Starting up Googolplex Theater!");
+        log.info("Website: " + PROJECT_WEBSITE);
+        Package thePackage = GoogolplexTheater.class.getPackage();
+        log.info("Version: {} ({})", thePackage.getSpecificationVersion(), thePackage.getImplementationVersion());
+        for (String property : DIAGNOSTIC_PROPERTIES) {
+            log.info("Runtime[{}]: {}", property, System.getProperty(property));
+        }
+    }
+
+    private final GoogolplexClientHandler client;
     private final Map<String, DeviceInfo> nameToDeviceInfo;
     private final Map<String, InetSocketAddress> nameToAddress;
     private final Map<String, Conn> nameToChannel;
 
-    public GoogolplexControllerImpl(GoogolplexTheaterConfig config) throws IOException {
-        String appId = config.getRecieverAppId();
+    @Autowired
+    public GoogolplexControllerImpl(GoogolplexClientHandler client) {
+        this.client = client;
         // the state is maintained in these maps
         this.nameToDeviceInfo = new ConcurrentHashMap<>();
         this.nameToAddress = new ConcurrentHashMap<>();
         this.nameToChannel = new ConcurrentHashMap<>();
-        SslContext sslContext = SslContextBuilder.forClient()
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .build();
-        log.info("Using cast application id: {}", appId);
-        // configure the socket client
-        // TODO: shared resources
-        this.bootstrap = TcpClient.create()
-                .secure(spec -> spec.sslContext(sslContext))
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
     }
 
     private record Conn(Instant birth, Disposable disposable) {}
@@ -152,16 +153,8 @@ public final class GoogolplexControllerImpl implements Closeable {
             return;
         }
         log.info("CONNECT '{}'", name);
-
-        Disposable sub = bootstrap
-                .remoteAddress(() -> address)
-                .connect()
-                .flatMap(new GoogolplexClientHandler(GoogolplexClientHandler.DEFAULT_APPLICATION_ID, 5, 10, deviceInfo))
-                .retryWhen(RetrySpec.fixedDelay(1024, Duration.ofSeconds(10)).doBeforeRetry(err -> {
-                    log.warn("ERROR " + name, err.failure());
-                }))
-                .subscribe();
-        nameToChannel.put(name, new Conn(Instant.now(), sub));
+        Disposable disposable = client.connect(address, deviceInfo).subscribe();
+        nameToChannel.put(name, new Conn(Instant.now(), disposable));
     }
 
     /**
