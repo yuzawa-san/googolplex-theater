@@ -109,7 +109,7 @@ public class FakeCast implements Closeable {
     @Override
     public void close() throws IOException {
         serverChannel.close().syncUninterruptibly();
-        bossGroup.shutdownGracefully().syncUninterruptibly();
+        bossGroup.shutdownGracefully(100, 100, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
     public CastMessage getMessage() throws InterruptedException {

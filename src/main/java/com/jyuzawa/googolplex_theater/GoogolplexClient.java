@@ -48,7 +48,7 @@ import reactor.util.retry.RetrySpec;
  */
 @Slf4j
 @Component
-public final class GoogolplexClient {
+public class GoogolplexClient {
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
 
     /**
