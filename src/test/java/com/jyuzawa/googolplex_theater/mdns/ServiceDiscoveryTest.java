@@ -7,7 +7,7 @@ package com.jyuzawa.googolplex_theater.mdns;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.jyuzawa.googolplex_theater.GoogolplexController;
+import com.jyuzawa.googolplex_theater.GoogolplexService;
 import com.jyuzawa.googolplex_theater.ServiceDiscovery;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,7 +31,7 @@ class ServiceDiscoveryTest {
 
     @Test
     void instantiationTest() throws IOException {
-        GoogolplexController controller = Mockito.mock(GoogolplexController.class);
+        GoogolplexService controller = Mockito.mock(GoogolplexService.class);
         ServiceDiscovery sd = new ServiceDiscovery(controller, null);
         sd.close();
     }

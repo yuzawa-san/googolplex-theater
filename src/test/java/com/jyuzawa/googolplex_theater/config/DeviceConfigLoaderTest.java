@@ -13,7 +13,7 @@ import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.DeviceConfig;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.DeviceConfigLoader;
-import com.jyuzawa.googolplex_theater.GoogolplexController;
+import com.jyuzawa.googolplex_theater.GoogolplexService;
 import io.netty.util.CharsetUtil;
 import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
@@ -51,7 +51,7 @@ class DeviceConfigLoaderTest {
             bufferedWriter.write(VALUE1);
         }
         BlockingQueue<DeviceConfig> queue = new ArrayBlockingQueue<>(10);
-        GoogolplexController controller = new GoogolplexController() {
+        GoogolplexService controller = new GoogolplexService() {
 
             @Override
             public void register(ServiceEvent event) {}

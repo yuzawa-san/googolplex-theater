@@ -7,7 +7,7 @@ package com.jyuzawa.googolplex_theater.server;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.jyuzawa.googolplex_theater.GoogolplexController;
-import com.jyuzawa.googolplex_theater.GoogolplexServer;
+import com.jyuzawa.googolplex_theater.GoogolplexService;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 
 @ExtendWith(VertxExtension.class)
 class GoogolplexServerTest {
-    static final GoogolplexController controller = Mockito.mock(GoogolplexController.class);
+    static final GoogolplexService controller = Mockito.mock(GoogolplexService.class);
     static final int port = 9101;
 
     @BeforeEach
@@ -34,7 +34,7 @@ class GoogolplexServerTest {
         device.put("name", "my device");
         List<JsonObject> devices = Collections.singletonList(device);
         Mockito.when(controller.getDeviceInfo()).thenReturn(devices);
-        GoogolplexServer server = new GoogolplexServer(controller, new InetSocketAddress(port));
+        GoogolplexController server = new GoogolplexController(controller, new InetSocketAddress(port));
         vertx.deployVerticle(server, testContext.succeedingThenComplete());
     }
 

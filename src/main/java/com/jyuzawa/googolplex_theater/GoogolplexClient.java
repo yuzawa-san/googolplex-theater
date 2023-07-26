@@ -129,13 +129,13 @@ public final class GoogolplexClient {
         return bootstrap
                 .remoteAddress(() -> address)
                 .connect()
-                .flatMap(conn -> new MyConnection(conn, deviceInfo).handle())
+                .flatMap(conn -> new GoogolplexConnection(conn, deviceInfo).handle())
                 .retryWhen(RetrySpec.backoff(Long.MAX_VALUE, retryInterval).doBeforeRetry(err -> {
                     log.warn("ERROR " + deviceInfo.getName(), err.failure());
                 }));
     }
 
-    private final class MyConnection {
+    private final class GoogolplexConnection {
         private final Connection conn;
         private final DeviceInfo deviceInfo;
         private final String name;
@@ -144,7 +144,7 @@ public final class GoogolplexClient {
         private final AtomicReference<Instant> lastHeartbeat;
         private final AtomicReference<String> sessionReceiverId;
 
-        private MyConnection(Connection conn, DeviceInfo deviceInfo) {
+        private GoogolplexConnection(Connection conn, DeviceInfo deviceInfo) {
             this.conn = conn;
             this.deviceInfo = deviceInfo;
             this.name = deviceInfo.getName();

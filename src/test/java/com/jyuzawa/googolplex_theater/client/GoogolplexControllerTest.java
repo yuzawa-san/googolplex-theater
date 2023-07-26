@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.jyuzawa.googolplex_theater.DeviceConfig;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.GoogolplexController;
+import com.jyuzawa.googolplex_theater.GoogolplexService;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 class GoogolplexControllerTest {
     private static final Logger LOG = LoggerFactory.getLogger(GoogolplexControllerTest.class);
 
-    static GoogolplexController controller;
+    static GoogolplexService controller;
     static FakeCast cast1;
     static FakeCast cast2;
     static FakeCast cast3;
@@ -42,7 +42,7 @@ class GoogolplexControllerTest {
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
         workerGroup = new NioEventLoopGroup(1);
-        controller = new GoogolplexController(workerGroup, GoogolplexTheaterConfig.load());
+        controller = new GoogolplexService(workerGroup, GoogolplexTheaterConfig.load());
         cast1 = new FakeCast(workerGroup, 9001);
         cast2 = new FakeCast(workerGroup, 9002);
         cast3 = new FakeCast(workerGroup, 9003);
@@ -121,10 +121,10 @@ class GoogolplexControllerTest {
 
     @Test
     public void durationTest() {
-        assertEquals("1s", GoogolplexController.calculateDuration(Duration.ofSeconds(1)));
-        assertEquals("1m0s", GoogolplexController.calculateDuration(Duration.ofMinutes(1)));
-        assertEquals("1h0m0s", GoogolplexController.calculateDuration(Duration.ofHours(1)));
-        assertEquals("1d0h0m0s", GoogolplexController.calculateDuration(Duration.ofDays(1)));
-        assertEquals("1d1h1m1s", GoogolplexController.calculateDuration(Duration.ofSeconds(90061)));
+        assertEquals("1s", GoogolplexService.calculateDuration(Duration.ofSeconds(1)));
+        assertEquals("1m0s", GoogolplexService.calculateDuration(Duration.ofMinutes(1)));
+        assertEquals("1h0m0s", GoogolplexService.calculateDuration(Duration.ofHours(1)));
+        assertEquals("1d0h0m0s", GoogolplexService.calculateDuration(Duration.ofDays(1)));
+        assertEquals("1d1h1m1s", GoogolplexService.calculateDuration(Duration.ofSeconds(90061)));
     }
 }

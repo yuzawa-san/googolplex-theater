@@ -37,13 +37,13 @@ public final class DeviceConfigLoader implements Closeable {
     private final Path path;
     private final Path directoryPath;
     private WatchService watchService;
-    private final GoogolplexController controller;
+    private final GoogolplexService service;
 
     @Autowired
     public DeviceConfigLoader(
-            GoogolplexController controller, @Value("${googolplexTheater.devicesPath}") Path deviceConfigPath)
+            GoogolplexService service, @Value("${googolplexTheater.devicesPath}") Path deviceConfigPath)
             throws IOException {
-        this.controller = controller;
+        this.service = service;
         this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
         this.path = deviceConfigPath;
         log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
@@ -102,13 +102,13 @@ public final class DeviceConfigLoader implements Closeable {
         log.info("Reloading device config");
         try (InputStream stream = Files.newInputStream(path)) {
             DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
-            controller.processDeviceConfig(out);
+            service.processDeviceConfig(out);
         }
     }
 
     @Override
     public void close() throws IOException {
-    	if (watchService != null) {
+        if (watchService != null) {
             watchService.close();
         }
         executor.close();

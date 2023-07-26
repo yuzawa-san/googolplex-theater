@@ -31,15 +31,15 @@ import org.springframework.stereotype.Component;
 public final class ServiceDiscovery implements Closeable {
     public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
 
-    private final GoogolplexController controller;
+    private final GoogolplexService service;
     private final JmDNS mdns;
 
     @Autowired
     public ServiceDiscovery(
-            GoogolplexController controller,
+            GoogolplexService service,
             @Value("${googolplexTheater.preferredInterface:#{null}}") String preferredInterface)
             throws IOException {
-        this.controller = controller;
+        this.service = service;
         InetAddress inetAddress = getInterfaceAddress(preferredInterface);
         if (inetAddress == null) {
             log.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
@@ -120,7 +120,7 @@ public final class ServiceDiscovery implements Closeable {
 
         @Override
         public void serviceResolved(ServiceEvent event) {
-            controller.register(event);
+            service.register(event);
         }
     }
 }
