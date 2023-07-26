@@ -10,24 +10,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
-import com.jyuzawa.googolplex_theater.DeviceConfig;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.DeviceConfigLoader;
-import com.jyuzawa.googolplex_theater.GoogolplexService;
 import io.netty.util.CharsetUtil;
-import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.jmdns.ServiceEvent;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 class DeviceConfigLoaderTest {
 
@@ -51,25 +48,17 @@ class DeviceConfigLoaderTest {
             bufferedWriter.write(VALUE1);
         }
         BlockingQueue<DeviceConfig> queue = new ArrayBlockingQueue<>(10);
-        GoogolplexService controller = new GoogolplexService() {
+        GoogolplexService controller = Mockito.mock(GoogolplexService.class);
+        Mockito.when(controller.processDeviceConfig(Mockito.any())).then(new Answer<Void>() {
 
             @Override
-            public void register(ServiceEvent event) {}
-
-            @Override
-            public void refresh(String name) {}
-
-            @Override
-            public List<JsonObject> getDeviceInfo() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                queue.add(invocation.getArgument(0, DeviceConfig.class));
                 return null;
             }
-
-            @Override
-            public void processDeviceConfig(DeviceConfig config) {
-                queue.add(config);
-            }
-        };
+        });
         DeviceConfigLoader loader = new DeviceConfigLoader(controller, path);
+        loader.start();
         try {
             DeviceConfig config = queue.take();
             assertEquals(1, config.getDevices().size());

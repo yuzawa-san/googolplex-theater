@@ -38,7 +38,7 @@ import reactor.core.Disposable;
  */
 @Slf4j
 @Component
-public final class GoogolplexService implements Closeable {
+public class GoogolplexService implements Closeable {
     private static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
     private static final List<String> DIAGNOSTIC_PROPERTIES = Collections.unmodifiableList(
             Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
