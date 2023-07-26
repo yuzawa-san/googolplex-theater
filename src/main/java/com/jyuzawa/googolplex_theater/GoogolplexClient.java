@@ -2,13 +2,12 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.client;
+package com.jyuzawa.googolplex_theater;
 
-import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.ProtocolVersion;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
@@ -49,7 +48,7 @@ import reactor.util.retry.RetrySpec;
  */
 @Slf4j
 @Component
-public final class GoogolplexClientHandler {
+public final class GoogolplexClient {
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[A-Z0-9]+$");
 
     /**
@@ -77,7 +76,7 @@ public final class GoogolplexClientHandler {
     private final TcpClient bootstrap;
 
     @Autowired
-    public GoogolplexClientHandler(
+    public GoogolplexClient(
             @Value("${googolplexTheater.appId}") String appId,
             @Value("${googolplexTheater.heartbeatInterval}") Duration heartbeatInterval,
             @Value("${googolplexTheater.heartbeatTimeout}") Duration heartbeatTimeout,
@@ -96,7 +95,6 @@ public final class GoogolplexClientHandler {
                 .build();
         log.info("Using cast application id: {}", appId);
         // configure the socket client
-        // TODO: shared resources
         this.bootstrap = TcpClient.create()
                 .secure(spec -> spec.sslContext(sslContext))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
@@ -122,8 +120,7 @@ public final class GoogolplexClientHandler {
         try {
             out.setPayloadUtf8(MapperUtil.MAPPER.writeValueAsString(payload));
         } catch (IOException e) {
-            // TODO: fix
-            e.printStackTrace();
+            throw new GoogolplexClientException("EncodingException", e);
         }
         return out.build();
     }
@@ -141,6 +138,7 @@ public final class GoogolplexClientHandler {
     private final class MyConnection {
         private final Connection conn;
         private final DeviceInfo deviceInfo;
+        private final String name;
         private final String senderId;
         private final AtomicInteger requestId;
         private final AtomicReference<Instant> lastHeartbeat;
@@ -149,6 +147,7 @@ public final class GoogolplexClientHandler {
         private MyConnection(Connection conn, DeviceInfo deviceInfo) {
             this.conn = conn;
             this.deviceInfo = deviceInfo;
+            this.name = deviceInfo.getName();
             this.senderId = "sender-" + ThreadLocalRandom.current().nextInt();
             this.requestId = new AtomicInteger();
             this.lastHeartbeat = new AtomicReference<>(Instant.now());
@@ -156,6 +155,7 @@ public final class GoogolplexClientHandler {
         }
 
         private Mono<Void> handle() {
+            log.info("CONNECT '{}'", name);
             conn.addHandlerLast("frameDecoder", new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
             conn.addHandlerLast("protobufDecoder", new ProtobufDecoder(CastMessage.getDefaultInstance()));
             conn.addHandlerLast("frameEncoder", new LengthFieldPrepender(4));
@@ -165,8 +165,11 @@ public final class GoogolplexClientHandler {
                             .cast(CastMessage.class)
                             .flatMap(this::handle)
                             .then())
-                    .doFinally(sig -> conn.dispose())
-                    .switchIfEmpty(Mono.error(new RuntimeException("connection closed by peer")));
+                    .doFinally(sig -> {
+                        log.info("DISCONNECT '{}'", name);
+                        conn.dispose();
+                    })
+                    .switchIfEmpty(Mono.error(new GoogolplexClientException("connection closed by peer")));
         }
 
         private Mono<Void> start() {
@@ -194,7 +197,7 @@ public final class GoogolplexClientHandler {
                 return Mono.empty();
             }
             String sourceId = msg.getSourceId();
-            if (!(sourceId.equals(DEFAULT_RECEIVER_ID) || sourceId.equals(sessionReceiverId))) {
+            if (!(sourceId.equals(DEFAULT_RECEIVER_ID) || sourceId.equals(sessionReceiverId.get()))) {
                 log.debug("Invalid message source");
                 return Mono.empty();
             }
@@ -205,7 +208,6 @@ public final class GoogolplexClientHandler {
             }
             // handle different namespaces differently
             String namespace = msg.getNamespace();
-            String name = deviceInfo.getName();
             if (NAMESPACE_HEARTBEAT.equals(namespace)) {
                 lastHeartbeat.set(Instant.now());
                 return Mono.empty();
@@ -228,7 +230,7 @@ public final class GoogolplexClientHandler {
                 // the presence of the reason indicates the launch likely failed for some reason
                 log.warn("ERROR '{}' {}", name, msg.getPayloadUtf8());
                 // close to reload connection
-                return Mono.error(new RuntimeException("badPayload"));
+                return Mono.error(new GoogolplexClientException("BadReceiverReason"));
             }
             if (!receiverPayload.isApplicationStatus()) {
                 return Mono.empty();
@@ -239,7 +241,7 @@ public final class GoogolplexClientHandler {
                  * refresh.
                  */
                 log.info("DOWN '{}'", name);
-                return Mono.error(new RuntimeException("IdleScreen"));
+                return Mono.error(new GoogolplexClientException("IdleScreen"));
             }
             String transportId = receiverPayload.getApplicationTransportId(appId);
             if (transportId == null) {
@@ -257,7 +259,7 @@ public final class GoogolplexClientHandler {
                     generateMessage(NAMESPACE_CONNECTION, senderId, transportId, CONNECT_MESSAGE);
             // display data custom message
             Map<String, Object> custom = new HashMap<>();
-            custom.put("name", deviceInfo.getName());
+            custom.put("name", name);
             custom.put("settings", deviceInfo.getSettings());
             custom.put("requestId", requestId.getAndIncrement());
             CastMessage customMessage = generateMessage(NAMESPACE_CUSTOM, senderId, transportId, custom);
@@ -271,8 +273,8 @@ public final class GoogolplexClientHandler {
                             .flatMap(i -> {
                                 if (lastHeartbeat.get().plus(heartbeatTimeout).isBefore(Instant.now())) {
                                     /* the last heartbeat occurred too long ago, so close to trigger a reconnect */
-                                    log.warn("EXPIRE '{}'", deviceInfo.getName());
-                                    return Mono.error(new RuntimeException("Expires"));
+                                    log.warn("EXPIRE '{}'", name);
+                                    return Mono.error(new GoogolplexClientException("HeartbeatTimeout"));
                                 } else {
                                     // send another heartbeat
                                     return conn.outbound().sendObject(heartbeatMessage);

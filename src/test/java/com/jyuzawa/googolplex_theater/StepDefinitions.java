@@ -13,14 +13,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.client.FakeCast;
-import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
 import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig.ConfigYaml;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterAll;
 import io.cucumber.java.Before;
@@ -228,23 +225,21 @@ public class StepDefinitions {
 
     private void assertTransaction(FakeCast cast, String url) throws Exception {
         CastMessage connect = cast.getMessage();
-        assertType(connect, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, GoogolplexClientHandler.NAMESPACE_CONNECTION);
+        assertType(connect, GoogolplexClient.DEFAULT_RECEIVER_ID, GoogolplexClient.NAMESPACE_CONNECTION);
         assertEquals("{\"type\":\"CONNECT\"}", connect.getPayloadUtf8());
 
         CastMessage launch = cast.getMessage();
-        assertType(launch, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, GoogolplexClientHandler.NAMESPACE_RECEIVER);
+        assertType(launch, GoogolplexClient.DEFAULT_RECEIVER_ID, GoogolplexClient.NAMESPACE_RECEIVER);
         assertEquals(
-                "{\"requestId\":0,\"appId\":\""
-                        + GoogolplexClientHandler.DEFAULT_APPLICATION_ID
-                        + "\",\"type\":\"LAUNCH\"}",
+                "{\"requestId\":0,\"appId\":\"" + GoogolplexClient.DEFAULT_APPLICATION_ID + "\",\"type\":\"LAUNCH\"}",
                 launch.getPayloadUtf8());
 
         CastMessage appConnect = cast.getMessage();
-        assertType(appConnect, cast.toString(), GoogolplexClientHandler.NAMESPACE_CONNECTION);
+        assertType(appConnect, cast.toString(), GoogolplexClient.NAMESPACE_CONNECTION);
         assertEquals("{\"type\":\"CONNECT\"}", appConnect.getPayloadUtf8());
 
         CastMessage app = cast.getMessage();
-        assertType(app, cast.toString(), GoogolplexClientHandler.NAMESPACE_CUSTOM);
+        assertType(app, cast.toString(), GoogolplexClient.NAMESPACE_CUSTOM);
         JsonNode node = MapperUtil.MAPPER.readTree(app.getPayloadUtf8());
         assertEquals(cast.name, node.get("name").asText());
         assertEquals(url, node.get("settings").get("url").asText());

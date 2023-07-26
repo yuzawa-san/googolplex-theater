@@ -2,9 +2,8 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.server;
+package com.jyuzawa.googolplex_theater;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public final class GoogolplexServer {
 
-    private final GoogolplexControllerImpl controller;
+    private final GoogolplexController controller;
 
     @GetMapping("/devices")
     public List<Map<String, Object>> root() {

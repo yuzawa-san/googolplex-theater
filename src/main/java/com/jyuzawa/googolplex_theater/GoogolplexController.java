@@ -2,11 +2,9 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.client;
+package com.jyuzawa.googolplex_theater;
 
-import com.jyuzawa.googolplex_theater.GoogolplexTheater;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -21,8 +19,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
+import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -36,7 +38,7 @@ import reactor.core.Disposable;
  */
 @Slf4j
 @Component
-public final class GoogolplexControllerImpl implements Closeable {
+public final class GoogolplexController implements Closeable {
     private static final String PROJECT_WEBSITE = "https://github.com/yuzawa-san/googolplex-theater";
     private static final List<String> DIAGNOSTIC_PROPERTIES = Collections.unmodifiableList(
             Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
@@ -51,18 +53,20 @@ public final class GoogolplexControllerImpl implements Closeable {
         }
     }
 
-    private final GoogolplexClientHandler client;
+    private final GoogolplexClient client;
     private final Map<String, DeviceInfo> nameToDeviceInfo;
     private final Map<String, InetSocketAddress> nameToAddress;
     private final Map<String, Conn> nameToChannel;
+    private final ExecutorService executor;
 
     @Autowired
-    public GoogolplexControllerImpl(GoogolplexClientHandler client) {
+    public GoogolplexController(GoogolplexClient client) {
         this.client = client;
         // the state is maintained in these maps
         this.nameToDeviceInfo = new ConcurrentHashMap<>();
         this.nameToAddress = new ConcurrentHashMap<>();
         this.nameToChannel = new ConcurrentHashMap<>();
+        this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("controller"));
     }
 
     private record Conn(Instant birth, Disposable disposable) {}
@@ -72,26 +76,28 @@ public final class GoogolplexControllerImpl implements Closeable {
      *
      * @param config the settings loaded from the file
      */
-    public void processDeviceConfig(DeviceConfig config) {
-        Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-        for (DeviceInfo deviceInfo : config.getDevices()) {
-            String name = deviceInfo.getName();
-            // mark that we should not remove this device
-            namesToRemove.remove(name);
-            DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
-            // ignore unchanged devices
-            if (!deviceInfo.equals(oldDeviceInfo)) {
-                log.info("CONFIG_UPDATED '{}'", name);
-                nameToDeviceInfo.put(name, deviceInfo);
+    public Future<?> processDeviceConfig(DeviceConfig config) {
+        return executor.submit(() -> {
+            Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
+            for (DeviceInfo deviceInfo : config.getDevices()) {
+                String name = deviceInfo.getName();
+                // mark that we should not remove this device
+                namesToRemove.remove(name);
+                DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
+                // ignore unchanged devices
+                if (!deviceInfo.equals(oldDeviceInfo)) {
+                    log.info("CONFIG_UPDATED '{}'", name);
+                    nameToDeviceInfo.put(name, deviceInfo);
+                    apply(name);
+                }
+            }
+            // remove devices that were missing in the new config
+            for (String name : namesToRemove) {
+                log.info("CONFIG_REMOVED '{}'", name);
+                nameToDeviceInfo.remove(name);
                 apply(name);
             }
-        }
-        // remove devices that were missing in the new config
-        for (String name : namesToRemove) {
-            log.info("CONFIG_REMOVED '{}'", name);
-            nameToDeviceInfo.remove(name);
-            apply(name);
-        }
+        });
     }
 
     /**
@@ -100,32 +106,34 @@ public final class GoogolplexControllerImpl implements Closeable {
      *
      * @param event mdns info
      */
-    public void register(ServiceEvent event) {
-        // the device information may not be full
-        ServiceInfo info = event.getInfo();
-        String name = info.getPropertyString("fn");
-        if (name == null) {
-            log.debug("Found unnamed cast:\n{}", info);
-            return;
-        }
-        InetAddress[] addresses = info.getInetAddresses();
-        if (addresses == null || addresses.length == 0) {
-            log.debug("Found unaddressable cast:\n{}", info);
-            return;
-        }
-        /*
-         * we choose the first address. there should usually be just one. the mdns library returns ipv4
-         * addresses before ipv6.
-         */
-        InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
-        InetSocketAddress oldAddress = nameToAddress.put(name, address);
-        if (!address.equals(oldAddress)) {
+    public Future<?> register(ServiceEvent event) {
+        return executor.submit(() -> {
+            // the device information may not be full
+            ServiceInfo info = event.getInfo();
+            String name = info.getPropertyString("fn");
+            if (name == null) {
+                log.debug("Found unnamed cast:\n{}", info);
+                return;
+            }
+            InetAddress[] addresses = info.getInetAddresses();
+            if (addresses == null || addresses.length == 0) {
+                log.debug("Found unaddressable cast:\n{}", info);
+                return;
+            }
             /*
-             * this is a newly discovered device, or an existing device whose address was updated.
+             * we choose the first address. there should usually be just one. the mdns library returns ipv4
+             * addresses before ipv6.
              */
-            log.info("REGISTER '{}' {}", name, address);
-            apply(name);
-        }
+            InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
+            InetSocketAddress oldAddress = nameToAddress.put(name, address);
+            if (!address.equals(oldAddress)) {
+                /*
+                 * this is a newly discovered device, or an existing device whose address was updated.
+                 */
+                log.info("REGISTER '{}' {}", name, address);
+                apply(name);
+            }
+        });
     }
 
     /**
@@ -137,7 +145,6 @@ public final class GoogolplexControllerImpl implements Closeable {
     private void apply(String name) {
         Conn oldChannel = nameToChannel.get(name);
         if (oldChannel != null) {
-            log.info("DISCONNECT '{}'", name);
             /*
              * kill the channel. it may reconnect below.
              */
@@ -152,7 +159,6 @@ public final class GoogolplexControllerImpl implements Closeable {
         if (deviceInfo == null) {
             return;
         }
-        log.info("CONNECT '{}'", name);
         Disposable disposable = client.connect(address, deviceInfo).subscribe();
         nameToChannel.put(name, new Conn(Instant.now(), disposable));
     }
@@ -162,17 +168,19 @@ public final class GoogolplexControllerImpl implements Closeable {
      *
      * @param name the device to refresh
      */
-    public void refresh(String name) {
-        // closing channels will cause them to reconnect
-        if (name == null) {
-            // close all channels
-            for (String theName : nameToChannel.keySet()) {
-                apply(theName);
+    public Future<?> refresh(String name) {
+        return executor.submit(() -> {
+            // closing channels will cause them to reconnect
+            if (name == null) {
+                // close all channels
+                for (String theName : nameToChannel.keySet()) {
+                    apply(theName);
+                }
+            } else {
+                // close specific channel
+                apply(name);
             }
-        } else {
-            // close specific channel
-            apply(name);
-        }
+        });
     }
 
     public List<Map<String, Object>> getDeviceInfo() {
@@ -207,5 +215,6 @@ public final class GoogolplexControllerImpl implements Closeable {
     public void close() {
         nameToDeviceInfo.clear();
         refresh(null);
+        executor.close();
     }
 }

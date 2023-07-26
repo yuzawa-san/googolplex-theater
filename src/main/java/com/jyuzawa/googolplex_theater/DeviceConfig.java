@@ -2,12 +2,11 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.config;
+package com.jyuzawa.googolplex_theater;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

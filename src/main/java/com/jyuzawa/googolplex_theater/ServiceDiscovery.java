@@ -2,9 +2,8 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.mdns;
+package com.jyuzawa.googolplex_theater;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,12 +31,12 @@ import org.springframework.stereotype.Component;
 public final class ServiceDiscovery implements Closeable {
     public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
 
-    private final GoogolplexControllerImpl controller;
+    private final GoogolplexController controller;
     private final JmDNS mdns;
 
     @Autowired
     public ServiceDiscovery(
-            GoogolplexControllerImpl controller,
+            GoogolplexController controller,
             @Value("${googolplexTheater.preferredInterface:#{null}}") String preferredInterface)
             throws IOException {
         this.controller = controller;

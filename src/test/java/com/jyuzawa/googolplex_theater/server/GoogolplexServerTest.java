@@ -6,7 +6,8 @@ package com.jyuzawa.googolplex_theater.server;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
+import com.jyuzawa.googolplex_theater.GoogolplexController;
+import com.jyuzawa.googolplex_theater.GoogolplexServer;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;

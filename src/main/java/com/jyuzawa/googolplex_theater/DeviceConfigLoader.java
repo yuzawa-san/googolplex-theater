@@ -2,10 +2,8 @@
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
  * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.config;
+package com.jyuzawa.googolplex_theater;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexControllerImpl;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +17,7 @@ import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.annotation.PostConstruct;
+import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,14 +37,14 @@ public final class DeviceConfigLoader implements Closeable {
     private final Path path;
     private final Path directoryPath;
     private WatchService watchService;
-    private final GoogolplexControllerImpl controller;
+    private final GoogolplexController controller;
 
     @Autowired
     public DeviceConfigLoader(
-            GoogolplexControllerImpl controller, @Value("${googolplexTheater.devicesPath}") Path deviceConfigPath)
+            GoogolplexController controller, @Value("${googolplexTheater.devicesPath}") Path deviceConfigPath)
             throws IOException {
         this.controller = controller;
-        this.executor = Executors.newSingleThreadExecutor();
+        this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
         this.path = deviceConfigPath;
         log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
         if (!Files.isRegularFile(path)) {
@@ -109,9 +108,9 @@ public final class DeviceConfigLoader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        executor.shutdownNow();
-        if (watchService != null) {
+    	if (watchService != null) {
             watchService.close();
         }
+        executor.close();
     }
 }
