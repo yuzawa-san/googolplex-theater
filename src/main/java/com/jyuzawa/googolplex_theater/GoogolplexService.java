@@ -44,10 +44,9 @@ public class GoogolplexService implements Closeable {
             Arrays.asList("os.name", "os.version", "os.arch", "java.vendor", "java.version"));
 
     static {
-        log.info("Starting up Googolplex Theater!");
         log.info("Website: " + PROJECT_WEBSITE);
         Package thePackage = GoogolplexTheater.class.getPackage();
-        log.info("Version: {} ({})", thePackage.getSpecificationVersion(), thePackage.getImplementationVersion());
+        log.info("Revision: {}", thePackage.getSpecificationVersion());
         for (String property : DIAGNOSTIC_PROPERTIES) {
             log.info("Runtime[{}]: {}", property, System.getProperty(property));
         }
