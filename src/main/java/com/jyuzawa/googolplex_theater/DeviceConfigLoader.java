@@ -20,7 +20,6 @@ import javax.annotation.PostConstruct;
 import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,9 +39,7 @@ public final class DeviceConfigLoader implements Closeable {
     private final GoogolplexService service;
 
     @Autowired
-    public DeviceConfigLoader(
-            GoogolplexService service, @Value("${googolplexTheater.devicesPath}") Path deviceConfigPath)
-            throws IOException {
+    public DeviceConfigLoader(GoogolplexService service, Path deviceConfigPath) throws IOException {
         this.service = service;
         this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
         this.path = deviceConfigPath;

@@ -10,12 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
-import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
-import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig.ConfigYaml;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterAll;
@@ -25,34 +20,34 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.CharsetUtil;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.codec.BodyCodec;
-import io.vertx.junit5.VertxTestContext;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.jmdns.JmDNS;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 public class StepDefinitions {
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
-    private static Vertx vertx;
+    @Autowired
+    Path devicesPath;
+
+    @Autowired
+    WebTestClient webTestClient;
+
     private static FakeCast device;
     private static EventLoopGroup workerGroup;
     private int loadCount;
-    private GoogolplexTheater googolplexTheater;
-    private static Path confPath;
-    private static Path devicesPath;
     private static final ObjectNode BASE_SETTINGS =
             MapperUtil.MAPPER.getNodeFactory().objectNode().put("foo", "bar");
     private static JmDNS mdns;
@@ -60,48 +55,25 @@ public class StepDefinitions {
     @BeforeAll
     public static void start() throws Exception {
         mdns = JmDNS.create();
-        vertx = Vertx.vertx();
-        workerGroup = vertx.nettyEventLoopGroup();
+        workerGroup = new NioEventLoopGroup(1);
         device = new FakeCast(workerGroup, 9001);
-        // For a simple file system with Unix-style paths and behavior:
-        FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
-                .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
-                .build());
-        confPath = fs.getPath("/conf");
-        Files.createDirectory(confPath);
-        devicesPath = confPath.resolve("devices.yml");
-        try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                confPath.resolve("config.yml"),
-                CharsetUtil.UTF_8,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.CREATE)) {
-            ConfigYaml config = new ConfigYaml();
-            config.setBaseReconnectSeconds(0);
-            config.setReconnectNoiseSeconds(0);
-            config.setHeartbeatIntervalSeconds(1);
-            config.setHeartbeatTimeoutSeconds(3);
-            config.setDiscoveryNetworkInterface(mdns.getInetAddress().getHostAddress());
-            System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
-            MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
-        }
     }
 
     @AfterAll
     public static void stop() throws IOException {
         device.close();
-        vertx.close();
-        workerGroup.shutdownGracefully().syncUninterruptibly();
+        workerGroup.shutdownGracefully(100, 100, TimeUnit.MILLISECONDS).syncUninterruptibly();
         mdns.close();
     }
 
-    private static void writeEmptyDevices() throws IOException {
+    private void writeEmptyDevices() throws IOException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
                 devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
             bufferedWriter.write("settings:\n  foo: bar");
         }
     }
 
-    private static void writeDevices(DeviceConfig deviceConfig) throws IOException {
+    private void writeDevices(DeviceConfig deviceConfig) throws IOException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
                 devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
             MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, deviceConfig);
@@ -111,12 +83,11 @@ public class StepDefinitions {
     @Before
     public void setup() throws Exception {
         writeEmptyDevices();
-        googolplexTheater = new GoogolplexTheater(GoogolplexTheaterConfig.load(confPath));
     }
 
     @After
     public void tearDown() throws IOException {
-        googolplexTheater.close();
+        writeEmptyDevices();
         mdns.unregisterAllServices();
     }
 
@@ -162,26 +133,13 @@ public class StepDefinitions {
     }
 
     private void refresh(String name) throws InterruptedException {
-        VertxTestContext testContext = new VertxTestContext();
-        WebClient client = WebClient.create(vertx);
-        MultiMap form = MultiMap.caseInsensitiveMultiMap();
-        final String displayName;
-        if (name == null) {
-            displayName = "All Devices";
-        } else {
-            displayName = name;
-            form.add("name", name);
-        }
-        client.post(8000, "localhost", "/refresh")
-                .as(BodyCodec.string())
-                .sendForm(
-                        form,
-                        testContext.succeeding(response -> testContext.verify(() -> {
-                            assertEquals(200, response.statusCode());
-                            assertTrue(response.body().contains(displayName + " refreshing..."));
-                            testContext.completeNow();
-                        })));
-        testContext.awaitCompletion(10, TimeUnit.SECONDS);
+        webTestClient
+                .post()
+                .uri("/refresh")
+                .bodyValue(name == null ? Map.of() : Map.of("name", name))
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful();
     }
 
     @When("the device is refreshed")

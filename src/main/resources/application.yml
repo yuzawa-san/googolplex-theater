@@ -1,8 +1,19 @@
-googolplexTheater:
-  appId: B1A3B99B
-  heartbeatInterval: 5s
-  heartbeatTimeout: 30s
-  retryInterval: 15s
-  devicesPath: /Users/jtyuzawa/Documents/personal_repos/googolplex-theater/build/install/googolplex-theater/conf/devices.yml
-spring.application.name: googolplex-theater
-spring.main.banner-mode: log
+spring:
+  application.name: googolplex-theater
+  main.banner-mode: log
+googolplex-theater:
+  app-id: B1A3B99B
+  heartbeat-interval: 5s
+  heartbeat-timeout: 30s
+  retry-interval: 15s
+  devices-path: /Users/jtyuzawa/Documents/personal_repos/googolplex-theater/build/install/googolplex-theater/conf/devices.yml
+---
+spring:
+  config:
+    activate:
+      on-profile: testing
+  main.allow-bean-definition-overriding: true
+googolplex-theater:
+  heartbeat-interval: 1s
+  heartbeat-timeout: 3s
+  retry-interval: 1s

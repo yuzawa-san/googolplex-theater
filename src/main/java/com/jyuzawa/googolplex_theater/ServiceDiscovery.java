@@ -37,7 +37,7 @@ public final class ServiceDiscovery implements Closeable {
     @Autowired
     public ServiceDiscovery(
             GoogolplexService service,
-            @Value("${googolplexTheater.preferredInterface:#{null}}") String preferredInterface)
+            @Value("${googolplex-theater.preferred-interface:#{null}}") String preferredInterface)
             throws IOException {
         this.service = service;
         InetAddress inetAddress = getInterfaceAddress(preferredInterface);

@@ -77,10 +77,10 @@ public class GoogolplexClient {
 
     @Autowired
     public GoogolplexClient(
-            @Value("${googolplexTheater.appId}") String appId,
-            @Value("${googolplexTheater.heartbeatInterval}") Duration heartbeatInterval,
-            @Value("${googolplexTheater.heartbeatTimeout}") Duration heartbeatTimeout,
-            @Value("${googolplexTheater.retryInterval}") Duration retryInterval)
+            @Value("${googolplex-theater.app-id}") String appId,
+            @Value("${googolplex-theater.heartbeat-interval}") Duration heartbeatInterval,
+            @Value("${googolplex-theater.heartbeat-timeout}") Duration heartbeatTimeout,
+            @Value("${googolplex-theater.retry-interval}") Duration retryInterval)
             throws SSLException {
         this.appId = appId;
         if (!APP_ID_PATTERN.matcher(appId).find()) {

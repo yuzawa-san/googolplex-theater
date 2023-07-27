@@ -112,6 +112,7 @@ dependencies {
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 	testImplementation(platform('io.cucumber:cucumber-bom:7.11.1'))
 	testImplementation 'io.cucumber:cucumber-java'
+	testImplementation 'io.cucumber:cucumber-spring'
 	testImplementation 'io.cucumber:cucumber-junit-platform-engine'
 	testImplementation 'org.junit.platform:junit-platform-suite:1.9.1'
 }
