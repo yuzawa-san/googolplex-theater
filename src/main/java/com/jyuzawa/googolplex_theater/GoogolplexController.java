@@ -9,7 +9,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -29,10 +28,8 @@ public final class GoogolplexController {
     }
 
     @PostMapping("/refresh")
-    public Map<String, Object> refreshAll(@RequestBody RefreshSpec refreshSpec) {
-        service.refresh(refreshSpec.name);
+    public Map<String, Object> refreshAll(String name) {
+        service.refresh(name);
         return Map.of("status", "ok");
     }
-
-    public record RefreshSpec(String name) {}
 }

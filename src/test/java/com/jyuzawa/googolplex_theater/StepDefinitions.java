@@ -28,11 +28,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.jmdns.JmDNS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 
 public class StepDefinitions {
     static {
@@ -133,10 +135,14 @@ public class StepDefinitions {
     }
 
     private void refresh(String name) throws InterruptedException {
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        if (name != null) {
+            formData.set("name", name);
+        }
         webTestClient
                 .post()
                 .uri("/refresh")
-                .bodyValue(name == null ? Map.of() : Map.of("name", name))
+                .body(BodyInserters.fromFormData(formData))
                 .exchange()
                 .expectStatus()
                 .is2xxSuccessful();
