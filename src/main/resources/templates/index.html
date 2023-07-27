@@ -17,20 +17,41 @@
 		<div class="container">
 			<h1><img src="/favicon.png" width="32"> Googolplex Theater</h1>
 			<div class="float-right">
-				<form method="post" action="/refresh">
+				<form method="post" action="./refresh">
 					<input class="btn btn-primary" type="submit" value="Refresh All">
 				</form>
 			</div>
 			<h2>Devices</h2>
-			<table>
-			<tr th:each="device: ${devices}">
-        <td th:text="${device.name}" />
-        <td th:text="${device.ipAddress}" />
-        <td th:text="${device.birth}" />
-        <td th:text="${device.settings}" />
-    </tr></table>
 			<div class="row">
-				
+				<div class="col-lg-6 pb-1" th:each="device: ${devices}">
+					<div class="card">
+						<div class="card-header">
+							<div class="float-right"> 
+								<form method="post" action="/refresh">
+									<input type="hidden" name="name" th:value="${device.name}">
+									<span th:if="${device.settings}">
+										<span th:if="${device.ipAddress}">
+											<span th:if="${device.uptime}" class="badge badge-success">Connected for <span th:text="${device.uptime}"></span></span>
+											<span th:unless="${device.uptime}"class="badge badge-warning">Disconnected</span>
+										</span>
+										<span th:unless="${device.ipAddress}" class="badge badge-danger">Not Found</span>
+									</span>
+									<span th:unless="${device.settings}" class="badge badge-secondary">Not Configured</span>
+									<input class="btn btn-primary btn-sm" type="submit" value="Refresh" th:disabled="!${device.uptime}">
+								</form>
+							</div>
+							<h5 class="mb-0" th:text="${device.name}"></h5>
+						</div>
+						<div class="card-body">
+							<p><strong>IP Address:</strong> <span th:text="${device.ipAddress} ?: 'not found'" /></p>
+							<div th:if="${device.settings}">
+								<p><strong>Settings:</strong></p>
+								<code class="settings" th:text="${device.settings.toPrettyString()}" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-12" th:unless="${devices}"><div class="card"><div class="card-body">No devices configured or discovered!</div></div></div>
 			</div>
 		</div>
 		<footer class="text-muted">

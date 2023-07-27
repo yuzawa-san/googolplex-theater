@@ -8,6 +8,7 @@ import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.impl.util.NamedThreadFactory;
@@ -67,7 +69,7 @@ public class GoogolplexService implements Closeable {
         this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("controller"));
     }
 
-    private record Conn(Instant birth, Disposable disposable) {}
+    private record Conn(AtomicReference<Instant> birth, Disposable disposable) {}
 
     /**
      * Load the config and propagate the changes to the any currently connected devices.
@@ -157,8 +159,9 @@ public class GoogolplexService implements Closeable {
         if (deviceInfo == null) {
             return;
         }
-        Disposable disposable = client.connect(address, deviceInfo).subscribe();
-        nameToChannel.put(name, new Conn(Instant.now(), disposable));
+        AtomicReference<Instant> birth = new AtomicReference<>();
+        Disposable disposable = client.connect(address, deviceInfo, birth).subscribe();
+        nameToChannel.put(name, new Conn(birth, disposable));
     }
 
     /**
@@ -186,6 +189,7 @@ public class GoogolplexService implements Closeable {
         Set<String> allNames = new TreeSet<>();
         allNames.addAll(nameToDeviceInfo.keySet());
         allNames.addAll(nameToAddress.keySet());
+        Instant now = Instant.now();
         for (String name : allNames) {
             DeviceStatus.DeviceStatusBuilder device = DeviceStatus.builder();
             device.name(name);
@@ -199,7 +203,11 @@ public class GoogolplexService implements Closeable {
             }
             Conn channel = nameToChannel.get(name);
             if (channel != null) {
-                device.birth(channel.birth());
+                Instant realBirth = channel.birth.get();
+                device.birth(realBirth);
+                if (realBirth != null) {
+                    device.uptime(calculateDuration(Duration.between(realBirth, now)));
+                }
             }
             out.add(device.build());
         }
@@ -211,5 +219,37 @@ public class GoogolplexService implements Closeable {
         nameToDeviceInfo.clear();
         refresh(null);
         executor.close();
+    }
+
+    /**
+     * Generate a human readable connection age string.
+     *
+     * @param duration
+     * @return
+     */
+    static String calculateDuration(Duration duration) {
+        StringBuilder out = new StringBuilder();
+        long deltaSeconds = duration.getSeconds();
+        long seconds = deltaSeconds;
+        long days = seconds / 86400L;
+        if (deltaSeconds >= 86400L) {
+            out.append(days).append("d");
+        }
+        seconds %= 86400L;
+
+        long hours = seconds / 3600L;
+        if (deltaSeconds >= 3600L) {
+            out.append(hours).append("h");
+        }
+        seconds %= 3600L;
+
+        long minutes = seconds / 60L;
+        if (deltaSeconds >= 60L) {
+            out.append(minutes).append("m");
+        }
+        seconds %= 60L;
+
+        out.append(seconds).append("s");
+        return out.toString();
     }
 }

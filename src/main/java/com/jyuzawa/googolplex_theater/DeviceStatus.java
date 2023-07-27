@@ -16,4 +16,5 @@ public final class DeviceStatus {
     String ipAddress;
     JsonNode settings;
     Instant birth;
+    String uptime;
 }

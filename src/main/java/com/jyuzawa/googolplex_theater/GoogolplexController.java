@@ -8,10 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 /**
- * This class runs the server for the web UI.
+ * This class handles for the web UI.
  *
  * @author jyuzawa
  */
@@ -28,9 +29,12 @@ public final class GoogolplexController {
     }
 
     @PostMapping("/refresh")
-    public String refresh(Model model, String name) {
-        // service.refresh(name);
-        service.getDeviceInfo();
-        return "index";
+    public String refresh(@ModelAttribute RefreshSpec spec, Model model) {
+        String name = spec.name;
+        service.refresh(name);
+        model.addAttribute("name", name == null ? "All Devices" : name);
+        return "main";
     }
+
+    public record RefreshSpec(String name) {}
 }

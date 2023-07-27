@@ -125,11 +125,11 @@ public class GoogolplexClient {
         return out.build();
     }
 
-    public Mono<Void> connect(InetSocketAddress address, DeviceInfo deviceInfo) {
+    public Mono<Void> connect(InetSocketAddress address, DeviceInfo deviceInfo, AtomicReference<Instant> birth) {
         return bootstrap
                 .remoteAddress(() -> address)
                 .connect()
-                .flatMap(conn -> new GoogolplexConnection(conn, deviceInfo).handle())
+                .flatMap(conn -> new GoogolplexConnection(conn, deviceInfo, birth).handle())
                 .retryWhen(RetrySpec.backoff(Long.MAX_VALUE, retryInterval).doBeforeRetry(err -> {
                     log.warn("ERROR " + deviceInfo.getName(), err.failure());
                 }));
@@ -138,14 +138,16 @@ public class GoogolplexClient {
     private final class GoogolplexConnection {
         private final Connection conn;
         private final DeviceInfo deviceInfo;
+        private final AtomicReference<Instant> birth;
         private final String name;
         private final String senderId;
         private final AtomicInteger requestId;
         private final AtomicReference<Instant> lastHeartbeat;
         private final AtomicReference<String> sessionReceiverId;
 
-        private GoogolplexConnection(Connection conn, DeviceInfo deviceInfo) {
+        private GoogolplexConnection(Connection conn, DeviceInfo deviceInfo, AtomicReference<Instant> birth) {
             this.conn = conn;
+            this.birth = birth;
             this.deviceInfo = deviceInfo;
             this.name = deviceInfo.getName();
             this.senderId = "sender-" + ThreadLocalRandom.current().nextInt();
@@ -167,6 +169,7 @@ public class GoogolplexClient {
                             .then())
                     .doFinally(sig -> {
                         log.info("DISCONNECT '{}'", name);
+                        birth.set(null);
                         conn.dispose();
                     })
                     .switchIfEmpty(Mono.error(new GoogolplexClientException("ConnectionClosed")));
@@ -254,6 +257,7 @@ public class GoogolplexClient {
                 return Mono.empty();
             }
             log.info("UP '{}'", name);
+            birth.set(Instant.now());
             // session connect
             CastMessage sessionConnectMessage =
                     generateMessage(NAMESPACE_CONNECTION, senderId, transportId, CONNECT_MESSAGE);
