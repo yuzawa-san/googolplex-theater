@@ -46,22 +46,13 @@ jacocoTestReport {
 	}
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
-			fileTree(dir: it, exclude: "${protobuf.generatedFilesBaseDir}/**/*.java")
+			fileTree(dir: it, exclude: 'com/jyuzawa/googolplex_theater/protobuf/**')
 		}))
 	}
 }
-check.dependsOn jacocoTestReport
 
 licenseReport {
 	renderers = [new com.github.jk1.license.render.TextReportRenderer()]
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs "${protobuf.generatedFilesBaseDir}/main/java"
-		}
-	}
 }
 
 protobuf {
@@ -69,7 +60,6 @@ protobuf {
 		artifact = "com.google.protobuf:protoc:3.21.12"
 	}
 	generateProtoTasks {
-		all().each { task -> }
 		ofSourceSet('main')
 	}
 }
@@ -120,6 +110,7 @@ dependencies {
 test {
 	useJUnitPlatform()
 	systemProperty("cucumber.junit-platform.naming-strategy", "long")
+	finalizedBy jacocoTestReport
 }
 
 def getGitHash = { ->
