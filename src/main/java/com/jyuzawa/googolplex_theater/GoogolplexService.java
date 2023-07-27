@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,30 +181,27 @@ public class GoogolplexService implements Closeable {
         });
     }
 
-    public List<Map<String, Object>> getDeviceInfo() {
-        List<Map<String, Object>> out = new ArrayList<>();
+    public List<DeviceStatus> getDeviceInfo() {
+        List<DeviceStatus> out = new ArrayList<>();
         Set<String> allNames = new TreeSet<>();
         allNames.addAll(nameToDeviceInfo.keySet());
         allNames.addAll(nameToAddress.keySet());
         for (String name : allNames) {
-            Map<String, Object> device = new LinkedHashMap<>();
-            device.put("name", name);
+            DeviceStatus.DeviceStatusBuilder device = DeviceStatus.builder();
+            device.name(name);
             DeviceInfo deviceInfo = nameToDeviceInfo.get(name);
             if (deviceInfo != null) {
-                device.put("settings", deviceInfo.getSettings());
+                device.settings(deviceInfo.getSettings());
             }
             InetSocketAddress ipAddress = nameToAddress.get(name);
             if (ipAddress != null) {
-                device.put("ipAddress", ipAddress.getAddress().getHostAddress());
+                device.ipAddress(ipAddress.getAddress().getHostAddress());
             }
             Conn channel = nameToChannel.get(name);
             if (channel != null) {
-                Instant birth = channel.birth();
-                if (birth != null) {
-                    device.put("birthMs", birth.toEpochMilli());
-                }
+                device.birth(channel.birth());
             }
-            out.add(device);
+            out.add(device.build());
         }
         return out;
     }

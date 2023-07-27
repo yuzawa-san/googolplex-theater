@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.jmdns.ServiceEvent;
@@ -91,7 +90,7 @@ class GoogolplexServiceTest {
         Mockito.when(noAddrInfo.getInetAddresses()).thenReturn(new InetAddress[] {});
         service.register(noAddr).get();
 
-        List<Map<String, Object>> deviceInfos = service.getDeviceInfo();
+        List<DeviceStatus> deviceInfos = service.getDeviceInfo();
         Set<String> configureds = getConfigureds(deviceInfos);
         assertEquals(4, configureds.size());
         assertTrue(configureds.contains(cast1.name));
@@ -103,21 +102,21 @@ class GoogolplexServiceTest {
         assertTrue(unconfigureds.contains("UnknownCast"));
     }
 
-    private Set<String> getUnconfigureds(List<Map<String, Object>> devices) {
+    private Set<String> getUnconfigureds(List<DeviceStatus> devices) {
         Set<String> out = new HashSet<>();
-        for (Map<String, Object> device : devices) {
-            if (null == device.get("settings")) {
-                out.add((String) device.get("name"));
+        for (DeviceStatus device : devices) {
+            if (null == device.getSettings()) {
+                out.add(device.getName());
             }
         }
         return out;
     }
 
-    private Set<String> getConfigureds(List<Map<String, Object>> devices) {
+    private Set<String> getConfigureds(List<DeviceStatus> devices) {
         Set<String> out = new HashSet<>();
-        for (Map<String, Object> device : devices) {
-            if (null != device.get("settings")) {
-                out.add((String) device.get("name"));
+        for (DeviceStatus device : devices) {
+            if (null != device.getSettings()) {
+                out.add(device.getName());
             }
         }
         return out;
