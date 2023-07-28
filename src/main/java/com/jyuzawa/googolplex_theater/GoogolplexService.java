@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
@@ -218,7 +219,12 @@ public class GoogolplexService implements Closeable {
     public void close() {
         nameToDeviceInfo.clear();
         refresh(null);
-        executor.close();
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            // pass
+        }
     }
 
     /**
