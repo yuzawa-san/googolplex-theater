@@ -11,6 +11,7 @@ import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +39,8 @@ class GoogolplexServiceTest {
     static void setUpBeforeClass() throws Exception {
         workerGroup = new NioEventLoopGroup(1);
         client = Mockito.mock(GoogolplexClient.class);
-        Mockito.when(client.connect(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(client.connect(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
         service = new GoogolplexService(client);
         cast1 = new FakeCast(workerGroup, 9001);
         cast2 = new FakeCast(workerGroup, 9002);
@@ -66,16 +68,16 @@ class GoogolplexServiceTest {
         DeviceConfig config = new DeviceConfig(devices, null);
         service.register(cast1.event()).get();
         service.register(cast2.event()).get();
-        Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.any());
+        Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.any(), Mockito.any());
         service.processDeviceConfig(config).get();
-        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast1.device()));
-        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast2.device()));
-        Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.eq(cast3.device()));
-        Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.eq(cast4.device()));
+        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast1.device()), Mockito.any());
+        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast2.device()), Mockito.any());
+        Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.eq(cast3.device()), Mockito.any());
+        Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.eq(cast4.device()), Mockito.any());
         service.register(cast3.event()).get();
         service.register(cast4.event()).get();
-        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast3.device()));
-        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast4.device()));
+        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast3.device()), Mockito.any());
+        Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast4.device()), Mockito.any());
         service.register(FakeCast.event(9005, "UnknownCast")).get();
         ServiceEvent noName = Mockito.mock(ServiceEvent.class);
         ServiceInfo noNameInfo = Mockito.mock(ServiceInfo.class);
@@ -120,5 +122,14 @@ class GoogolplexServiceTest {
             }
         }
         return out;
+    }
+
+    @Test
+    public void durationTest() {
+        assertEquals("1s", GoogolplexService.calculateDuration(Duration.ofSeconds(1)));
+        assertEquals("1m0s", GoogolplexService.calculateDuration(Duration.ofMinutes(1)));
+        assertEquals("1h0m0s", GoogolplexService.calculateDuration(Duration.ofHours(1)));
+        assertEquals("1d0h0m0s", GoogolplexService.calculateDuration(Duration.ofDays(1)));
+        assertEquals("1d1h1m1s", GoogolplexService.calculateDuration(Duration.ofSeconds(90061)));
     }
 }

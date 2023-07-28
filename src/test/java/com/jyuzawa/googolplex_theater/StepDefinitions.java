@@ -148,6 +148,11 @@ public class StepDefinitions {
                 .is2xxSuccessful();
     }
 
+    @Then("the user interface loads properly")
+    public void the_user_interface_loads_properly() {
+        webTestClient.get().uri("/").exchange().expectStatus().is2xxSuccessful();
+    }
+
     @When("the device is refreshed")
     public void the_device_is_refreshed() throws InterruptedException {
         refresh(device.name);

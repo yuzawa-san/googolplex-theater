@@ -6,18 +6,22 @@ Feature: Detect device configuration and service discovery changes
 		Given a registered device with url "https://example.com/a"
 		When the device url is set to "https://example.com/a"
 		Then the device connected 1 times
+		And the user interface loads properly
 	Scenario Outline: Device refreshes when config is modified.
 		Given a registered device with url "https://example.com/a"
 		When the device url is set to "https://example.com/b"
 		Then the device loaded url "https://example.com/b"
 		And the device connected 2 times
+		And the user interface loads properly
 	Scenario Outline: Device disconnects when device is removed from configuration.
 		Given a registered device with url "https://example.com/a"
 		When the device is unregistered
 		Then the device connected 1 times
 		And the device is not connected
+		And the user interface loads properly
 	Scenario Outline: Device connects when device is added from configuration.
 		Given an unregistered device
 		When the device url is set to "https://example.com/a"
 		Then the device loaded url "https://example.com/a"
 		And the device connected 1 times
+		And the user interface loads properly
