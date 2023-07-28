@@ -56,7 +56,7 @@ public class GoogolplexService implements Closeable {
     private final GoogolplexClient client;
     private final Map<String, DeviceInfo> nameToDeviceInfo;
     private final Map<String, InetSocketAddress> nameToAddress;
-    private final Map<String, Conn> nameToChannel;
+    private final Map<String, Channel> nameToChannel;
     private final ExecutorService executor;
 
     @Autowired
@@ -69,7 +69,7 @@ public class GoogolplexService implements Closeable {
         this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("controller"));
     }
 
-    private record Conn(AtomicReference<Instant> birth, Disposable disposable) {}
+    private record Channel(AtomicReference<Instant> birth, Disposable disposable) {}
 
     /**
      * Load the config and propagate the changes to the any currently connected devices.
@@ -143,7 +143,7 @@ public class GoogolplexService implements Closeable {
      * @param name device's name
      */
     private void apply(String name) {
-        Conn oldChannel = nameToChannel.get(name);
+        Channel oldChannel = nameToChannel.get(name);
         if (oldChannel != null) {
             /*
              * kill the channel. it may reconnect below.
@@ -161,7 +161,7 @@ public class GoogolplexService implements Closeable {
         }
         AtomicReference<Instant> birth = new AtomicReference<>();
         Disposable disposable = client.connect(address, deviceInfo, birth).subscribe();
-        nameToChannel.put(name, new Conn(birth, disposable));
+        nameToChannel.put(name, new Channel(birth, disposable));
     }
 
     /**
@@ -201,7 +201,7 @@ public class GoogolplexService implements Closeable {
             if (ipAddress != null) {
                 device.ipAddress(ipAddress.getAddress().getHostAddress());
             }
-            Conn channel = nameToChannel.get(name);
+            Channel channel = nameToChannel.get(name);
             if (channel != null) {
                 Instant realBirth = channel.birth.get();
                 device.birth(realBirth);
