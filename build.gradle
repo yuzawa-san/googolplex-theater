@@ -9,7 +9,7 @@ plugins {
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '2.1'
 	id("com.netflix.nebula.ospackage") version "11.2.0"
-	id "io.freefair.lombok" version "6.6.1"
+	id "io.freefair.lombok" version "8.1.0"
 }
 
 apply plugin: "java"
