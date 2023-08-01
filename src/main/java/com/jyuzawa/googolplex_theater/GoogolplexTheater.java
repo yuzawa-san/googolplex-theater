@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -27,20 +28,12 @@ public class GoogolplexTheater {
 
     public static void main(String[] args) throws Exception {
         Path appHome = Paths.get("src/dist").toAbsolutePath();
-        try {
-            Path jarPath = Paths.get(GoogolplexTheater.class
-                    .getProtectionDomain()
-                    .getCodeSource()
-                    .getLocation()
-                    .toURI());
-            if (Files.isRegularFile(jarPath)) {
-                appHome = jarPath.resolve("../../").normalize().toAbsolutePath();
-                System.setProperty(
-                        "spring.config.import",
-                        appHome.resolve("./conf/config.yml").toString());
-            }
-        } catch (Exception e) {
-            // pass
+        ApplicationHome home = new ApplicationHome(GoogolplexTheater.class);
+        Path jarPath = home.getSource().toPath();
+        if (Files.isRegularFile(jarPath)) {
+            appHome = jarPath.resolve("../../").normalize().toAbsolutePath();
+            System.setProperty(
+                    "spring.config.import", appHome.resolve("conf/config.yml").toString());
         }
         System.setProperty("googolplex-theater.app-home", appHome.toString());
         SpringApplication.run(GoogolplexTheater.class, args);

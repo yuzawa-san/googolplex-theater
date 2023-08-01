@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-jre-focal
 WORKDIR /opt/googolplex-theater
-COPY build/install/googolplex-theater/ .
+COPY build/install/googolplex-theater-boot/ .
 EXPOSE 8000
 EXPOSE 5353/udp
 VOLUME ["/opt/googolplex-theater/conf"]
