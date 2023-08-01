@@ -40,11 +40,12 @@ class DeviceConfigLoaderTest {
         FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
                 .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
                 .build());
-        Path conf = fs.getPath("/conf");
+        Path rootPath = fs.getPath("/");
+        Path conf = rootPath.resolve("conf");
         Files.createDirectory(conf);
-        Path path = conf.resolve("devices.yml");
-        try (BufferedWriter bufferedWriter =
-                Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+        Path devicePath = conf.resolve("devices.yml");
+        try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+                devicePath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
             bufferedWriter.write(VALUE1);
         }
         BlockingQueue<DeviceConfig> queue = new ArrayBlockingQueue<>(10);
@@ -57,7 +58,7 @@ class DeviceConfigLoaderTest {
                 return null;
             }
         });
-        DeviceConfigLoader loader = new DeviceConfigLoader(controller, path);
+        DeviceConfigLoader loader = new DeviceConfigLoader(controller, conf, devicePath.toString());
         loader.start();
         try {
             DeviceConfig config = queue.take();
@@ -70,7 +71,7 @@ class DeviceConfigLoaderTest {
 
             // see if an update is detected
             try (BufferedWriter bufferedWriter =
-                    Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE)) {
+                    Files.newBufferedWriter(devicePath, CharsetUtil.UTF_8, StandardOpenOption.WRITE)) {
                 bufferedWriter.write(VALUE2);
             }
             config = queue.poll(1, TimeUnit.MINUTES);

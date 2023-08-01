@@ -21,6 +21,7 @@ import javax.annotation.PostConstruct;
 import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,11 +41,15 @@ public final class DeviceConfigLoader implements Closeable {
     private final GoogolplexService service;
 
     @Autowired
-    public DeviceConfigLoader(GoogolplexService service, Path deviceConfigPath) throws IOException {
+    public DeviceConfigLoader(
+            GoogolplexService service,
+            Path appHome,
+            @Value("${googolplex-theater.devices-path}") String deviceConfigPath)
+            throws IOException {
         this.service = service;
         this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
-        this.path = deviceConfigPath;
-        log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
+        this.path = appHome.resolve(deviceConfigPath).toAbsolutePath();
+        log.info("Using device config: {}", path);
         if (!Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Config file does not exist: " + path);
         }
@@ -109,6 +114,7 @@ public final class DeviceConfigLoader implements Closeable {
         if (watchService != null) {
             watchService.close();
         }
+        executor.shutdown();
         try {
             executor.awaitTermination(1, TimeUnit.MINUTES);
         } catch (InterruptedException e) {

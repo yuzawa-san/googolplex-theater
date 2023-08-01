@@ -38,18 +38,21 @@ public class GoogolplexTheaterTesting {
 
         @Bean
         @Primary
-        public Path deviceConfigPath() throws IOException {
+        public Path appHome() throws IOException {
             FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
                     .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
                     .build());
-            Path confPath = fs.getPath("/conf");
+            Path rootPath = fs.getPath("/");
+            Path confPath = rootPath.resolve("conf");
             Files.createDirectory(confPath);
-            Path out = confPath.resolve("devices.yml");
             try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                    out, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+                    confPath.resolve("devices.yml"),
+                    CharsetUtil.UTF_8,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.CREATE)) {
                 bufferedWriter.write("settings:\n  foo: bar");
             }
-            return out;
+            return rootPath;
         }
     }
 

@@ -6,7 +6,7 @@ googolplex-theater:
   heartbeat-interval: 5s
   heartbeat-timeout: 30s
   retry-interval: 15s
-  devices-path: /Users/jtyuzawa/Documents/personal_repos/googolplex-theater/build/install/googolplex-theater/conf/devices.yml
+  devices-path: conf/devices.yml
 ---
 spring:
   config:

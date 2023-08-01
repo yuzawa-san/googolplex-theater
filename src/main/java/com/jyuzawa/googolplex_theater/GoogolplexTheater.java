@@ -4,7 +4,9 @@
  */
 package com.jyuzawa.googolplex_theater;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,11 +21,28 @@ import org.springframework.context.annotation.Bean;
 public class GoogolplexTheater {
 
     @Bean
-    public Path deviceConfigPath(@Value("${googolplex-theater.devices-path}") Path deviceConfigPath) {
-        return deviceConfigPath;
+    public Path appHome(@Value("${googolplex-theater.app-home}") Path appHome) {
+        return appHome;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        Path appHome = Paths.get("src/dist").toAbsolutePath();
+        try {
+            Path jarPath = Paths.get(GoogolplexTheater.class
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
+            if (Files.isRegularFile(jarPath)) {
+                appHome = jarPath.resolve("../../").normalize().toAbsolutePath();
+                System.setProperty(
+                        "spring.config.import",
+                        appHome.resolve("./conf/config.yml").toString());
+            }
+        } catch (Exception e) {
+            // pass
+        }
+        System.setProperty("googolplex-theater.app-home", appHome.toString());
         SpringApplication.run(GoogolplexTheater.class, args);
     }
 }

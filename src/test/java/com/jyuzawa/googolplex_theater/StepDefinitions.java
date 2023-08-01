@@ -70,14 +70,20 @@ public class StepDefinitions {
 
     private void writeEmptyDevices() throws IOException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+                devicesPath.resolve("conf/devices.yml"),
+                CharsetUtil.UTF_8,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE)) {
             bufferedWriter.write("settings:\n  foo: bar");
         }
     }
 
     private void writeDevices(DeviceConfig deviceConfig) throws IOException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+                devicesPath.resolve("conf/devices.yml"),
+                CharsetUtil.UTF_8,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE)) {
             MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, deviceConfig);
         }
     }
