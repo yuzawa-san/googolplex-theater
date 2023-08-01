@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
- * All rights reserved. Licensed under the MIT License.
+ * SPDX-License-Identifier: MIT
  */
 package com.jyuzawa.googolplex_theater;
 
@@ -10,17 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
-import com.google.common.jimfs.WatchServiceConfiguration;
-import com.jyuzawa.googolplex_theater.client.FakeCast;
-import com.jyuzawa.googolplex_theater.client.GoogolplexClientHandler;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
-import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig;
-import com.jyuzawa.googolplex_theater.config.GoogolplexTheaterConfig.ConfigYaml;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterAll;
 import io.cucumber.java.Before;
@@ -29,34 +20,36 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.CharsetUtil;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.codec.BodyCodec;
-import io.vertx.junit5.VertxTestContext;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.jmdns.JmDNS;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 
 public class StepDefinitions {
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
-    private static Vertx vertx;
+    @Autowired
+    Path devicesPath;
+
+    @Autowired
+    WebTestClient webTestClient;
+
     private static FakeCast device;
     private static EventLoopGroup workerGroup;
     private int loadCount;
-    private GoogolplexTheater googolplexTheater;
-    private static Path confPath;
-    private static Path devicesPath;
     private static final ObjectNode BASE_SETTINGS =
             MapperUtil.MAPPER.getNodeFactory().objectNode().put("foo", "bar");
     private static JmDNS mdns;
@@ -64,50 +57,33 @@ public class StepDefinitions {
     @BeforeAll
     public static void start() throws Exception {
         mdns = JmDNS.create();
-        vertx = Vertx.vertx();
-        workerGroup = vertx.nettyEventLoopGroup();
+        workerGroup = new NioEventLoopGroup(1);
         device = new FakeCast(workerGroup, 9001);
-        // For a simple file system with Unix-style paths and behavior:
-        FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
-                .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
-                .build());
-        confPath = fs.getPath("/conf");
-        Files.createDirectory(confPath);
-        devicesPath = confPath.resolve("devices.yml");
-        try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                confPath.resolve("config.yml"),
-                CharsetUtil.UTF_8,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.CREATE)) {
-            ConfigYaml config = new ConfigYaml();
-            config.setBaseReconnectSeconds(0);
-            config.setReconnectNoiseSeconds(0);
-            config.setHeartbeatIntervalSeconds(1);
-            config.setHeartbeatTimeoutSeconds(3);
-            config.setDiscoveryNetworkInterface(mdns.getInetAddress().getHostAddress());
-            System.out.println(MapperUtil.YAML_MAPPER.writeValueAsString(config));
-            MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, config);
-        }
     }
 
     @AfterAll
     public static void stop() throws IOException {
         device.close();
-        vertx.close();
-        workerGroup.shutdownGracefully().syncUninterruptibly();
+        workerGroup.shutdownGracefully(100, 100, TimeUnit.MILLISECONDS).syncUninterruptibly();
         mdns.close();
     }
 
-    private static void writeEmptyDevices() throws IOException {
+    private void writeEmptyDevices() throws IOException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+                devicesPath.resolve("conf/devices.yml"),
+                CharsetUtil.UTF_8,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE)) {
             bufferedWriter.write("settings:\n  foo: bar");
         }
     }
 
-    private static void writeDevices(DeviceConfig deviceConfig) throws IOException {
+    private void writeDevices(DeviceConfig deviceConfig) throws IOException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-                devicesPath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+                devicesPath.resolve("conf/devices.yml"),
+                CharsetUtil.UTF_8,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE)) {
             MapperUtil.YAML_MAPPER.writeValue(bufferedWriter, deviceConfig);
         }
     }
@@ -115,12 +91,11 @@ public class StepDefinitions {
     @Before
     public void setup() throws Exception {
         writeEmptyDevices();
-        googolplexTheater = new GoogolplexTheater(GoogolplexTheaterConfig.load(confPath));
     }
 
     @After
     public void tearDown() throws IOException {
-        googolplexTheater.close();
+        writeEmptyDevices();
         mdns.unregisterAllServices();
     }
 
@@ -166,26 +141,22 @@ public class StepDefinitions {
     }
 
     private void refresh(String name) throws InterruptedException {
-        VertxTestContext testContext = new VertxTestContext();
-        WebClient client = WebClient.create(vertx);
-        MultiMap form = MultiMap.caseInsensitiveMultiMap();
-        final String displayName;
-        if (name == null) {
-            displayName = "All Devices";
-        } else {
-            displayName = name;
-            form.add("name", name);
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        if (name != null) {
+            formData.set("name", name);
         }
-        client.post(8000, "localhost", "/refresh")
-                .as(BodyCodec.string())
-                .sendForm(
-                        form,
-                        testContext.succeeding(response -> testContext.verify(() -> {
-                            assertEquals(200, response.statusCode());
-                            assertTrue(response.body().contains(displayName + " refreshing..."));
-                            testContext.completeNow();
-                        })));
-        testContext.awaitCompletion(10, TimeUnit.SECONDS);
+        webTestClient
+                .post()
+                .uri("/refresh")
+                .body(BodyInserters.fromFormData(formData))
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful();
+    }
+
+    @Then("the user interface loads properly")
+    public void the_user_interface_loads_properly() {
+        webTestClient.get().uri("/").exchange().expectStatus().is2xxSuccessful();
     }
 
     @When("the device is refreshed")
@@ -228,23 +199,21 @@ public class StepDefinitions {
 
     private void assertTransaction(FakeCast cast, String url) throws Exception {
         CastMessage connect = cast.getMessage();
-        assertType(connect, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, GoogolplexClientHandler.NAMESPACE_CONNECTION);
+        assertType(connect, GoogolplexClient.DEFAULT_RECEIVER_ID, GoogolplexClient.NAMESPACE_CONNECTION);
         assertEquals("{\"type\":\"CONNECT\"}", connect.getPayloadUtf8());
 
         CastMessage launch = cast.getMessage();
-        assertType(launch, GoogolplexClientHandler.DEFAULT_RECEIVER_ID, GoogolplexClientHandler.NAMESPACE_RECEIVER);
+        assertType(launch, GoogolplexClient.DEFAULT_RECEIVER_ID, GoogolplexClient.NAMESPACE_RECEIVER);
         assertEquals(
-                "{\"requestId\":0,\"appId\":\""
-                        + GoogolplexClientHandler.DEFAULT_APPLICATION_ID
-                        + "\",\"type\":\"LAUNCH\"}",
+                "{\"requestId\":0,\"appId\":\"" + GoogolplexClient.DEFAULT_APPLICATION_ID + "\",\"type\":\"LAUNCH\"}",
                 launch.getPayloadUtf8());
 
         CastMessage appConnect = cast.getMessage();
-        assertType(appConnect, cast.toString(), GoogolplexClientHandler.NAMESPACE_CONNECTION);
+        assertType(appConnect, cast.toString(), GoogolplexClient.NAMESPACE_CONNECTION);
         assertEquals("{\"type\":\"CONNECT\"}", appConnect.getPayloadUtf8());
 
         CastMessage app = cast.getMessage();
-        assertType(app, cast.toString(), GoogolplexClientHandler.NAMESPACE_CUSTOM);
+        assertType(app, cast.toString(), GoogolplexClient.NAMESPACE_CUSTOM);
         JsonNode node = MapperUtil.MAPPER.readTree(app.getPayloadUtf8());
         assertEquals(cast.name, node.get("name").asText());
         assertEquals(url, node.get("settings").get("url").asText());

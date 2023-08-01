@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Googolplex Theater</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<link rel="icon" type="image/png" href="./favicon.png">
+		<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+		<style>
+			body { line-height:1em }
+			.settings { font-size:10px;white-space:pre-wrap;word-wrap:break-word; }
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1><img src="./favicon.png" width="32"> Googolplex Theater</h1>
+			<div class="float-right">
+				<form method="post" action="./refresh">
+					<input class="btn btn-primary" type="submit" value="Refresh All">
+				</form>
+			</div>
+			<h2>Devices</h2>
+			<div class="row">
+				<div class="col-lg-6 pb-1" th:each="device: ${devices}">
+					<div class="card">
+						<div class="card-header">
+							<div class="float-right"> 
+								<form method="post" action="./refresh">
+									<input type="hidden" name="name" th:value="${device.name}">
+									<span th:if="${device.settings}">
+										<span th:if="${device.ipAddress}">
+											<span th:if="${device.uptime}" class="badge badge-success">Connected for <span th:text="${device.uptime}"></span></span>
+											<span th:unless="${device.uptime}"class="badge badge-warning">Disconnected</span>
+										</span>
+										<span th:unless="${device.ipAddress}" class="badge badge-danger">Not Found</span>
+									</span>
+									<span th:unless="${device.settings}" class="badge badge-secondary">Not Configured</span>
+									<input class="btn btn-primary btn-sm" type="submit" value="Refresh" th:disabled="!${device.uptime}">
+								</form>
+							</div>
+							<h5 class="mb-0" th:text="${device.name}"></h5>
+						</div>
+						<div class="card-body">
+							<p><strong>IP Address:</strong> <span th:text="${device.ipAddress} ?: 'not found'" /></p>
+							<div th:if="${device.settings}">
+								<p><strong>Settings:</strong></p>
+								<code class="settings" th:text="${device.settings.toPrettyString()}" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-12" th:unless="${devices}"><div class="card"><div class="card-body">No devices configured or discovered!</div></div></div>
+			</div>
+		</div>
+		<footer class="text-muted">
+			<div class="container">
+				<hr>
+				<a href="https://github.com/yuzawa-san/googolplex-theater">GitHub</a>
+			</div>
+		</footer>
+	</body>
+</html>

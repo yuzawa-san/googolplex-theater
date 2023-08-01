@@ -1,11 +1,9 @@
 /*
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
- * All rights reserved. Licensed under the MIT License.
+ * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.config;
+package com.jyuzawa.googolplex_theater;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
-import com.jyuzawa.googolplex_theater.util.MapperUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +16,13 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
+import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * This class loads the device config at start and watches the files for subsequent changes. The
@@ -27,27 +31,38 @@ import lombok.extern.slf4j.Slf4j;
  * @author jyuzawa
  */
 @Slf4j
+@Component
 public final class DeviceConfigLoader implements Closeable {
 
     private final ExecutorService executor;
     private final Path path;
-    private final GoogolplexController controller;
-    private final WatchService watchService;
+    private final Path directoryPath;
+    private WatchService watchService;
+    private final GoogolplexService service;
 
-    public DeviceConfigLoader(GoogolplexController controller, Path deviceConfigPath) throws IOException {
-        this.controller = controller;
-        this.executor = Executors.newSingleThreadExecutor();
-        this.path = deviceConfigPath;
-        log.info("Using device config: {}", deviceConfigPath.toAbsolutePath());
-        load();
-        this.watchService = path.getFileSystem().newWatchService();
-        /*
-         * the watch operation only works with directories, so we have to get the parent directory of the file.
-         */
-        Path directoryPath = path.getParent();
+    @Autowired
+    public DeviceConfigLoader(
+            GoogolplexService service,
+            Path appHome,
+            @Value("${googolplex-theater.devices-path}") String deviceConfigPath)
+            throws IOException {
+        this.service = service;
+        this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
+        this.path = appHome.resolve(deviceConfigPath).toAbsolutePath();
+        log.info("Using device config: {}", path);
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalArgumentException("Config file does not exist: " + path);
+        }
+        this.directoryPath = path.getParent();
         if (directoryPath == null) {
             throw new IllegalArgumentException("Path has missing parent");
         }
+    }
+
+    @PostConstruct
+    public void start() throws IOException {
+        load();
+        this.watchService = path.getFileSystem().newWatchService();
         directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
         executor.submit(() -> {
             try {
@@ -90,14 +105,20 @@ public final class DeviceConfigLoader implements Closeable {
         log.info("Reloading device config");
         try (InputStream stream = Files.newInputStream(path)) {
             DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
-            controller.processDeviceConfig(out);
+            service.processDeviceConfig(out);
         }
     }
 
     @Override
     public void close() throws IOException {
-        controller.processDeviceConfig(new DeviceConfig());
-        executor.shutdownNow();
-        watchService.close();
+        if (watchService != null) {
+            watchService.close();
+        }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            // pass
+        }
     }
 }

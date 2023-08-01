@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
- * All rights reserved. Licensed under the MIT License.
+ * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.config;
+package com.jyuzawa.googolplex_theater;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -10,22 +10,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
-import com.jyuzawa.googolplex_theater.config.DeviceConfig.DeviceInfo;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import io.netty.util.CharsetUtil;
-import io.vertx.core.json.JsonObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.jmdns.ServiceEvent;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 class DeviceConfigLoaderTest {
 
@@ -41,33 +40,26 @@ class DeviceConfigLoaderTest {
         FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder()
                 .setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS))
                 .build());
-        Path conf = fs.getPath("/conf");
+        Path rootPath = fs.getPath("/");
+        Path conf = rootPath.resolve("conf");
         Files.createDirectory(conf);
-        Path path = conf.resolve("devices.yml");
-        try (BufferedWriter bufferedWriter =
-                Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+        Path devicePath = conf.resolve("devices.yml");
+        try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+                devicePath, CharsetUtil.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
             bufferedWriter.write(VALUE1);
         }
         BlockingQueue<DeviceConfig> queue = new ArrayBlockingQueue<>(10);
-        GoogolplexController controller = new GoogolplexController() {
+        GoogolplexService controller = Mockito.mock(GoogolplexService.class);
+        Mockito.when(controller.processDeviceConfig(Mockito.any())).then(new Answer<Void>() {
 
             @Override
-            public void register(ServiceEvent event) {}
-
-            @Override
-            public void refresh(String name) {}
-
-            @Override
-            public List<JsonObject> getDeviceInfo() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                queue.add(invocation.getArgument(0, DeviceConfig.class));
                 return null;
             }
-
-            @Override
-            public void processDeviceConfig(DeviceConfig config) {
-                queue.add(config);
-            }
-        };
-        DeviceConfigLoader loader = new DeviceConfigLoader(controller, path);
+        });
+        DeviceConfigLoader loader = new DeviceConfigLoader(controller, conf, devicePath.toString());
+        loader.start();
         try {
             DeviceConfig config = queue.take();
             assertEquals(1, config.getDevices().size());
@@ -79,7 +71,7 @@ class DeviceConfigLoaderTest {
 
             // see if an update is detected
             try (BufferedWriter bufferedWriter =
-                    Files.newBufferedWriter(path, CharsetUtil.UTF_8, StandardOpenOption.WRITE)) {
+                    Files.newBufferedWriter(devicePath, CharsetUtil.UTF_8, StandardOpenOption.WRITE)) {
                 bufferedWriter.write(VALUE2);
             }
             config = queue.poll(1, TimeUnit.MINUTES);

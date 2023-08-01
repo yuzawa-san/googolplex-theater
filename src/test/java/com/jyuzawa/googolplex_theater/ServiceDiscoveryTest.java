@@ -1,13 +1,12 @@
 /*
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
- * All rights reserved. Licensed under the MIT License.
+ * SPDX-License-Identifier: MIT
  */
-package com.jyuzawa.googolplex_theater.mdns;
+package com.jyuzawa.googolplex_theater;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.jyuzawa.googolplex_theater.client.GoogolplexController;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -30,7 +29,7 @@ class ServiceDiscoveryTest {
 
     @Test
     void instantiationTest() throws IOException {
-        GoogolplexController controller = Mockito.mock(GoogolplexController.class);
+        GoogolplexService controller = Mockito.mock(GoogolplexService.class);
         ServiceDiscovery sd = new ServiceDiscovery(controller, null);
         sd.close();
     }

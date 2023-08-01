@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022 James Yuzawa (https://www.jyuzawa.com/)
- * All rights reserved. Licensed under the MIT License.
+ * SPDX-License-Identifier: MIT
  */
 package com.jyuzawa.googolplex_theater;
 
@@ -11,7 +11,7 @@ import org.junit.platform.suite.api.SelectClasspathResource;
 import org.junit.platform.suite.api.Suite;
 
 @Suite
-@IncludeEngines("cucumber")
+@IncludeEngines({"cucumber", "spring"})
 @SelectClasspathResource("features")
 @ConfigurationParameter(key = Constants.GLUE_PROPERTY_NAME, value = "com.jyuzawa.googolplex_theater")
 @ConfigurationParameter(key = Constants.PLUGIN_PROPERTY_NAME, value = "pretty,html:build/reports/cucumber.html")
