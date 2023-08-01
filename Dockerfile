@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre-focal
+FROM eclipse-temurin:20-jre-jammy
 WORKDIR /opt/googolplex-theater
 COPY build/install/googolplex-theater-boot/ .
 EXPOSE 8000

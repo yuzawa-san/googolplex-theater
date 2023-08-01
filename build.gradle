@@ -140,7 +140,7 @@ buildDeb {
 	into '/opt/googolplex-theater'
 	user 'googolplex-theater'
 	permissionGroup 'googolplex-theater'
-	requires("default-jre-headless")
+	requires("openjdk-17-jre-headless")
 	from("${project.buildDir}/install/googolplex-theater-boot") {
 		exclude 'conf'
 		exclude 'service'
