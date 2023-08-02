@@ -169,7 +169,7 @@ The maintainer has used this to show statistics dashboards in a software enginee
 * Place the devices.yml file under version control (git) or store it someplace accessible (http/s3/gcs).
 * Add a cron job to pull the devices.yml file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * devices.yml is updated periodically as our dashboard needs change. The updates are automatically picked up.
-* If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8000 and hitting a few buttons.
+* If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8080 and hitting a few buttons.
 
 ### Using a Custom Receiver
 
