@@ -67,7 +67,7 @@ The installation process may prompt you to install a version of Java.
 The packaging automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
 The application is installed in `/opt/googolplex-theater`.
 It is registered as a systemd service enabled to launch at startup.
-The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service` if you wish to customize or update the program arguments.
+The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service`.
 The `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
 
 #### packagecloud
@@ -118,7 +118,6 @@ Sadly, this option does not work in Mac.
 If you get warnings about port 5353 being in use, you may need to disable Avahi on Linux.
 The `conf` directory is mounted as a docker volume.
 This will seamlessly map your local configuration into the Docker runtime.
-Arguments like `--help` can be appended onto the end of the `docker run` example above.
 
 It is recommended to wrap your `docker run` in something to keep it running as a daemon or persistent service.
 
@@ -182,7 +181,7 @@ Currently the device name and settings are printed to the screen. Customize the 
 
 Host your modified file via HTTPS on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
 
-Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
+There is a property in the `config.yml` to override the receiver application.
 
 ### Troubleshooting
 
@@ -191,7 +190,7 @@ It is important that the service discovery uses the network interface and IP add
 The application will make decent attempt to find the proper network interface to use.
 There is a chance it may find the wrong interface/address based on your system configration (wireless internet vs ethernet, VPN, ordering).
 Some diagnostic information is printed in the application output annotated with `com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery`.
-There is a command line argument (`-i`) which allows the desired network interface (by name) or IP address to be provided.
+There is a property in the config.yml which allows the desired network interface (by name) or IP address to be provided.
 
 ## Contributing
 
@@ -201,7 +200,6 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 
 ### TODO
 
-* Raspberry Pi OS package distribution
 * Split screen layouts
 * Framing proxy (may not be feasible or allowed under HTTPS)
 
