@@ -1,7 +1,7 @@
 # googolplex-theater
 by [@yuzawa-san](https://github.com/yuzawa-san/)
 
-![Icon](src/main/resources/favicon.png)
+![Icon](src/main/resources/static/favicon.png)
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
 [![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
@@ -32,7 +32,7 @@ See [feature files](src/test/resources/features/) for more details.
 
 This application has very minimal runtime requirements:
 
-* Java runtime version 11 or later.
+* Java runtime version 17 or later.
 * Linux or MacOS is preferred. Windows appears to work, but the maintainer lacks access to the hardware to test, so your mileage may vary.
 
 There are certain requirements for networking which are beyond the realm of this project, but should be noted:
@@ -41,13 +41,13 @@ There are certain requirements for networking which are beyond the realm of this
   * Multicast DNS must work on your network and on the computer you run the application on. This is how the devices and the application discover each other.
 * It is strongly recommended to use a dedicated computer to run this application.
   * The [Raspberry Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) is a good, small, and cost-effective computer to use.
-  * It is not advisable to use older models which use older processor architectures (ARMv6 or ARMv7), specifically the Raspberry Pi Zero.
   * The newer models with ARMv8 processors are most desirable. See the [models list](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) for more details. Most models introduced after 2016 fulfill these recommendations.
+  * It is not advisable to use older models which use older processor architectures (ARMv6 or ARMv7), specifically the _original_ Raspberry Pi Zero or Zero W. See the linked specifications table in previous item for more details.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
 
 Development requirements:
 
-* JDK 11 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
+* JDK 17 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
 
 ## Installation
 
@@ -67,14 +67,14 @@ The installation process may prompt you to install a version of Java.
 The packaging automates the installation for the most part, so it is only really necessary to [update your configuration](#usage).
 The application is installed in `/opt/googolplex-theater`.
 It is registered as a systemd service enabled to launch at startup.
-The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service` if you wish to customize or update the program arguments.
+The service file is installed at `/usr/lib/systemd/system/googolplex-theater.service`.
 The `systemctl` and `journalctl` commands are useful for starting, stopping, checking status, tailing logs, etc.
 
 #### packagecloud
 
 [Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
 This is one of the easiest ways to install the application and keep it up to date.
-The following distros are currently supported: `raspbian/buster`, `raspbian/bullseye`, `ubuntu/focal`, `ubuntu/bionic`, `ubuntu/jammy`.
+The following distros are currently supported: `raspbian/bullseye`, `raspbian/bookworm`, `ubuntu/focal`, `ubuntu/jammy`.
 
 Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
 ```
@@ -118,7 +118,6 @@ Sadly, this option does not work in Mac.
 If you get warnings about port 5353 being in use, you may need to disable Avahi on Linux.
 The `conf` directory is mounted as a docker volume.
 This will seamlessly map your local configuration into the Docker runtime.
-Arguments like `--help` can be appended onto the end of the `docker run` example above.
 
 It is recommended to wrap your `docker run` in something to keep it running as a daemon or persistent service.
 
@@ -131,7 +130,7 @@ Alternatively, clone/download this repo, and run:
 ./gradlew build
 ```
 
-This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
+This will generate the application ZIP archive in `./build/distributions/googolplex-theater-boot-VERSION.zip`
 
 Once you have the ZIP archive, expand it in the desired destination location and `cd` into directory.
 
@@ -154,7 +153,6 @@ See service descriptor files for upstart, systemd, and launchd in the `./service
 ## Usage
 
 The configuration is defined in `./conf/config.yml` and `./conf/devices.yml`.
-The location of your configuration can be customized using a command line argument.
 The file is automatically watched for changes.
 Some example use cases involve using cron and putting your config under version control and pulling from origin periodically, or downloading from S3/web, or updating using rsync/scp.
 
@@ -171,7 +169,7 @@ The maintainer has used this to show statistics dashboards in a software enginee
 * Place the devices.yml file under version control (git) or store it someplace accessible (http/s3/gcs).
 * Add a cron job to pull the devices.yml file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
 * devices.yml is updated periodically as our dashboard needs change. The updates are automatically picked up.
-* If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8000 and hitting a few buttons.
+* If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8080 and hitting a few buttons.
 
 ### Using a Custom Receiver
 
@@ -183,7 +181,7 @@ Currently the device name and settings are printed to the screen. Customize the 
 
 Host your modified file via HTTPS on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
 
-Pass your APP_ID in as a command line argument when you run, and your receiver will be loaded up.
+There is a property in the `config.yml` to override the receiver application.
 
 ### Troubleshooting
 
@@ -192,11 +190,9 @@ It is important that the service discovery uses the network interface and IP add
 The application will make decent attempt to find the proper network interface to use.
 There is a chance it may find the wrong interface/address based on your system configration (wireless internet vs ethernet, VPN, ordering).
 Some diagnostic information is printed in the application output annotated with `com.jyuzawa.googolplex_theater.mdns.ServiceDiscovery`.
-There is a command line argument (`-i`) which allows the desired network interface (by name) or IP address to be provided.
+There is a property in the config.yml which allows the desired network interface (by name) or IP address to be provided.
 
 ## Contributing
-
-_NOTE: due to COVID-19 the maintainer does not have regular access to the hardware to test this application._
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
@@ -204,7 +200,6 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 
 ### TODO
 
-* Raspberry Pi OS package distribution
 * Split screen layouts
 * Framing proxy (may not be feasible or allowed under HTTPS)
 

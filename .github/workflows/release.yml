@@ -25,7 +25,7 @@ jobs:
           bundler-cache: true
       - name: Build with Gradle
         run: |
-          ./gradlew --no-daemon -s build buildDeb installDist
+          ./gradlew --no-daemon -s build buildDeb installBootDist
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -64,7 +64,7 @@ jobs:
           prerelease: false
       - name: Get the ZIP
         id: get_zip
-        run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*.zip"))
+        run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*-boot-*.zip"))
       - name: Upload Release ZIP
         id: upload-release-asset-zip
         uses: actions/upload-release-asset@v1
@@ -80,10 +80,9 @@ jobs:
         run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*.deb"))
       - name: Upload to Packagecloud
         run: |
-          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/buster ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bullseye ./build/distributions/${{ steps.get_deb.outputs.filename }}
+          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bookworm ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/focal ./build/distributions/${{ steps.get_deb.outputs.filename }}
-          bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/bionic ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/jammy ./build/distributions/${{ steps.get_deb.outputs.filename }}
         env:
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
