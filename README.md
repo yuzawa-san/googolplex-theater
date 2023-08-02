@@ -41,8 +41,8 @@ There are certain requirements for networking which are beyond the realm of this
   * Multicast DNS must work on your network and on the computer you run the application on. This is how the devices and the application discover each other.
 * It is strongly recommended to use a dedicated computer to run this application.
   * The [Raspberry Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) is a good, small, and cost-effective computer to use.
-  * It is not advisable to use older models which use older processor architectures (ARMv6 or ARMv7), specifically the Raspberry Pi Zero.
   * The newer models with ARMv8 processors are most desirable. See the [models list](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) for more details. Most models introduced after 2016 fulfill these recommendations.
+  * It is not advisable to use older models which use older processor architectures (ARMv6 or ARMv7), specifically the _original_ Raspberry Pi Zero or Zero W. See the linked specifications table in previous item for more details.
 * IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
 
 Development requirements:
@@ -74,7 +74,7 @@ The `systemctl` and `journalctl` commands are useful for starting, stopping, che
 
 [Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
 This is one of the easiest ways to install the application and keep it up to date.
-The following distros are currently supported: `raspbian/bookworm`, `raspbian/bullseye`, `ubuntu/focal`, `ubuntu/jammy`.
+The following distros are currently supported: `raspbian/bullseye`, `raspbian/bookworm`, `ubuntu/focal`, `ubuntu/jammy`.
 
 Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
 ```
