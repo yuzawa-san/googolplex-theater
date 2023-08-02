@@ -1,7 +1,7 @@
 # googolplex-theater
 by [@yuzawa-san](https://github.com/yuzawa-san/)
 
-![Icon](src/main/resources/favicon.png)
+![Icon](src/main/resources/static/favicon.png)
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/yuzawa-san/googolplex-theater)](https://github.com/yuzawa-san/googolplex-theater/releases)
 [![GitHub All Releases](https://img.shields.io/github/downloads/yuzawa-san/googolplex-theater/total)](https://github.com/yuzawa-san/googolplex-theater/releases)
@@ -32,7 +32,7 @@ See [feature files](src/test/resources/features/) for more details.
 
 This application has very minimal runtime requirements:
 
-* Java runtime version 11 or later.
+* Java runtime version 17 or later.
 * Linux or MacOS is preferred. Windows appears to work, but the maintainer lacks access to the hardware to test, so your mileage may vary.
 
 There are certain requirements for networking which are beyond the realm of this project, but should be noted:
@@ -47,7 +47,7 @@ There are certain requirements for networking which are beyond the realm of this
 
 Development requirements:
 
-* JDK 11 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
+* JDK 17 or later. The [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is used to build this application and is already included.
 
 ## Installation
 
@@ -74,7 +74,7 @@ The `systemctl` and `journalctl` commands are useful for starting, stopping, che
 
 [Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
 This is one of the easiest ways to install the application and keep it up to date.
-The following distros are currently supported: `raspbian/buster`, `raspbian/bullseye`, `ubuntu/focal`, `ubuntu/bionic`, `ubuntu/jammy`.
+The following distros are currently supported: `raspbian/bookworm`, `raspbian/bullseye`, `ubuntu/focal`, `ubuntu/jammy`.
 
 Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
 ```
@@ -131,7 +131,7 @@ Alternatively, clone/download this repo, and run:
 ./gradlew build
 ```
 
-This will generate the application ZIP archive in `./build/distributions/googolplex-theater-VERSION.zip`
+This will generate the application ZIP archive in `./build/distributions/googolplex-theater-boot-VERSION.zip`
 
 Once you have the ZIP archive, expand it in the desired destination location and `cd` into directory.
 
@@ -154,7 +154,6 @@ See service descriptor files for upstart, systemd, and launchd in the `./service
 ## Usage
 
 The configuration is defined in `./conf/config.yml` and `./conf/devices.yml`.
-The location of your configuration can be customized using a command line argument.
 The file is automatically watched for changes.
 Some example use cases involve using cron and putting your config under version control and pulling from origin periodically, or downloading from S3/web, or updating using rsync/scp.
 
@@ -195,8 +194,6 @@ Some diagnostic information is printed in the application output annotated with 
 There is a command line argument (`-i`) which allows the desired network interface (by name) or IP address to be provided.
 
 ## Contributing
-
-_NOTE: due to COVID-19 the maintainer does not have regular access to the hardware to test this application._
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
