@@ -105,7 +105,7 @@ dependencies {
 	testImplementation 'io.cucumber:cucumber-java'
 	testImplementation 'io.cucumber:cucumber-spring'
 	testImplementation 'io.cucumber:cucumber-junit-platform-engine'
-	testImplementation 'org.junit.platform:junit-platform-suite:1.9.1'
+	testImplementation 'org.junit.platform:junit-platform-suite:1.10.1'
 }
 
 test {
