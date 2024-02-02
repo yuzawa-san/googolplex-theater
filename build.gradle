@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.1'
+	id 'org.springframework.boot' version '3.2.2'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id "net.researchgate.release" version "3.0.2"
 	id "com.google.protobuf" version "0.9.4"
@@ -94,7 +94,7 @@ dependencies {
 	implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
 	implementation 'com.google.protobuf:protobuf-java:3.25.1'
 	implementation 'org.jmdns:jmdns:3.5.9'
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.1'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.mockito:mockito-core:5.5.0'
