@@ -39,9 +39,8 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.1.0
         if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
-      - name: Save reports
-        uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
+      - name: Test Summary
+        uses: test-summary/action@v2
         with:
-          name: reports-${{ matrix.os }}-${{ matrix.java }}
-          path: build/reports/
+          paths: "build/test-results/test/TEST-*.xml"
+        if: always()
