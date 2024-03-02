@@ -12,12 +12,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # LTS versions + latest
-        java: [ '17', '21' ]
-    name: Java ${{ matrix.java }} build
+        java: [ '21' ]
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+        include:
+          - java: 17
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/wrapper-validation-action@v2
@@ -33,10 +38,10 @@ jobs:
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.0.1
-        if: ${{ matrix.java == '17' }}
+        if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
       - name: Save reports
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: reports-${{ matrix.java }}
+          name: reports-${{ matrix.os }}-${{ matrix.java }}
           path: build/reports/
