@@ -56,7 +56,7 @@ public class StepDefinitions {
 
     @BeforeAll
     public static void start() throws Exception {
-        mdns = JmDNS.create();
+        mdns = JmDNS.create(ServiceDiscovery.getInterfaceAddress(null));
         workerGroup = new NioEventLoopGroup(1);
         device = new FakeCast(workerGroup, 9001);
     }

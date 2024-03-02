@@ -100,7 +100,7 @@ This process also requires manual updating.
 The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
 
 This may be comparatively easier versus getting a proper Java runtime installed.
-This is released in a few common processor architectures: amd64, arm64/v8, arm/v7.
+This is released in a few common processor architectures: amd64, arm64/v8.
 
 To run a specific `VERSION` of the application, pull:
 ```

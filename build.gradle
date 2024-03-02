@@ -36,7 +36,7 @@ release {
 }
 
 lombok {
-	version = "1.18.26"
+	version = "1.18.30"
 }
 
 jacocoTestReport {
