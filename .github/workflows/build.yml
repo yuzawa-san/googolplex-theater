@@ -44,3 +44,9 @@ jobs:
         with:
           paths: "build/test-results/test/TEST-*.xml"
         if: always()
+      - name: Save reports
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: reports-${{ matrix.os }}-${{ matrix.java }}
+          path: build/reports/
