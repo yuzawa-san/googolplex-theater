@@ -37,7 +37,7 @@ jobs:
         run: |
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.1.0
+        uses: codecov/codecov-action@v4.1.1
         if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
       - name: Test Summary
         uses: test-summary/action@v2
