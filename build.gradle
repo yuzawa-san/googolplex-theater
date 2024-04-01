@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.2'
+	id 'org.springframework.boot' version '3.2.4'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id "net.researchgate.release" version "3.0.2"
 	id "com.google.protobuf" version "0.9.4"
@@ -36,7 +36,7 @@ release {
 }
 
 lombok {
-	version = "1.18.30"
+	version = "1.18.32"
 }
 
 jacocoTestReport {
@@ -57,7 +57,7 @@ licenseReport {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:3.25.3"
+		artifact = "com.google.protobuf:protoc:4.26.1"
 	}
 	generateProtoTasks {
 		ofSourceSet('main')
