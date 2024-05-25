@@ -19,7 +19,7 @@ jobs:
         java: [ '21' ]
         os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
         include:
-          - java: 17
+          - java: 22
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
@@ -38,7 +38,7 @@ jobs:
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.3.1
-        if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.java == '21' && matrix.os == 'ubuntu-latest' }}
       - name: Test Summary
         uses: test-summary/action@v2
         with:
