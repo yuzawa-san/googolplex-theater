@@ -74,7 +74,7 @@ The `systemctl` and `journalctl` commands are useful for starting, stopping, che
 
 [Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
 This is one of the easiest ways to install the application and keep it up to date.
-The following distros are currently supported: `raspbian/bullseye`, `raspbian/bookworm`, `ubuntu/focal`, `ubuntu/jammy`.
+The following distros are currently supported: `raspbian/bullseye`, `raspbian/bookworm`, `ubuntu/focal`, `ubuntu/jammy`, `ubuntu/noble`.
 
 Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
 ```
@@ -134,11 +134,6 @@ This will generate the application ZIP archive in `./build/distributions/googolp
 
 Once you have the ZIP archive, expand it in the desired destination location and `cd` into directory.
 
-To show all options:
-```
-./bin/googolplex-theater --help
-```
-
 To run the application with default settings:
 ```
 ./bin/googolplex-theater
@@ -148,7 +143,6 @@ To run the application with default settings:
 
 To provide resiliency, it is recommended to run the application as a daemon.
 See service descriptor files for upstart, systemd, and launchd in the `./service/` directory. They should work with minor modifications. Please refer to their respective installation guides to enable on your system.
-
 
 ## Usage
 

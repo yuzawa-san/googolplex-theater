@@ -25,8 +25,8 @@ jobs:
     name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
     steps:
       - uses: actions/checkout@v4
-      - uses: gradle/wrapper-validation-action@v3
-      - name: Set up JDK ${{ matrix.java }}
+      - uses: gradle/actions/wrapper-validation@v3
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -37,8 +37,10 @@ jobs:
         run: |
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.3.1
+        uses: codecov/codecov-action@v4.4.1
         if: ${{ matrix.java == '21' && matrix.os == 'ubuntu-latest' }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Test Summary
         uses: test-summary/action@v2
         with:
