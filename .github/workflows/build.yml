@@ -25,7 +25,7 @@ jobs:
     name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
     steps:
       - uses: actions/checkout@v4
-        uses: gradle/actions/wrapper-validation@v3
+      - uses: gradle/actions/wrapper-validation@v3
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
