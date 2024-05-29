@@ -51,7 +51,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
       - name: Get the tag
         id: get_tag
-        run: echo ::set-output name=tag::$(echo ${{ github.ref }} | cut -d / -f 3)
+        run: echo tag=$(echo ${{ github.ref }} | cut -d / -f 3) >> $GITHUB_OUTPUT
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -64,7 +64,7 @@ jobs:
           prerelease: false
       - name: Get the ZIP
         id: get_zip
-        run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*-boot-*.zip"))
+        run: echo filename=$(basename $(find build/distributions -name "*-boot-*.zip")) >> $GITHUB_OUTPUT
       - name: Upload Release ZIP
         id: upload-release-asset-zip
         uses: actions/upload-release-asset@v1
@@ -77,7 +77,7 @@ jobs:
           asset_content_type: application/zip
       - name: Get the DEB
         id: get_deb
-        run: echo ::set-output name=filename::$(basename $(find build/distributions -name "*.deb"))
+        run: echo filename=$(basename $(find build/distributions -name "*.deb")) >> $GITHUB_OUTPUT
       - name: Upload to Packagecloud
         run: |
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bullseye ./build/distributions/${{ steps.get_deb.outputs.filename }}
