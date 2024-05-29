@@ -1,2 +1,2 @@
 source 'https://rubygems.org'
-gem "package_cloud"
+gem 'package_cloud', '~> 0.3.14'
