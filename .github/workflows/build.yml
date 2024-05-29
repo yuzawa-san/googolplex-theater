@@ -39,6 +39,8 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.4.1
         if: ${{ matrix.java == '21' && matrix.os == 'ubuntu-latest' }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Test Summary
         uses: test-summary/action@v2
         with:
