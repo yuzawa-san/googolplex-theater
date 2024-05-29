@@ -1,15 +1,16 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.4'
-	id 'io.spring.dependency-management' version '1.1.4'
+	id 'org.springframework.boot' version '3.3.0'
+	id 'io.spring.dependency-management' version '1.1.5'
 	id "net.researchgate.release" version "3.0.2"
 	id "com.google.protobuf" version "0.9.4"
 	id "com.diffplug.spotless" version "6.25.0"
-	id "com.github.spotbugs" version "6.0.9"
+	id "com.github.spotbugs" version "6.0.15"
+	id "com.github.ben-manes.versions" version "0.51.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
-	id 'com.github.jk1.dependency-license-report' version '2.7'
-	id("com.netflix.nebula.ospackage") version "11.9.0"
-	id "io.freefair.lombok" version "8.4"
+	id 'com.github.jk1.dependency-license-report' version '2.8'
+	id("com.netflix.nebula.ospackage") version "11.9.1"
+	id "io.freefair.lombok" version "8.6"
 }
 
 apply plugin: "java"
@@ -57,7 +58,7 @@ licenseReport {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.26.1"
+		artifact = "com.google.protobuf:protoc:4.27.0"
 	}
 	generateProtoTasks {
 		ofSourceSet('main')
@@ -92,16 +93,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'javax.annotation:javax.annotation-api:1.3.2'
 	implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
-	implementation 'com.google.protobuf:protobuf-java:4.26.1'
+	implementation 'com.google.protobuf:protobuf-java:4.27.0'
 	implementation 'org.jmdns:jmdns:3.5.9'
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.1'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.mockito:mockito-core:5.11.0'
+	testImplementation 'org.mockito:mockito-core:5.12.0'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 	testImplementation 'com.google.jimfs:jimfs:1.3.0'
-	testImplementation(platform('io.cucumber:cucumber-bom:7.17.0'))
+	testImplementation(platform('io.cucumber:cucumber-bom:7.18.0'))
 	testImplementation 'io.cucumber:cucumber-java'
 	testImplementation 'io.cucumber:cucumber-spring'
 	testImplementation 'io.cucumber:cucumber-junit-platform-engine'
