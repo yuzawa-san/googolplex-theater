@@ -9,6 +9,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
@@ -25,7 +29,7 @@ jobs:
           bundler-cache: true
       - name: Build with Gradle
         run: |
-          ./gradlew --no-daemon -s build buildDeb installBootDist
+          ./gradlew --no-daemon -s bootZip buildDeb installBootDist
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -47,6 +51,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       - name: Get the tag
@@ -97,3 +103,8 @@ jobs:
           asset_path: ./build/distributions/${{ steps.get_deb.outputs.filename }}
           asset_name: ${{ steps.get_deb.outputs.filename }}
           asset_content_type: application/vnd.debian.binary-package
+      - name: Attest
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'build/distributions/*'
+      
