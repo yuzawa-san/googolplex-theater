@@ -29,7 +29,7 @@ jobs:
           bundler-cache: true
       - name: Build with Gradle
         run: |
-          ./gradlew --no-daemon -s bootZip buildDeb installBootDist
+          ./gradlew --no-daemon -s build buildDeb installBootDist
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -106,5 +106,5 @@ jobs:
       - name: Attest
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: 'build/distributions/*'
+          subject-path: 'build/distributions/${{ steps.get_zip.outputs.filename }},build/distributions/${{ steps.get_deb.outputs.filename }}'
       
