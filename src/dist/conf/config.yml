@@ -13,3 +13,7 @@
 #  devices-path: conf/devices.yml
 #  preferred-interface: eth0
 #  advertise: true
+#  proxy:
+#    url: https://grafana.mysite.com/
+#    add-request-headers:
+#      Authorization: Bearer my_grafana_token

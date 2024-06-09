@@ -1,5 +1,8 @@
-settings:
-  refreshSeconds: 180
+# NOTE: these top level settings can be applied to all devices
+
+#settings:
+#  refreshSeconds: 180
+
 devices:
   - name: device1
     settings:
