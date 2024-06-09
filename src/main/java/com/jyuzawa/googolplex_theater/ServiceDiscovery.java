@@ -17,6 +17,7 @@ import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,9 @@ public final class ServiceDiscovery implements Closeable {
     private final JmDNS mdns;
     private final boolean advertise;
 
+    @Getter
+    private final InetAddress inetAddress;
+
     @Autowired
     public ServiceDiscovery(
             GoogolplexService service,
@@ -53,7 +57,8 @@ public final class ServiceDiscovery implements Closeable {
             log.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
         }
         this.mdns = JmDNS.create(inetAddress);
-        log.info("Search for casts using {}", mdns.getInetAddress());
+        this.inetAddress = mdns.getInetAddress();
+        log.info("Search for casts using {}", inetAddress);
     }
 
     @PostConstruct

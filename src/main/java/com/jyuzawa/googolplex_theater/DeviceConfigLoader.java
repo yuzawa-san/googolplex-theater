@@ -4,6 +4,10 @@
  */
 package com.jyuzawa.googolplex_theater;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +18,8 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,12 +45,15 @@ public final class DeviceConfigLoader implements Closeable {
     private final Path directoryPath;
     private WatchService watchService;
     private final GoogolplexService service;
+    private final String proxyUrl;
 
     @Autowired
     public DeviceConfigLoader(
             GoogolplexService service,
             Path appHome,
-            @Value("${googolplex-theater.devices-path}") String deviceConfigPath)
+            @Value("${googolplex-theater.devices-path}") String deviceConfigPath,
+            ProxyProperties proxyProperties,
+            ServiceDiscovery serviceDiscovery)
             throws IOException {
         this.service = service;
         this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
@@ -57,6 +66,7 @@ public final class DeviceConfigLoader implements Closeable {
         if (directoryPath == null) {
             throw new IllegalArgumentException("Path has missing parent");
         }
+        this.proxyUrl = "http://" + serviceDiscovery.getInetAddress().getHostAddress() + ":" + proxyProperties.port;
     }
 
     @PostConstruct
@@ -104,7 +114,18 @@ public final class DeviceConfigLoader implements Closeable {
     private void load() throws IOException {
         log.info("Reloading device config");
         try (InputStream stream = Files.newInputStream(path)) {
-            DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
+            DeviceConfig deviceConfig = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
+            List<DeviceInfo> out = new ArrayList<>();
+            for (DeviceInfo deviceInfo : deviceConfig.getDevices()) {
+                ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
+                newSettings.setAll(deviceInfo.getSettings());
+                JsonNode urlNode = newSettings.get("url");
+                if (urlNode != null) {
+                    String url = urlNode.asText().replace("${PROXY}", proxyUrl);
+                    newSettings.set("url", new TextNode(url));
+                }
+                out.add(new DeviceInfo(deviceInfo.getName(), newSettings));
+            }
             service.processDeviceConfig(out);
         }
     }

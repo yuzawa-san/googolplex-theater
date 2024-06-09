@@ -58,7 +58,8 @@ class DeviceConfigLoaderTest {
                 return null;
             }
         });
-        DeviceConfigLoader loader = new DeviceConfigLoader(controller, conf, devicePath.toString());
+        DeviceConfigLoader loader = new DeviceConfigLoader(
+                controller, conf, devicePath.toString(), new ProxyProperties(), Mockito.mock(ServiceDiscovery.class));
         loader.start();
         try {
             DeviceConfig config = queue.take();
