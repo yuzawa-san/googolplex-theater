@@ -12,6 +12,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.web.server.WebServer;
 
 class ServiceDiscoveryTest {
 
@@ -30,7 +32,12 @@ class ServiceDiscoveryTest {
     @Test
     void instantiationTest() throws IOException {
         GoogolplexService controller = Mockito.mock(GoogolplexService.class);
-        ServiceDiscovery sd = new ServiceDiscovery(controller, null);
+        ServiceDiscovery sd = new ServiceDiscovery(controller, null, true);
+        WebServerInitializedEvent event = Mockito.mock(WebServerInitializedEvent.class);
+        WebServer webServer = Mockito.mock(WebServer.class);
+        Mockito.when(event.getWebServer()).thenReturn(webServer);
+        Mockito.when(webServer.getPort()).thenReturn(8080);
+        sd.onApplicationEvent(event);
         sd.close();
     }
 }
