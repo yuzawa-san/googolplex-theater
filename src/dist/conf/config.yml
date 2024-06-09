@@ -12,3 +12,4 @@
 #  retry-interval: 15s
 #  devices-path: conf/devices.yml
 #  preferred-interface: eth0
+#  advertise: true

@@ -15,10 +15,13 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,16 +33,21 @@ import org.springframework.stereotype.Component;
 @Component
 public final class ServiceDiscovery implements Closeable {
     public static final String MDNS_SERVICE_NAME = "_googlecast._tcp.local.";
+    private static final String MDNS_ADVERTISE_NAME = "_http._tcp.local.";
+    private static final String MDNS_NAME = "googolplex-theater";
 
     private final GoogolplexService service;
     private final JmDNS mdns;
+    private final boolean advertise;
 
     @Autowired
     public ServiceDiscovery(
             GoogolplexService service,
-            @Value("${googolplex-theater.preferred-interface:#{null}}") String preferredInterface)
+            @Value("${googolplex-theater.preferred-interface:#{null}}") String preferredInterface,
+            @Value("${googolplex-theater.advertise:#{false}}") boolean advertise)
             throws IOException {
         this.service = service;
+        this.advertise = advertise;
         InetAddress inetAddress = getInterfaceAddress(preferredInterface);
         if (inetAddress == null) {
             log.warn("No IP address for service discovery found. Falling back to JmDNS library default.");
@@ -49,8 +57,16 @@ public final class ServiceDiscovery implements Closeable {
     }
 
     @PostConstruct
-    public void start() {
+    public void start() throws IOException {
         this.mdns.addServiceListener(MDNS_SERVICE_NAME, new ServiceDiscoveryListener());
+    }
+
+    @EventListener
+    public void onApplicationEvent(WebServerInitializedEvent event) throws IOException {
+        if (advertise) {
+            int port = event.getWebServer().getPort();
+            this.mdns.registerService(ServiceInfo.create(MDNS_ADVERTISE_NAME, MDNS_NAME, port, MDNS_NAME));
+        }
     }
 
     static InetAddress getInterfaceAddress(String preferredInterface) throws SocketException, UnknownHostException {
