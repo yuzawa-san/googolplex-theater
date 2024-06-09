@@ -151,21 +151,6 @@ The configuration is defined in `./conf/config.yml` and `./conf/devices.yml`.
 The file is automatically watched for changes.
 Some example use cases involve using cron and putting your config under version control and pulling from origin periodically, or downloading from S3/web, or updating using rsync/scp.
 
-### Case Study: Grafana Dashboards
-
-The maintainer has used this to show statistics dashboards in a software engineering context.
-
-* Buy a new Raspberry Pi and install the default Raspberry Pi OS (Raspbian).
-* Configure and name your Chromecasts.
-* Install application Debian package and Java runtime.
-* Create one Grafana playlist per device.
-* Figure out how to use proper Grafana auth (proxy, token, etc).
-* Make your devices.yml file with each playlist url per device.
-* Place the devices.yml file under version control (git) or store it someplace accessible (http/s3/gcs).
-* Add a cron job to pull the devices.yml file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi).
-* devices.yml is updated periodically as our dashboard needs change. The updates are automatically picked up.
-* If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8080 and hitting a few buttons.
-
 ### Using a Custom Receiver
 
 If you wish to customize the behavior of the receiver from just displaying a single URL in an IFRAME, see the example custom receiver in `receiver/custom.html`.
@@ -177,6 +162,27 @@ Currently the device name and settings are printed to the screen. Customize the 
 Host your modified file via HTTPS on your hosting provider of choice. Then point your new custom receiver application towards that page's URL.
 
 There is a property in the `config.yml` to override the receiver application.
+
+### Case Study: Grafana Dashboards
+
+The maintainer has used this to show statistics dashboards in a software engineering context.
+
+- Buy a new Raspberry Pi and install the default Raspberry Pi OS (Raspbian).
+- Configure and name your Chromecast(s).
+- Install application via download or via Debian package (which will likely install Java runtime if it is not already installed).
+- Create one Grafana playlist per device.
+- Make your devices.yml file with each playlist url per device. Set the rotation and refresh parameters and make sure the kiosk mode is in the query string parameters.
+- Figure out how to connect.
+    - Less secure: Use HTTPS with an IP address allowlist to your location (which must have a static IP) on whatever proxy you may have in front of your Grafana deployment.
+    - More Secure: Create a Grafana API token with viewer permission and use this application's proxy feature.
+        - [Sign up as a Chromecast developer](https://developers.google.com/cast/docs/registration#RegisterApp) so you can use the local proxy over HTTP.
+        - Register your [devices](https://cast.google.com/publish) for development.
+        - Register a new custom reciever, but do not publish it (that would force it to use HTTPS). Configure this app with the "appId" alphanumeric string. Point the url to `http://my-device.local:8001/receiver.html` or `http://192.168.1.XXX:8001/receiver.html` (assuming you have a static/sticky IP).
+        - Configure this app's proxy settings pointing at your Grafana root url.
+        - Add the Grafana token to the proxy settings
+        - Make your devices.yml have urls like `${PROXY}/path/to/playlist?....`
+- If you want to update the devices periodically, place the devices.yml file under version control (git) or store it someplace accessible (http/s3/gcs). Add a cron job to pull the devices.yml file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi). The updates are automatically picked up.
+- If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8080 and hitting a few buttons.
 
 ### Troubleshooting
 
