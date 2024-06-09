@@ -12,8 +12,8 @@ by [@yuzawa-san](https://github.com/yuzawa-san/)
 [![codecov](https://codecov.io/gh/yuzawa-san/googolplex-theater/branch/develop/graph/badge.svg)](https://codecov.io/gh/yuzawa-san/googolplex-theater)
 
 Persistently maintain multiple Chromecast devices on you local network without using your browser.
-Ideal for digital signage applications.
-Originally developed to display statistics dashboards.
+Ideal for digital signage applications: restaurant menus, notice boards.
+Originally developed to display statistics dashboards (e.g. Grafana).
 
 ![Example](docs/example.jpg)
 
@@ -26,6 +26,7 @@ There is no backing database or database dependencies, rather there is a YAML fi
 The YAML configuration is conveyed to the receiver application, which by default accepts a URL to display in an IFRAME.
 The receiver application can be customized easily to suit your needs.
 The application will try to reconnect if a session is ended for whatever reason.
+(Optional) The application has a local HTTP proxy for advanced use cases (adding/removing headers for auth or frame breaking).
 See [feature files](src/test/resources/features/) for more details.
 
 ## Requirements
@@ -43,7 +44,7 @@ There are certain requirements for networking which are beyond the realm of this
   * The [Raspberry Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) is a good, small, and cost-effective computer to use.
   * The newer models with ARMv8 processors are most desirable. See the [models list](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications) for more details. Most models introduced after 2016 fulfill these recommendations.
   * It is not advisable to use older models which use older processor architectures (ARMv6 or ARMv7), specifically the _original_ Raspberry Pi Zero or Zero W. See the linked specifications table in previous item for more details.
-* IMPORTANT: URLs must be HTTPS and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content.
+* IMPORTANT: URLs must be HTTPS (unless you use an unpublished receiver app) and must not [deny framing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) This is a limit of using an IFRAME to display content. NOTE: the built-in proxy provides a way to attempt to circumvent this.
 
 Development requirements:
 
@@ -195,7 +196,6 @@ This is intended to be minimalist and easy to set up, so advanced features are n
 ### TODO
 
 * Split screen layouts
-* Framing proxy (may not be feasible or allowed under HTTPS)
 
 ## Related Projects
 
