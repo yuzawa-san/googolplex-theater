@@ -1,0 +1,1 @@
+This directory exists for backwards compatibility. Please refer to the files in `src/main/resources/static/receiver`
