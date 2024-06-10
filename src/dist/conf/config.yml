@@ -17,3 +17,5 @@
 #    url: https://grafana.mysite.com/
 #    add-request-headers:
 #      Authorization: Bearer my_grafana_token
+#    remove-response-headers:
+#      - My-Bad-Header
