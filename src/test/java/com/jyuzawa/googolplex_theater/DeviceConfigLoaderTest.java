@@ -12,7 +12,6 @@ import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.WatchServiceConfiguration;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import io.netty.util.CharsetUtil;
-import io.netty.util.NetUtil;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -67,8 +66,8 @@ class DeviceConfigLoaderTest {
         InetAddress address = InetAddress.getByName(ipAddress);
         Mockito.when(serviceDiscovery.getInetAddress()).thenReturn(address);
         ProxyProperties proxyProperties = new ProxyProperties();
-        DeviceConfigLoader loader = new DeviceConfigLoader(
-                controller, conf, devicePath.toString(), proxyProperties, serviceDiscovery);
+        DeviceConfigLoader loader =
+                new DeviceConfigLoader(controller, conf, devicePath.toString(), proxyProperties, serviceDiscovery);
         loader.start();
         try {
             List<DeviceInfo> devices = queue.take();
@@ -81,7 +80,7 @@ class DeviceConfigLoaderTest {
             device = devices.get(1);
             assertEquals("ProxiedDevice", device.getName());
             assertEquals(
-                    "http://" + ipAddress + ":"+proxyProperties.port+"/foo/bar",
+                    "http://" + ipAddress + ":" + proxyProperties.port + "/foo/bar",
                     device.getSettings().get("url").asText());
 
             // see if an update is detected
