@@ -19,18 +19,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
-import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This class represents the state of the application. All modifications to state occur in the same
@@ -56,7 +53,7 @@ public class GoogolplexService implements Closeable {
     private final Map<String, DeviceInfo> nameToDeviceInfo;
     private final Map<String, InetSocketAddress> nameToAddress;
     private final Map<String, Channel> nameToChannel;
-    private final ExecutorService executor;
+    private final Scheduler executor;
 
     @Autowired
     public GoogolplexService(GoogolplexClient client) {
@@ -65,7 +62,7 @@ public class GoogolplexService implements Closeable {
         this.nameToDeviceInfo = new ConcurrentHashMap<>();
         this.nameToAddress = new ConcurrentHashMap<>();
         this.nameToChannel = new ConcurrentHashMap<>();
-        this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("controller"));
+        this.executor = Schedulers.newSingle("controller");
     }
 
     private record Channel(AtomicReference<Instant> birth, Disposable disposable) {}
@@ -75,28 +72,30 @@ public class GoogolplexService implements Closeable {
      *
      * @param deviceInfos the devices loaded from the config file
      */
-    public Future<?> processDeviceConfig(List<DeviceInfo> deviceInfos) {
-        return executor.submit(() -> {
-            Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-            for (DeviceInfo deviceInfo : deviceInfos) {
-                String name = deviceInfo.getName();
-                // mark that we should not remove this device
-                namesToRemove.remove(name);
-                DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
-                // ignore unchanged devices
-                if (!deviceInfo.equals(oldDeviceInfo)) {
-                    log.info("CONFIG_UPDATED '{}'", name);
-                    nameToDeviceInfo.put(name, deviceInfo);
-                    apply(name);
-                }
-            }
-            // remove devices that were missing in the new config
-            for (String name : namesToRemove) {
-                log.info("CONFIG_REMOVED '{}'", name);
-                nameToDeviceInfo.remove(name);
+    public Disposable processDeviceConfig(List<DeviceInfo> deviceInfos) {
+        return executor.schedule(() -> processDeviceConfig0(deviceInfos));
+    }
+
+    void processDeviceConfig0(List<DeviceInfo> deviceInfos) {
+        Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
+        for (DeviceInfo deviceInfo : deviceInfos) {
+            String name = deviceInfo.getName();
+            // mark that we should not remove this device
+            namesToRemove.remove(name);
+            DeviceInfo oldDeviceInfo = nameToDeviceInfo.get(name);
+            // ignore unchanged devices
+            if (!deviceInfo.equals(oldDeviceInfo)) {
+                log.info("CONFIG_UPDATED '{}'", name);
+                nameToDeviceInfo.put(name, deviceInfo);
                 apply(name);
             }
-        });
+        }
+        // remove devices that were missing in the new config
+        for (String name : namesToRemove) {
+            log.info("CONFIG_REMOVED '{}'", name);
+            nameToDeviceInfo.remove(name);
+            apply(name);
+        }
     }
 
     /**
@@ -105,34 +104,36 @@ public class GoogolplexService implements Closeable {
      *
      * @param event mdns info
      */
-    public Future<?> register(ServiceEvent event) {
-        return executor.submit(() -> {
-            // the device information may not be full
-            ServiceInfo info = event.getInfo();
-            String name = info.getPropertyString("fn");
-            if (name == null) {
-                log.debug("Found unnamed cast:\n{}", info);
-                return;
-            }
-            InetAddress[] addresses = info.getInetAddresses();
-            if (addresses == null || addresses.length == 0) {
-                log.debug("Found unaddressable cast:\n{}", info);
-                return;
-            }
+    public Disposable register(ServiceEvent event) {
+        return executor.schedule(() -> register0(event));
+    }
+
+    void register0(ServiceEvent event) {
+        // the device information may not be full
+        ServiceInfo info = event.getInfo();
+        String name = info.getPropertyString("fn");
+        if (name == null) {
+            log.debug("Found unnamed cast:\n{}", info);
+            return;
+        }
+        InetAddress[] addresses = info.getInetAddresses();
+        if (addresses == null || addresses.length == 0) {
+            log.debug("Found unaddressable cast:\n{}", info);
+            return;
+        }
+        /*
+         * we choose the first address. there should usually be just one. the mdns library returns ipv4
+         * addresses before ipv6.
+         */
+        InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
+        InetSocketAddress oldAddress = nameToAddress.put(name, address);
+        if (!address.equals(oldAddress)) {
             /*
-             * we choose the first address. there should usually be just one. the mdns library returns ipv4
-             * addresses before ipv6.
+             * this is a newly discovered device, or an existing device whose address was updated.
              */
-            InetSocketAddress address = new InetSocketAddress(addresses[0], info.getPort());
-            InetSocketAddress oldAddress = nameToAddress.put(name, address);
-            if (!address.equals(oldAddress)) {
-                /*
-                 * this is a newly discovered device, or an existing device whose address was updated.
-                 */
-                log.info("REGISTER '{}' {}", name, address);
-                apply(name);
-            }
-        });
+            log.info("REGISTER '{}' {}", name, address);
+            apply(name);
+        }
     }
 
     /**
@@ -168,8 +169,8 @@ public class GoogolplexService implements Closeable {
      *
      * @param name the device to refresh
      */
-    public Future<?> refresh(String name) {
-        return executor.submit(() -> {
+    public Disposable refresh(String name) {
+        return executor.schedule(() -> {
             // closing channels will cause them to reconnect
             if (name == null) {
                 // close all channels
@@ -217,12 +218,7 @@ public class GoogolplexService implements Closeable {
     public void close() {
         nameToDeviceInfo.clear();
         refresh(null);
-        executor.shutdown();
-        try {
-            executor.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            // pass
-        }
+        executor.disposeGracefully().block(Duration.ofSeconds(10));
     }
 
     /**

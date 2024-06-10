@@ -20,17 +20,16 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This class loads the device config at start and watches the files for subsequent changes. The
@@ -42,7 +41,7 @@ import org.springframework.stereotype.Component;
 @Component
 public final class DeviceConfigLoader implements Closeable {
 
-    private final ExecutorService executor;
+    private final Scheduler executor;
     private final Path path;
     private final Path directoryPath;
     private WatchService watchService;
@@ -58,7 +57,8 @@ public final class DeviceConfigLoader implements Closeable {
             ServiceDiscovery serviceDiscovery)
             throws IOException {
         this.service = service;
-        this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
+        this.executor = Schedulers.newSingle("deviceConfigLoader");
+
         this.path = appHome.resolve(deviceConfigPath).toAbsolutePath();
         log.info("Using device config: {}", path);
         if (!Files.isRegularFile(path)) {
@@ -78,7 +78,7 @@ public final class DeviceConfigLoader implements Closeable {
         load();
         this.watchService = path.getFileSystem().newWatchService();
         directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-        executor.submit(() -> {
+        executor.schedule(() -> {
             try {
                 WatchKey key;
                 // this blocks until the system notifies us of any changes.
@@ -139,11 +139,6 @@ public final class DeviceConfigLoader implements Closeable {
         if (watchService != null) {
             watchService.close();
         }
-        executor.shutdown();
-        try {
-            executor.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            // pass
-        }
+        executor.disposeGracefully().block(Duration.ofSeconds(10));
     }
 }
