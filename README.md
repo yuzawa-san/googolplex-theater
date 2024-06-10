@@ -174,6 +174,7 @@ The maintainer has used this to show statistics dashboards in a software enginee
 - Make your devices.yml file with each playlist url per device. Set the rotation and refresh parameters and make sure the kiosk mode is in the query string parameters.
 - Figure out how to connect.
     - Less secure: Use HTTPS with an IP address allowlist to your location (which must have a static IP) on whatever proxy you may have in front of your Grafana deployment.
+    - Medium Secure: Create a Grafana API token with viewer permission and run nginx or other proxy locally with a real SSL certificate, add Authorization header.
     - More Secure: Create a Grafana API token with viewer permission and use this application's proxy feature.
         - [Sign up as a Chromecast developer](https://developers.google.com/cast/docs/registration#RegisterApp) so you can use the local proxy over HTTP.
         - Register your [devices](https://cast.google.com/publish) for development.
