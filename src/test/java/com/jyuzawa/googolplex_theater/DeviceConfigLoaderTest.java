@@ -63,10 +63,12 @@ class DeviceConfigLoaderTest {
             }
         });
         ServiceDiscovery serviceDiscovery = Mockito.mock(ServiceDiscovery.class);
-        InetAddress address = InetAddress.getByName("192.168.1.239");
+        String ipAddress = "192.168.1.239";
+        InetAddress address = InetAddress.getByName(ipAddress);
         Mockito.when(serviceDiscovery.getInetAddress()).thenReturn(address);
+        ProxyProperties proxyProperties = new ProxyProperties();
         DeviceConfigLoader loader = new DeviceConfigLoader(
-                controller, conf, devicePath.toString(), new ProxyProperties(), serviceDiscovery);
+                controller, conf, devicePath.toString(), proxyProperties, serviceDiscovery);
         loader.start();
         try {
             List<DeviceInfo> devices = queue.take();
@@ -79,7 +81,7 @@ class DeviceConfigLoaderTest {
             device = devices.get(1);
             assertEquals("ProxiedDevice", device.getName());
             assertEquals(
-                    "http://" + NetUtil.toAddressString(address) + ":8081/foo/bar",
+                    "http://" + ipAddress + ":"+proxyProperties.port+"/foo/bar",
                     device.getSettings().get("url").asText());
 
             // see if an update is detected
