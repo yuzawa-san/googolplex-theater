@@ -87,15 +87,9 @@ class ProxyTest {
                                                 Unpooled.copiedBuffer(payload, StandardCharsets.UTF_8))))
                                 .then()
                                 .thenMany(in.receiveFrames()
+                                        .take(payloads.size())
                                         .cast(TextWebSocketFrame.class)
-                                        .flatMap(f -> {
-                                            String value = f.text();
-                                            if (value.equals(payloads.get(payloads.size() - 1))) {
-                                                return out.sendClose().thenReturn(value);
-                                            }
-                                            return Mono.just(value);
-                                        })
-                                        .doOnNext(System.out::println)))
+                                        .map(TextWebSocketFrame::text)))
                         .collectList()
                         .block(Duration.ofSeconds(10)));
     }
