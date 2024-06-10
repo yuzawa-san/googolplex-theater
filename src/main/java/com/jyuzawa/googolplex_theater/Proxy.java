@@ -55,7 +55,7 @@ public class Proxy {
 
     @PostConstruct
     public void start() {
-        log.info("Starting proxy on port {}", properties.port);
+        log.info("Starting proxy for {} on port {}", properties.url, properties.port);
         disposableServer = httpServer.bindNow();
     }
 
