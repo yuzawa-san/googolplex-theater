@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
@@ -80,10 +80,12 @@ public class Proxy {
         return res.sendWebsocket((fromBrowser, toBrowser) -> configureHttpClient(req)
                 .websocket()
                 .uri(req.uri())
-                .handle((fromServer, toServer) -> Flux.zip(
-                        toBrowser.sendObject(fromServer.receiveFrames().doOnNext(ReferenceCountUtil::retain)),
-                        toServer.sendObject(fromBrowser.receiveFrames().doOnNext(ReferenceCountUtil::retain))))
-                .then());
+                .handle((fromServer, toServer) -> Mono.when(
+                                toBrowser
+                                        .sendObject(fromServer.receiveFrames().doOnNext(ReferenceCountUtil::retain))
+                                        .then(),
+                                toServer.sendObject(fromBrowser.receiveFrames().doOnNext(ReferenceCountUtil::retain)))
+                        .then()));
     }
 
     private Publisher<Void> handleHttp(HttpServerRequest req, HttpServerResponse res) {
