@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
+import io.netty.util.NetUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,7 +68,9 @@ public final class DeviceConfigLoader implements Closeable {
         if (directoryPath == null) {
             throw new IllegalArgumentException("Path has missing parent");
         }
-        this.proxyUrl = "http://" + serviceDiscovery.getInetAddress().getHostAddress() + ":" + proxyProperties.port;
+        this.proxyUrl = "http://"
+                + NetUtil.toSocketAddressString(
+                        new InetSocketAddress(serviceDiscovery.getInetAddress(), proxyProperties.port));
     }
 
     @PostConstruct
