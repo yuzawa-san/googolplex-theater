@@ -11,9 +11,11 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.client.HttpClient;
@@ -74,18 +76,27 @@ class ProxyTest {
                         .aggregate()
                         .asString()
                         .block(Duration.ofSeconds(10)));
+        List<String> payloads = List.of("foo", "bar", "baz");
         assertEquals(
-                "wspayload",
+                payloads,
                 httpClient
                         .websocket()
                         .uri("/ws")
-                        .handle((in, out) -> out.sendObject(new TextWebSocketFrame(
-                                        Unpooled.copiedBuffer("wspayload", StandardCharsets.UTF_8)))
+                        .handle((in, out) -> out.sendObject(Flux.fromIterable(payloads)
+                                        .map(payload -> new TextWebSocketFrame(
+                                                Unpooled.copiedBuffer(payload, StandardCharsets.UTF_8))))
                                 .then()
                                 .thenMany(in.receiveFrames()
                                         .cast(TextWebSocketFrame.class)
-                                        .map(TextWebSocketFrame::text)
+                                        .flatMap(f -> {
+                                            String value = f.text();
+                                            if (value.equals(payloads.get(payloads.size() - 1))) {
+                                                return out.sendClose().thenReturn(value);
+                                            }
+                                            return Mono.just(value);
+                                        })
                                         .doOnNext(System.out::println)))
-                        .blockFirst(Duration.ofSeconds(10)));
+                        .collectList()
+                        .block(Duration.ofSeconds(10)));
     }
 }
