@@ -15,7 +15,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.client.ReactorResourceFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -24,6 +26,7 @@ import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.resources.LoopResources;
 
 @Slf4j
 @Component
@@ -47,10 +50,13 @@ public class Proxy {
     private final HttpServer httpServer;
     private DisposableServer disposableServer;
 
-    public Proxy(ProxyProperties properties) {
+    @Autowired
+    public Proxy(ProxyProperties properties, ReactorResourceFactory reactorResourceFactory) {
         this.properties = properties;
-        this.httpClient = HttpClient.create().baseUrl(properties.url);
+        LoopResources loopResources = reactorResourceFactory.getLoopResources();
+        this.httpClient = HttpClient.create().runOn(loopResources).baseUrl(properties.url);
         this.httpServer = HttpServer.create()
+                .runOn(loopResources)
                 .accessLog(properties.log)
                 .port(properties.port)
                 .handle(this::handle);

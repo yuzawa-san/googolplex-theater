@@ -30,6 +30,7 @@ import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.ReactorResourceFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -80,7 +81,8 @@ public class GoogolplexClient {
             @Value("${googolplex-theater.app-id}") String appId,
             @Value("${googolplex-theater.heartbeat-interval}") Duration heartbeatInterval,
             @Value("${googolplex-theater.heartbeat-timeout}") Duration heartbeatTimeout,
-            @Value("${googolplex-theater.retry-interval}") Duration retryInterval)
+            @Value("${googolplex-theater.retry-interval}") Duration retryInterval,
+            ReactorResourceFactory reactorResourceFactory)
             throws SSLException {
         this.appId = appId;
         if (!APP_ID_PATTERN.matcher(appId).find()) {
@@ -96,6 +98,7 @@ public class GoogolplexClient {
         log.info("Using cast application id: {}", appId);
         // configure the socket client
         this.bootstrap = TcpClient.create()
+                .runOn(reactorResourceFactory.getLoopResources())
                 .secure(spec -> spec.sslContext(sslContext))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
     }
