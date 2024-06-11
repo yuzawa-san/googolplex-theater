@@ -15,11 +15,14 @@ import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.http.client.ReactorResourceFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.server.HttpServer;
+import reactor.netty.resources.LoopResources;
 
 class ProxyTest {
 
@@ -44,7 +47,9 @@ class ProxyTest {
         ProxyProperties proxyProperties = new ProxyProperties();
         proxyProperties.url = "http://localhost:8082/";
         proxyProperties.port = 8081;
-        proxy = new Proxy(proxyProperties);
+        ReactorResourceFactory factory = Mockito.mock(ReactorResourceFactory.class);
+        Mockito.when(factory.getLoopResources()).thenReturn(LoopResources.create("test"));
+        proxy = new Proxy(proxyProperties, factory);
         proxy.start();
     }
 
