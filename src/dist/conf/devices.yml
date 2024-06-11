@@ -11,3 +11,6 @@ devices:
     settings:
       url: https://example.com/
       refreshSeconds: 1800
+#  - name: device3
+#    settings:
+#      proxyPath: /path/to/be/proxied

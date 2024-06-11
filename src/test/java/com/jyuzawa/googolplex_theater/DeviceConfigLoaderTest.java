@@ -31,10 +31,10 @@ import org.mockito.stubbing.Answer;
 class DeviceConfigLoaderTest {
 
     private static final String VALUE1 =
-            "devices:\n  - name: NameOfYourDevice2\n    settings:\n      url: https://example2.com/\n      refreshSeconds: 9600\n  - name: ProxiedDevice\n    settings:\n      url: ${PROXY}/foo/bar";
+            "devices:\n  - name: NameOfYourDevice2\n    settings:\n      url: https://example2.com/\n      refreshSeconds: 9600\n  - name: ProxiedDevice\n    settings:\n      proxyPath: /foo/bar";
 
     private static final String VALUE2 =
-            "devices:\n  - name: NameOfYourDevice2\n    settings:\n      url: https://example2.com/updated\n      refreshSeconds: 600\n  - name: ProxiedDevice\n    settings:\n      url: ${PROXY}/foo/bar";
+            "devices:\n  - name: NameOfYourDevice2\n    settings:\n      url: https://example2.com/updated\n      refreshSeconds: 600\n  - name: ProxiedDevice\n    settings:\n      proxyPath: /foo/bar";
 
     @Test
     void loaderTest() throws IOException, InterruptedException {

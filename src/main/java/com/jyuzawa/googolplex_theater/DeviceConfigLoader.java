@@ -13,6 +13,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +47,7 @@ public final class DeviceConfigLoader implements Closeable {
     private final Path directoryPath;
     private WatchService watchService;
     private final GoogolplexService service;
-    private final String proxyUrl;
+    private final URI proxyUri;
 
     @Autowired
     public DeviceConfigLoader(
@@ -68,9 +69,9 @@ public final class DeviceConfigLoader implements Closeable {
         if (directoryPath == null) {
             throw new IllegalArgumentException("Path has missing parent");
         }
-        this.proxyUrl = "http://"
+        this.proxyUri = URI.create("http://"
                 + NetUtil.toSocketAddressString(
-                        new InetSocketAddress(serviceDiscovery.getInetAddress(), proxyProperties.port));
+                        new InetSocketAddress(serviceDiscovery.getInetAddress(), proxyProperties.port)));
     }
 
     @PostConstruct
@@ -121,14 +122,19 @@ public final class DeviceConfigLoader implements Closeable {
             DeviceConfig deviceConfig = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
             List<DeviceInfo> out = new ArrayList<>();
             for (DeviceInfo deviceInfo : deviceConfig.getDevices()) {
-                ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
-                newSettings.setAll(deviceInfo.getSettings());
-                JsonNode urlNode = newSettings.get("url");
-                if (urlNode != null) {
-                    String url = urlNode.asText().replace("${PROXY}", proxyUrl);
+                ObjectNode settings = deviceInfo.getSettings();
+                JsonNode proxyPathNode = settings.get("proxyPath");
+                if (proxyPathNode != null) {
+                    ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
+                    newSettings.setAll(settings);
+                    String url =
+                            proxyUri.resolve(URI.create(proxyPathNode.asText())).toString();
                     newSettings.set("url", new TextNode(url));
+                    newSettings.remove("proxyPath");
+                    out.add(new DeviceInfo(deviceInfo.getName(), newSettings));
+                } else {
+                    out.add(deviceInfo);
                 }
-                out.add(new DeviceInfo(deviceInfo.getName(), newSettings));
             }
             service.processDeviceConfig(out);
         }

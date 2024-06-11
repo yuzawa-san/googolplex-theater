@@ -178,10 +178,10 @@ The maintainer has used this to show statistics dashboards in a software enginee
     - More Secure: Create a Grafana API token with viewer permission and use this application's proxy feature.
         - [Sign up as a Chromecast developer](https://developers.google.com/cast/docs/registration#RegisterApp) so you can use the local proxy over HTTP.
         - Register your [devices](https://cast.google.com/publish) for development.
-        - Register a new custom reciever, but do not publish it (that would force it to use HTTPS). Configure this app with the "appId" alphanumeric string. Point the url to `http://my-device.local:8001/receiver.html` or `http://192.168.1.XXX:8001/receiver.html` (assuming you have a static/sticky IP).
+        - Register a new custom reciever, but do not publish it (that would force it to use HTTPS). Configure this app with the "appId" alphanumeric string. Point the url to your _static_ private IP `http://192.168.1.XXX:8001/receiver.html`.
         - Configure this app's proxy settings pointing at your Grafana root url.
-        - Add the Grafana token to the proxy settings
-        - Make your devices.yml have urls like `${PROXY}/path/to/playlist?....`
+        - Add the Grafana token to the proxy "add header" settings
+        - Make your devices.yml have `proxyPath: /path/to/playlist?....`
 - If you want to update the devices periodically, place the devices.yml file under version control (git) or store it someplace accessible (http/s3/gcs). Add a cron job to pull the devices.yml file from wherever you stored it (alternatively configure something to push the file to the Raspberry Pi). The updates are automatically picked up.
 - If a screen needs to be refreshed, one can do so by accessing the web UI exposed port 8080 and hitting a few buttons.
 
