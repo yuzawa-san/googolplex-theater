@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 public class ProxyProperties {
     public String url;
     public int port = 8081;
+    public boolean log;
     public Map<String, String> addRequestHeaders = Map.of();
     public List<String> removeResponseHeaders = List.of();
 }

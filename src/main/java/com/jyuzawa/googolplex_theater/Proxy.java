@@ -50,7 +50,8 @@ public class Proxy {
     public Proxy(ProxyProperties properties) {
         this.properties = properties;
         this.httpClient = HttpClient.create().baseUrl(properties.url);
-        this.httpServer = HttpServer.create().port(properties.port).handle(this::handle);
+        this.httpServer =
+                HttpServer.create().accessLog(properties.log).port(properties.port).handle(this::handle);
     }
 
     @PostConstruct
