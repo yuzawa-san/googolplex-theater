@@ -65,11 +65,10 @@ class GoogolplexServiceTest {
         devices.add(cast2.device());
         devices.add(cast3.device());
         devices.add(cast4.device());
-        DeviceConfig config = new DeviceConfig(devices, null);
         service.register(cast1.event()).get();
         service.register(cast2.event()).get();
         Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.any(), Mockito.any());
-        service.processDeviceConfig(config).get();
+        service.processDeviceConfig(devices).get();
         Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast1.device()), Mockito.any());
         Mockito.verify(client).connect(Mockito.any(), Mockito.eq(cast2.device()), Mockito.any());
         Mockito.verify(client, Mockito.never()).connect(Mockito.any(), Mockito.eq(cast3.device()), Mockito.any());

@@ -4,9 +4,16 @@
  */
 package com.jyuzawa.googolplex_theater;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
+import io.netty.util.NetUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,15 +21,16 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.jmdns.impl.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This class loads the device config at start and watches the files for subsequent changes. The
@@ -34,20 +42,24 @@ import org.springframework.stereotype.Component;
 @Component
 public final class DeviceConfigLoader implements Closeable {
 
-    private final ExecutorService executor;
+    private final Scheduler executor;
     private final Path path;
     private final Path directoryPath;
     private WatchService watchService;
     private final GoogolplexService service;
+    private final URI proxyUri;
 
     @Autowired
     public DeviceConfigLoader(
             GoogolplexService service,
             Path appHome,
-            @Value("${googolplex-theater.devices-path}") String deviceConfigPath)
+            @Value("${googolplex-theater.devices-path}") String deviceConfigPath,
+            ProxyProperties proxyProperties,
+            ServiceDiscovery serviceDiscovery)
             throws IOException {
         this.service = service;
-        this.executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("deviceConfigLoader"));
+        this.executor = Schedulers.newSingle("deviceConfigLoader");
+
         this.path = appHome.resolve(deviceConfigPath).toAbsolutePath();
         log.info("Using device config: {}", path);
         if (!Files.isRegularFile(path)) {
@@ -57,6 +69,9 @@ public final class DeviceConfigLoader implements Closeable {
         if (directoryPath == null) {
             throw new IllegalArgumentException("Path has missing parent");
         }
+        this.proxyUri = URI.create("http://"
+                + NetUtil.toSocketAddressString(
+                        new InetSocketAddress(serviceDiscovery.getInetAddress(), proxyProperties.port)));
     }
 
     @PostConstruct
@@ -64,7 +79,7 @@ public final class DeviceConfigLoader implements Closeable {
         load();
         this.watchService = path.getFileSystem().newWatchService();
         directoryPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-        executor.submit(() -> {
+        executor.schedule(() -> {
             try {
                 WatchKey key;
                 // this blocks until the system notifies us of any changes.
@@ -104,7 +119,23 @@ public final class DeviceConfigLoader implements Closeable {
     private void load() throws IOException {
         log.info("Reloading device config");
         try (InputStream stream = Files.newInputStream(path)) {
-            DeviceConfig out = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
+            DeviceConfig deviceConfig = MapperUtil.YAML_MAPPER.readValue(stream, DeviceConfig.class);
+            List<DeviceInfo> out = new ArrayList<>();
+            for (DeviceInfo deviceInfo : deviceConfig.getDevices()) {
+                ObjectNode settings = deviceInfo.getSettings();
+                JsonNode proxyPathNode = settings.get("proxyPath");
+                if (proxyPathNode != null) {
+                    ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
+                    newSettings.setAll(settings);
+                    String url =
+                            proxyUri.resolve(URI.create(proxyPathNode.asText())).toString();
+                    newSettings.set("url", new TextNode(url));
+                    newSettings.remove("proxyPath");
+                    out.add(new DeviceInfo(deviceInfo.getName(), newSettings));
+                } else {
+                    out.add(deviceInfo);
+                }
+            }
             service.processDeviceConfig(out);
         }
     }
@@ -114,11 +145,6 @@ public final class DeviceConfigLoader implements Closeable {
         if (watchService != null) {
             watchService.close();
         }
-        executor.shutdown();
-        try {
-            executor.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            // pass
-        }
+        executor.disposeGracefully().block(Duration.ofSeconds(10));
     }
 }

@@ -1,5 +1,8 @@
-settings:
-  refreshSeconds: 180
+# NOTE: these top level settings can be applied to all devices
+
+#settings:
+#  refreshSeconds: 180
+
 devices:
   - name: device1
     settings:
@@ -8,3 +11,6 @@ devices:
     settings:
       url: https://example.com/
       refreshSeconds: 1800
+#  - name: device3
+#    settings:
+#      proxyPath: /path/to/be/proxied

@@ -12,4 +12,12 @@
 #  retry-interval: 15s
 #  devices-path: conf/devices.yml
 #  preferred-interface: eth0
-#  advertise: true
+#  advertise: false
+#  server-log: true
+#  proxy:
+#    url: https://grafana.mysite.com/
+#    log: false
+#    add-request-headers:
+#      Authorization: Bearer my_grafana_token
+#    remove-response-headers:
+#      - My-Bad-Header

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.system.ApplicationHome;
+import org.springframework.boot.web.embedded.netty.NettyServerCustomizer;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -24,6 +25,11 @@ public class GoogolplexTheater {
     @Bean
     public Path appHome(@Value("${googolplex-theater.app-home}") Path appHome) {
         return appHome;
+    }
+
+    @Bean
+    public NettyServerCustomizer nettyServerCustomizer(@Value("${googolplex-theater.server-log}") boolean enabled) {
+        return s -> s.accessLog(enabled);
     }
 
     public static void main(String[] args) throws Exception {

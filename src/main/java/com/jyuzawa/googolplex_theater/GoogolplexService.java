@@ -73,12 +73,12 @@ public class GoogolplexService implements Closeable {
     /**
      * Load the config and propagate the changes to the any currently connected devices.
      *
-     * @param config the settings loaded from the file
+     * @param deviceInfos the device settings loaded from the file
      */
-    public Future<?> processDeviceConfig(DeviceConfig config) {
+    public Future<?> processDeviceConfig(List<DeviceInfo> deviceInfos) {
         return executor.submit(() -> {
             Set<String> namesToRemove = new HashSet<>(nameToDeviceInfo.keySet());
-            for (DeviceInfo deviceInfo : config.getDevices()) {
+            for (DeviceInfo deviceInfo : deviceInfos) {
                 String name = deviceInfo.getName();
                 // mark that we should not remove this device
                 namesToRemove.remove(name);
