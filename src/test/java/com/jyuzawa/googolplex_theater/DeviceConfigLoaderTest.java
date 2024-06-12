@@ -52,15 +52,17 @@ class DeviceConfigLoaderTest {
         }
         BlockingQueue<List<DeviceInfo>> queue = new ArrayBlockingQueue<>(10);
         GoogolplexService controller = Mockito.mock(GoogolplexService.class);
-        Mockito.when(controller.processDeviceConfig(Mockito.any())).then(new Answer<Void>() {
+        Mockito.doAnswer(new Answer<Void>() {
 
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                List<DeviceInfo> newDevices = invocation.getArgument(0);
-                queue.add(newDevices);
-                return null;
-            }
-        });
+                    @Override
+                    public Void answer(InvocationOnMock invocation) throws Throwable {
+                        List<DeviceInfo> newDevices = invocation.getArgument(0);
+                        queue.add(newDevices);
+                        return null;
+                    }
+                })
+                .when(controller)
+                .processDeviceConfig(Mockito.any());
         ServiceDiscovery serviceDiscovery = Mockito.mock(ServiceDiscovery.class);
         String ipAddress = "192.168.1.239";
         InetAddress address = InetAddress.getByName(ipAddress);
