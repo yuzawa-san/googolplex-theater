@@ -37,7 +37,7 @@ jobs:
         run: |
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         if: ${{ matrix.java == '21' && matrix.os == 'ubuntu-latest' }}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
