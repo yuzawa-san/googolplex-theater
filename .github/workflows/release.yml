@@ -104,7 +104,7 @@ jobs:
           asset_name: ${{ steps.get_deb.outputs.filename }}
           asset_content_type: application/vnd.debian.binary-package
       - name: Attest
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: 'build/distributions/${{ steps.get_zip.outputs.filename }},build/distributions/${{ steps.get_deb.outputs.filename }}'
       
