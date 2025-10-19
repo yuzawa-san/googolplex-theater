@@ -57,7 +57,7 @@ public class StepDefinitions {
 
     @BeforeAll
     public static void start() throws Exception {
-        mdns = JmDNS.create(InetAddress.getLocalHost());
+        mdns = JmDNS.create(InetAddress.getLoopbackAddress());
         workerGroup = new NioEventLoopGroup(1);
         device = new FakeCast(workerGroup, 9001);
     }
