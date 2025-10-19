@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Install Ruby and Gems
@@ -86,9 +86,8 @@ jobs:
         run: echo filename=$(basename $(find build/distributions -name "*.deb")) >> $GITHUB_OUTPUT
       - name: Upload to Packagecloud
         run: |
-          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bullseye ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/bookworm ./build/distributions/${{ steps.get_deb.outputs.filename }}
-          bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/focal ./build/distributions/${{ steps.get_deb.outputs.filename }}
+          bundle exec package_cloud push yuzawa-san/googolplex-theater/raspbian/trixie ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/jammy ./build/distributions/${{ steps.get_deb.outputs.filename }}
           bundle exec package_cloud push yuzawa-san/googolplex-theater/ubuntu/noble ./build/distributions/${{ steps.get_deb.outputs.filename }}
         env:

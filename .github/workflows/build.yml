@@ -16,11 +16,11 @@ jobs:
       fail-fast: false
       matrix:
         # LTS versions + latest
-        java: [ '21' ]
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-        include:
-          - java: 22
-            os: ubuntu-latest
+        java: [ '25' ]
+        os: ['ubuntu-latest', 'macos-14', 'windows-latest']
+        # include:
+        #   - java: 26
+        #     os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
     steps:
@@ -38,7 +38,7 @@ jobs:
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.4.3
-        if: ${{ matrix.java == '21' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.java == '25' && matrix.os == 'ubuntu-latest' }}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Test Summary

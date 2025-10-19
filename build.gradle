@@ -1,16 +1,16 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.3.0'
-	id 'io.spring.dependency-management' version '1.1.5'
-	id "net.researchgate.release" version "3.0.2"
-	id "com.google.protobuf" version "0.9.4"
-	id "com.diffplug.spotless" version "6.25.0"
-	id "com.github.spotbugs" version "6.0.15"
-	id "com.github.ben-manes.versions" version "0.51.0"
+	id 'org.springframework.boot' version '3.5.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id "net.researchgate.release" version "3.1.0"
+	id "com.google.protobuf" version "0.9.5"
+	id "com.diffplug.spotless" version "8.0.0"
+	id "com.github.spotbugs" version "6.4.4"
+	id "com.github.ben-manes.versions" version "0.53.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '2.9'
-	id("com.netflix.nebula.ospackage") version "11.10.0"
-	id "io.freefair.lombok" version "8.10"
+	id("com.netflix.nebula.ospackage") version "12.1.1"
+	id "io.freefair.lombok" version "9.0.0"
 }
 
 apply plugin: "java"
@@ -37,7 +37,7 @@ release {
 }
 
 lombok {
-	version = "1.18.32"
+	version = "1.18.42"
 }
 
 jacocoTestReport {
@@ -58,7 +58,7 @@ licenseReport {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.27.0"
+		artifact = "com.google.protobuf:protoc:4.33.0"
 	}
 	generateProtoTasks {
 		ofSourceSet('main')
@@ -78,7 +78,7 @@ spotless {
 	format 'misc', {
 		target '**/*.gradle', '**/*.proto', '**/*.feature'
 		trimTrailingWhitespace()
-		indentWithTabs()
+		leadingSpacesToTabs()
 		endWithNewline()
 	}
 	format 'md', {
@@ -92,21 +92,21 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'javax.annotation:javax.annotation-api:1.3.2'
-	implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
-	implementation 'com.google.protobuf:protobuf-java:4.27.5'
-	implementation 'org.jmdns:jmdns:3.5.9'
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.1'
+	implementation 'org.bouncycastle:bcpkix-jdk18on:1.82'
+	implementation 'com.google.protobuf:protobuf-java:4.33.0'
+	implementation 'org.jmdns:jmdns:3.6.2'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.mockito:mockito-core:5.12.0'
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-	testImplementation 'com.google.jimfs:jimfs:1.3.0'
-	testImplementation(platform('io.cucumber:cucumber-bom:7.18.0'))
+	testImplementation 'org.mockito:mockito-core:5.20.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+	testImplementation 'com.google.jimfs:jimfs:1.3.1'
+	testImplementation(platform('io.cucumber:cucumber-bom:7.23.0'))
 	testImplementation 'io.cucumber:cucumber-java'
 	testImplementation 'io.cucumber:cucumber-spring'
 	testImplementation 'io.cucumber:cucumber-junit-platform-engine'
-	testImplementation 'org.junit.platform:junit-platform-suite:1.10.2'
+	testImplementation 'org.junit.platform:junit-platform-suite'
 }
 
 test {
@@ -145,11 +145,11 @@ buildDeb {
 	from("${project.buildDir}/install/googolplex-theater-boot") {
 		exclude 'conf'
 		exclude 'service'
-		fileMode 0755
+		filePermissions { unix("rwxrw-rw-") }
 	}
 	from("${project.buildDir}/install/googolplex-theater-boot/conf") {
 		fileType CONFIG | NOREPLACE
-		fileMode 0644
+		filePermissions { unix("rw-rw-rw-") }
 		into 'conf'
 	}
 	configurationFile("/opt/googolplex-theater/conf/config.yml")
@@ -157,7 +157,7 @@ buildDeb {
 	from("${projectDir}/deb/googolplex-theater.service") {
 		fileType CONFIG | NOREPLACE
 		addParentDirs = false
-		fileMode 0644
+		filePermissions { unix("rw-rw-rw-") }
 		into "/usr/lib/systemd/system"
 	}
 	configurationFile("/usr/lib/systemd/system/googolplex-theater.service")

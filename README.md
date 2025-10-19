@@ -75,7 +75,7 @@ The `systemctl` and `journalctl` commands are useful for starting, stopping, che
 
 [Packagecloud](http://packagecloud.io/) generously provides hosting for [this project](https://packagecloud.io/yuzawa-san/googolplex-theater) and other open-source projects.
 This is one of the easiest ways to install the application and keep it up to date.
-The following distros are currently supported: `raspbian/bullseye`, `raspbian/bookworm`, `ubuntu/focal`, `ubuntu/jammy`, `ubuntu/noble`.
+The following distros are currently supported: `raspbian/bookworm`, `raspbian/trixie`, `ubuntu/jammy`, `ubuntu/noble`.
 
 Add the packagecloud repository for this project using [their instructions](https://packagecloud.io/yuzawa-san/googolplex-theater/install#bash-deb):
 ```
