@@ -24,7 +24,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.CharsetUtil;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -57,7 +56,7 @@ public class StepDefinitions {
 
     @BeforeAll
     public static void start() throws Exception {
-        mdns = JmDNS.create(InetAddress.getLoopbackAddress());
+        mdns = JmDNS.create(ServiceDiscovery.getInterfaceAddress(null));
         workerGroup = new NioEventLoopGroup(1);
         device = new FakeCast(workerGroup, 9001);
     }
