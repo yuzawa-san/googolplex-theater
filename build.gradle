@@ -145,11 +145,11 @@ buildDeb {
 	from("${project.buildDir}/install/googolplex-theater-boot") {
 		exclude 'conf'
 		exclude 'service'
-		//filePermissions { unix("rwxrw-rw-") }
+		filePermissions { unix("rwxrw-rw-") }
 	}
 	from("${project.buildDir}/install/googolplex-theater-boot/conf") {
 		fileType CONFIG | NOREPLACE
-		//filePermissions { unix("rw-rw-rw-") }
+		filePermissions { unix("rw-rw-rw-") }
 		into 'conf'
 	}
 	configurationFile("/opt/googolplex-theater/conf/config.yml")
@@ -157,7 +157,7 @@ buildDeb {
 	from("${projectDir}/deb/googolplex-theater.service") {
 		fileType CONFIG | NOREPLACE
 		addParentDirs = false
-		//filePermissions { unix("rw-rw-rw-") }
+		filePermissions { unix("rw-rw-rw-") }
 		into "/usr/lib/systemd/system"
 	}
 	configurationFile("/usr/lib/systemd/system/googolplex-theater.service")
