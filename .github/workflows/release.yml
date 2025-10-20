@@ -9,11 +9,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-      packages: write
+    permissions: write-all
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK
