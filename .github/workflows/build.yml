@@ -25,14 +25,14 @@ jobs:
     name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
     steps:
       - uses: actions/checkout@v4
-      - uses: gradle/actions/wrapper-validation@v4
+      - uses: gradle/actions/wrapper-validation@v5
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
       - name: Build with Gradle
         run: |
           ./gradlew --no-daemon -s build
