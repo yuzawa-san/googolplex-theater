@@ -70,7 +70,7 @@ protobuf {
 
 spotless {
 	java {
-		target 'src/**/*.java'
+		target '**/*.java'
 		targetExclude "${protobuf.generatedFilesBaseDir}/**/*.java"
 		licenseHeader '/*\n * Copyright (c) $YEAR James Yuzawa (https://www.jyuzawa.com/)\n * SPDX-License-Identifier: MIT\n */'
 		removeUnusedImports()
