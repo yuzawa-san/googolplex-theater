@@ -34,6 +34,9 @@ repositories {
 
 release {
 	tagTemplate = 'v${version}'
+	git {
+		requireBranch.set('master')
+	}
 }
 
 lombok {
