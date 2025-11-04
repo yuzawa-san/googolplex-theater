@@ -98,7 +98,7 @@ dependencies {
 	implementation 'org.bouncycastle:bcpkix-jdk18on:1.82'
 	implementation 'com.google.protobuf:protobuf-java:4.33.0'
 	implementation 'org.jmdns:jmdns:3.6.2'
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.1'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.mockito:mockito-core:5.20.0'
