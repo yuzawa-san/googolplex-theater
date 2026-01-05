@@ -3,7 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.5.7'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id "net.researchgate.release" version "3.1.0"
-	id "com.google.protobuf" version "0.9.5"
+	id "com.google.protobuf" version "0.9.6"
 	id "com.diffplug.spotless" version "8.1.0"
 	id "com.github.spotbugs" version "6.4.4"
 	id "com.github.ben-manes.versions" version "0.53.0"
