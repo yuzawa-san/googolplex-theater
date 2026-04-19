@@ -127,8 +127,8 @@ public final class DeviceConfigLoader implements Closeable {
                 if (proxyPathNode != null) {
                     ObjectNode newSettings = new ObjectNode(MapperUtil.YAML_MAPPER.getNodeFactory());
                     newSettings.setAll(settings);
-                    String url =
-                            proxyUri.resolve(URI.create(proxyPathNode.asString())).toString();
+                    String url = proxyUri.resolve(URI.create(proxyPathNode.asString()))
+                            .toString();
                     newSettings.set("url", StringNode.valueOf(url));
                     newSettings.remove("proxyPath");
                     out.add(new DeviceInfo(deviceInfo.getName(), newSettings));
