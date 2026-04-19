@@ -4,6 +4,7 @@
  */
 package com.jyuzawa.googolplex_theater;
 
+import jakarta.annotation.PostConstruct;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -12,7 +13,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.PostConstruct;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 

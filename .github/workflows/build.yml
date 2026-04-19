@@ -15,12 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # LTS versions + latest
-        java: [ '25' ]
+        # NOTE: https://github.com/actions/runner-images/issues/10924
+        # baseline + latest
+        java: [ '26' ]
         os: ['ubuntu-latest', 'macos-14', 'windows-latest']
-        # include:
-        #   - java: 26
-        #     os: ubuntu-latest
+        include:
+          - java: 17
+            os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} on Java ${{ matrix.java }}
     steps:
@@ -37,10 +38,12 @@ jobs:
         run: |
           ./gradlew --no-daemon -s build
       - name: Upload coverage to Codecov
+        # skip minimum version
+        if: ${{ matrix.java != '17' }}
         uses: codecov/codecov-action@v6.0.0
-        if: ${{ matrix.java == '25' && matrix.os == 'ubuntu-latest' }}
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: java-${{ matrix.java }}-${{ matrix.os }}
       - name: Test Summary
         uses: test-summary/action@v2
         with:

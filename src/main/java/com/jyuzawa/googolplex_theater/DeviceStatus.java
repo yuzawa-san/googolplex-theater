@@ -4,10 +4,10 @@
  */
 package com.jyuzawa.googolplex_theater;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
 import lombok.Builder;
 import lombok.Value;
+import tools.jackson.databind.JsonNode;
 
 @Value
 @Builder

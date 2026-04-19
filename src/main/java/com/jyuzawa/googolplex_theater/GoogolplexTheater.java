@@ -10,8 +10,8 @@ import java.nio.file.Paths;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.reactor.netty.NettyServerCustomizer;
 import org.springframework.boot.system.ApplicationHome;
-import org.springframework.boot.web.embedded.netty.NettyServerCustomizer;
 import org.springframework.context.annotation.Bean;
 
 /**
