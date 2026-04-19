@@ -12,8 +12,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.boot.web.server.WebServer;
+import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 
 class ServiceDiscoveryTest {
 
