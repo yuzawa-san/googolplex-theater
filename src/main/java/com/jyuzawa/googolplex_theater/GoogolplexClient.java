@@ -37,6 +37,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.RetrySpec;
+import tools.jackson.core.JacksonException;
 
 /**
  * This class handles messages from the device and prepares proper responses. The lifecycle is very
@@ -122,7 +123,7 @@ public class GoogolplexClient {
         out.setPayloadType(PayloadType.STRING);
         try {
             out.setPayloadUtf8(MapperUtil.MAPPER.writeValueAsString(payload));
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new GoogolplexClientException("EncodingException", e);
         }
         return out.build();
@@ -229,7 +230,7 @@ public class GoogolplexClient {
             ReceiverResponse receiverPayload;
             try {
                 receiverPayload = MapperUtil.MAPPER.readValue(msg.getPayloadUtf8(), ReceiverResponse.class);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 return Mono.error(e);
             }
             if (receiverPayload.getReason() != null) {

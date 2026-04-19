@@ -4,11 +4,9 @@
  */
 package com.jyuzawa.googolplex_theater;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import io.netty.util.NetUtil;
+import jakarta.annotation.PostConstruct;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,13 +22,15 @@ import java.nio.file.WatchService;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.StringNode;
 
 /**
  * This class loads the device config at start and watches the files for subsequent changes. The
@@ -129,7 +129,7 @@ public final class DeviceConfigLoader implements Closeable {
                     newSettings.setAll(settings);
                     String url =
                             proxyUri.resolve(URI.create(proxyPathNode.asText())).toString();
-                    newSettings.set("url", new TextNode(url));
+                    newSettings.set("url", StringNode.valueOf(url));
                     newSettings.remove("proxyPath");
                     out.add(new DeviceInfo(deviceInfo.getName(), newSettings));
                 } else {

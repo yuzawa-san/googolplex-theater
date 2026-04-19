@@ -6,9 +6,6 @@ package com.jyuzawa.googolplex_theater;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jyuzawa.googolplex_theater.DeviceConfig.DeviceInfo;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage;
 import com.jyuzawa.googolplex_theater.protobuf.Wire.CastMessage.PayloadType;
@@ -44,6 +41,7 @@ import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.impl.ServiceInfoImpl;
 import org.mockito.Mockito;
+import tools.jackson.databind.node.ObjectNode;
 
 public class FakeCast implements Closeable {
     private static final InetAddress LOOPBACK = InetAddress.getLoopbackAddress();
@@ -86,7 +84,7 @@ public class FakeCast implements Closeable {
         this.custom = String.valueOf(ThreadLocalRandom.current().nextInt());
     }
 
-    public DeviceInfo device() throws JsonMappingException, JsonProcessingException {
+    public DeviceInfo device() {
         return new DeviceInfo(name, (ObjectNode) MapperUtil.MAPPER.readTree("{\"foo\":\"" + custom + "\"}"));
     }
 

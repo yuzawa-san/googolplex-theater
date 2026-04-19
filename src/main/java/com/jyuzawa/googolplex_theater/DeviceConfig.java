@@ -6,11 +6,11 @@ package com.jyuzawa.googolplex_theater;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.Data;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * This is a POJO for YAML deserialization. This class represents a collection of named devices and
