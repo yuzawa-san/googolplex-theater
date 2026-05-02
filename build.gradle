@@ -6,7 +6,7 @@ plugins {
 	id "com.google.protobuf" version "0.9.6"
 	id "com.diffplug.spotless" version "8.4.0"
 	id "com.github.spotbugs" version "6.5.1"
-	id "com.github.ben-manes.versions" version "0.53.0"
+	id "com.github.ben-manes.versions" version "0.54.0"
 	id "com.github.jakemarsden.git-hooks" version "0.0.2"
 	id 'com.github.jk1.dependency-license-report' version '3.1.2'
 	id("com.netflix.nebula.ospackage") version "12.3.0"
