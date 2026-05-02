@@ -61,7 +61,7 @@ licenseReport {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.33.5"
+		artifact = "com.google.protobuf:protoc:4.34.1"
 	}
 	generateProtoTasks {
 		ofSourceSet('main')
