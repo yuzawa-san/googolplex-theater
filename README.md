@@ -98,7 +98,7 @@ This process also requires manual updating.
 
 ### Docker Installation
 
-The application is also available on [dockerhub](https://hub.docker.com/repository/docker/yuzawa/googolplex-theater/).
+The application is also available on [GitHub Container Registry (GHCR)](https://github.com/yuzawa-san/googolplex-theater/pkgs/container/googolplex-theater).
 
 This may be comparatively easier versus getting a proper Java runtime installed.
 This is released in a few common processor architectures: amd64, arm64/v8.
