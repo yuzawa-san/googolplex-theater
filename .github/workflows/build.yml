@@ -40,7 +40,7 @@ jobs:
       - name: Upload coverage to Codecov
         # skip minimum version
         if: ${{ matrix.java != '17' }}
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@v6.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: java-${{ matrix.java }}-${{ matrix.os }}
